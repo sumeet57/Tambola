@@ -1,0 +1,26 @@
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
+const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [player, setPlayer] = useState(null);
+  useEffect(() => {
+    setPlayer(JSON.parse(sessionStorage.getItem("player")));
+  }, [location]);
+
+  return (
+    <>
+      <nav className="w-full py-3 flex justify-between items-center p-4 bg-gray-100 fixed">
+        <div className="text-xl font-bold">Tambola Game</div>
+        <div className="flex items-center space-x-4">
+          <div className="bg-blue-500 text-white px-4 py-2 rounded">
+            Points : {player?.points || 0}
+          </div>
+        </div>
+      </nav>
+    </>
+  );
+};
+
+export default Header;
