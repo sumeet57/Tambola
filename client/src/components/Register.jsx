@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  updateLocalStorage,
+  updateSessionStorage,
+} from "../utils/storageUtils.js";
 const Register = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -18,11 +22,11 @@ const Register = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      // remove host id and host from storage
+      // remove host id and host from storage (utils/storageUtils.js)
       localStorage.clear();
       sessionStorage.clear();
-      localStorage.setItem("userid", data.userid);
-      sessionStorage.setItem("player", JSON.stringify(data.user));
+      updateLocalStorage("userid", data.userid);
+      updateSessionStorage("player", data.user);
       navigate("/");
       document.querySelector(".message").innerHTML = data.message;
     } else {
@@ -42,11 +46,11 @@ const Register = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      // remove user id and user from storage
+      // remove user id and user from storage (utils/storageUtils.js)
       localStorage.clear();
       sessionStorage.clear();
-      localStorage.setItem("hostid", data.hostid);
-      sessionStorage.setItem("player", JSON.stringify(data.host));
+      updateLocalStorage("hostid", data.hostid);
+      updateSessionStorage("player", data.host);
       navigate("/");
       document.querySelector(".message").innerHTML = data.message;
     } else {

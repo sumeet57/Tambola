@@ -13,16 +13,6 @@ const hostSchema = new mongoose.Schema({
     type: String,
     required: [true, "Password is required"],
   },
-  room: {
-    type: String,
-    default: "",
-  },
-  invites: [
-    {
-      type: String,
-      default: [],
-    },
-  ],
   points: {
     type: Number,
     default: 100,

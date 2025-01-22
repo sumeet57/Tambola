@@ -11,12 +11,13 @@ import {
 } from "react-router-dom";
 
 //import components
-import Login from "./components/login.jsx";
+import Login from "./components/Login.jsx";
 import Register from "./components/register.jsx";
 import Hostroom from "./pages/Hostroom.jsx";
 import Userroom from "./pages/Userroom.jsx";
 import Userpage from "./pages/Userpage.jsx";
 import Hostpage from "./pages/Hostpage.jsx";
+import Game from "./pages/Game.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
         element: <Hostroom />,
       },
     ],
+  },
+  {
+    path: "/game",
+    element: <Game />,
   },
 ]);
 

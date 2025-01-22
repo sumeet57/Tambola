@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import socket from "../socket/websocket";
+import { updateSessionStorage } from "../utils/storageUtils";
 
 const Hostroom = () => {
   const param = useParams();
@@ -75,7 +76,7 @@ const Hostroom = () => {
           const dataPlayer = await resPlayer.json();
           if (resPlayer.status === 200 && resPoints.status === 200) {
             sessionStorage.clear();
-            sessionStorage.setItem("player", JSON.stringify(dataPoints.data));
+            updateSessionStorage("player", dataPoints.data);
             handleClosePopup();
           } else {
             console.log(dataPlayer.message || dataPoints.message);
@@ -85,6 +86,18 @@ const Hostroom = () => {
       }
     }
   };
+
+  const handleStartClick = async () => {
+    socket.emit("assign_numbers", id);
+  };
+  useEffect(() => {
+    socket.on("numbers_assigned", (numbers) => {
+      navigate(`/game`, { state: { numbers } });
+    });
+    socket.on("error", (message) => {
+      console.log(message);
+    });
+  });
 
   return (
     <div className="p-4 pt-20">
@@ -142,7 +155,10 @@ const Hostroom = () => {
         </div>
       </div>
 
-      <button className="bg-red-500 text-white px-4 py-2 rounded mt-4">
+      <button
+        onClick={handleStartClick}
+        className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+      >
         Start Game
       </button>
     </div>

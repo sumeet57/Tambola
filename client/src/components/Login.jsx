@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  updateLocalStorage,
+  updateSessionStorage,
+} from "../utils/storageUtils.js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,8 +26,8 @@ const Login = () => {
     if (res.status === 200) {
       localStorage.clear();
       sessionStorage.clear();
-      localStorage.setItem("userid", data.userid);
-      sessionStorage.setItem("player", JSON.stringify(data.user));
+      updateLocalStorage("userid", data.userid);
+      updateSessionStorage("player", data.user);
       navigate("/");
       document.querySelector(".message").innerHTML = data.message;
     } else {
@@ -43,12 +47,10 @@ const Login = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      console.log(data);
       localStorage.clear();
       sessionStorage.clear();
-      sessionStorage.setItem("player", JSON.stringify(data.host));
-      console.log(sessionStorage.getItem("player"));
-      localStorage.setItem("hostid", data.hostid);
+      updateLocalStorage("hostid", data.hostid);
+      updateSessionStorage("player", data.host);
       navigate("/");
       document.querySelector(".message").innerHTML = data.message;
     } else {

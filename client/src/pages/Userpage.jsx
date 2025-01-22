@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import socket from "../socket/websocket";
 import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { updateSessionStorage } from "../utils/storageUtils";
 
 const Userpage = () => {
   //for extracting roomid from params if present
@@ -43,11 +44,11 @@ const Userpage = () => {
     const data = await res.json();
     if (res.status === 200) {
       sessionStorage.removeItem("player");
-      sessionStorage.setItem("player", JSON.stringify(data.data));
+      updateSessionStorage("player", data.data);
 
       //connecting to room
-      socket.emit("join_room", roomId, data.data, socketid);
-      navigate(`/user/room/${roomId}`);
+      const newData = JSON.parse(sessionStorage.getItem("player"));
+      socket.emit("join_room", roomId, newData, socketid, tickets);
     } else {
       document.querySelector(".message").innerHTML = data.message;
     }
@@ -57,6 +58,9 @@ const Userpage = () => {
   useEffect(() => {
     socket.on("room_joined", (room) => {
       navigate(`/user/room/${room}`);
+    });
+    socket.on("error", (message) => {
+      document.querySelector(".message").innerHTML = message;
     });
 
     return () => {
@@ -105,7 +109,7 @@ const Userpage = () => {
                 <option value={3}>3</option>
               </select>
             </div>
-            <p className="message bg-red-500"></p>
+            <p className="message text-red-500"></p>
             <button
               onClick={handleJoin}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

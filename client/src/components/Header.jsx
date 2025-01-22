@@ -6,8 +6,19 @@ const Header = () => {
   const location = useLocation();
   const [player, setPlayer] = useState(null);
   useEffect(() => {
-    setPlayer(JSON.parse(sessionStorage.getItem("player")));
-  }, [location]);
+    const handleStorageUpdate = () => {
+      const playerData = JSON.parse(sessionStorage.getItem("player"));
+      setPlayer(playerData);
+    };
+    // Listen for custom event
+    window.addEventListener("sessionStorageUpdated", handleStorageUpdate);
+
+    // Initial fetch from sessionStorage
+    handleStorageUpdate();
+    return () => {
+      window.removeEventListener("sessionStorageUpdated", handleStorageUpdate);
+    };
+  }, []);
 
   return (
     <>

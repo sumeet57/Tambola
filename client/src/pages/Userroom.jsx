@@ -18,6 +18,12 @@ const Userroom = () => {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    socket.on("numbers_assigned", (numbers) => {
+      navigate(`/game`, { state: { numbers } });
+    });
+  });
+
   return (
     <>
       <div className="mt-4 pt-20">

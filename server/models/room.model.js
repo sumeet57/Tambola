@@ -9,6 +9,10 @@ const roomSchema = new mongoose.Schema(
     },
     players: [
       {
+        playerid: {
+          type: String,
+          required: [true, "Player ID is required"],
+        },
         socketid: {
           type: String,
           required: [true, "Socket ID is required"],

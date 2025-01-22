@@ -3,6 +3,7 @@ import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import socket from "../socket/websocket";
 import { use } from "react";
+import { updateSessionStorage } from "../utils/storageUtils";
 const Hostpage = () => {
   //for navigation
   const navigate = useNavigate();
@@ -16,38 +17,46 @@ const Hostpage = () => {
 
   // for getting the socket id from local storage
   const socketid = localStorage.getItem("socketid");
+  const hostid = localStorage.getItem("hostid");
+
+  // session storage for player
+  const host = JSON.parse(sessionStorage.getItem("player"));
 
   const handleCreateRoom = () => {
     // Handle room creation logic here
-    const host = localStorage.getItem("hostid");
-    const deductPoints = async () => {
-      const res = await fetch("http://localhost:3000/api/game/points", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: host,
-          points: ticketCount,
-        }),
-      });
-      const data = await res.json();
-      if (res.status === 200) {
-        sessionStorage.removeItem("player");
-        sessionStorage.setItem("player", JSON.stringify(data.data));
-        const player = JSON.parse(sessionStorage.getItem("player"));
-        socket.emit("create_room", roomId, player, socketid, ticketCount);
-      } else {
-        document.querySelector(".message").innerHTML = data.message;
-      }
-    };
-    deductPoints();
+    if (hostid) {
+      socket.emit("create_room", roomId, ticketCount, host, socketid);
+    } else {
+      document.querySelector(".message").innerHTML = "Host not found";
+    }
   };
 
   //listening to socket events
   useEffect(() => {
     socket.on("room_created", (room) => {
+      const deductPoints = async () => {
+        const res = await fetch("http://localhost:3000/api/game/points", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: hostid,
+            points: ticketCount,
+          }),
+        });
+        const data = await res.json();
+        if (res.status === 200) {
+          updateSessionStorage("player", data.data);
+        } else {
+          document.querySelector(".message").innerHTML = data.message;
+        }
+      };
+      deductPoints();
       navigate(`/host/room/${room}`);
+    });
+    socket.on("error", (message) => {
+      document.querySelector(".message").innerHTML = message;
     });
 
     return () => {

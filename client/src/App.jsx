@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import socket from "./socket/websocket";
 import { useNavigate } from "react-router-dom";
 import Header from "./components/Header.jsx";
+import {
+  updateLocalStorage,
+  updateSessionStorage,
+} from "./utils/storageUtils.js";
 const App = () => {
   // eastablishing connection with socket
   socket.on(
@@ -9,7 +13,7 @@ const App = () => {
     () => {
       console.log(`Connected with ID: ${socket.id}`);
       localStorage.removeItem("socketid");
-      localStorage.setItem("socketid", socket.id);
+      updateLocalStorage("socketid", socket.id);
     },
     []
   );
@@ -76,8 +80,7 @@ const App = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      sessionStorage.removeItem("player");
-      sessionStorage.setItem("player", JSON.stringify(data.user));
+      updateSessionStorage("player", data.user);
     }
     setShowNotifications(true);
   };
@@ -85,9 +88,9 @@ const App = () => {
   //storing the data in sessionstorage for user reference
   const [player, setPlayer] = useState(null);
   useEffect(() => {
-    const storedPlayer = sessionStorage.getItem("player");
+    const storedPlayer = JSON.parse(sessionStorage.getItem("player"));
     if (storedPlayer) {
-      setPlayer(JSON.parse(storedPlayer));
+      setPlayer(storedPlayer);
     }
   }, [showNotifications]);
 
