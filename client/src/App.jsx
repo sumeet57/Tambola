@@ -101,27 +101,26 @@ const App = () => {
   return (
     <>
       <Header />
-      <div className="w-full h-screen flex gap-4 items-center justify-center">
+      <div className="w-full pt-10 h-screen flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-300 p-4">
         <button
-          className="bg-green-500 text-white px-6 py-3 rounded"
+          className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
           onClick={handleHostClick}
         >
           Host a Game
         </button>
         <button
-          className="bg-yellow-500 text-white px-6 py-3 rounded"
+          className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
           onClick={handleJoinClick}
         >
           Join a Game
         </button>
         <button
-          className="bg-red-400 text-white px-6 py-3 rounded"
+          className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
           onClick={handleNotificationClick}
         >
           Invitations
         </button>
       </div>
-
       {showNotifications && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-lg relative">

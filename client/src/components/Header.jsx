@@ -23,11 +23,22 @@ const Header = () => {
   return (
     <>
       <nav className="w-full py-3 flex justify-between items-center p-4 bg-gray-100 fixed">
-        <div className="text-xl font-bold">Tambola Game</div>
-        <div className="flex items-center space-x-4">
-          <div className="bg-blue-500 text-white px-4 py-2 rounded">
-            Points : {player?.points || 0}
-          </div>
+        <div className="text-xl font-bold">Tambola</div>
+        <div className="flex items-center space-x-2">
+          {player ? (
+            <div className="bg-blue-500 text-white px-4 py-2 rounded">
+              Points : {player?.points || 0}
+            </div>
+          ) : (
+            <>
+              <div className="bg-blue-500 text-white px-4 py-2 rounded">
+                <button onClick={() => navigate("/login")}>Login</button>
+              </div>
+              <div className="bg-blue-500 text-white px-4 py-2 rounded">
+                <button onClick={() => navigate("/register")}>Register</button>
+              </div>
+            </>
+          )}
         </div>
       </nav>
     </>

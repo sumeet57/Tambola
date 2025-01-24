@@ -88,7 +88,7 @@ const Hostroom = () => {
   };
 
   const handleStartClick = async () => {
-    socket.emit("assign_numbers", id);
+    socket.emit("start_game", id);
   };
   useEffect(() => {
     socket.on("numbers_assigned", (numbers) => {

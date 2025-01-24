@@ -59,48 +59,76 @@ const Register = () => {
   };
 
   return (
-    <>
-      <h1 className="text-2xl font-semibold">Register page</h1>
-      <form action="">
-        name :{" "}
-        <input
-          className="border-2 border-black p-2"
-          type="text"
-          name="name"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />{" "}
-        <br />
-        phone :{" "}
-        <input
-          className="border-2 border-black p-2"
-          type="text"
-          name="phone"
-          id="phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />{" "}
-        <br />
-        password :{" "}
-        <input
-          className="border-2 border-black p-2"
-          type="password"
-          name="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />{" "}
-        <br />
-        <button onClick={submitUser} className="px-6 py-3 bg-yellow-200 m-4">
-          Register as User
-        </button>
-        <button onClick={submitHost} className="px-6 py-3 bg-yellow-200 m-4">
-          Register as Host
-        </button>
-      </form>
-      <div className="message text-red-500"></div>
-    </>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-6">Register</h1>
+        <form className="space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Name
+            </label>
+            <input
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              type="text"
+              name="name"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Phone
+            </label>
+            <input
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              type="text"
+              name="phone"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <input
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              type="password"
+              name="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between">
+            <button
+              onClick={submitUser}
+              className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+            >
+              Register as User
+            </button>
+            <button
+              onClick={submitHost}
+              className="w-full py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 ml-4"
+            >
+              Register as Host
+            </button>
+          </div>
+        </form>
+        <div className="message text-red-500 text-center mt-4"></div>
+      </div>
+    </div>
   );
 };
 

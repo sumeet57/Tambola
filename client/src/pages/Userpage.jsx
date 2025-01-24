@@ -18,19 +18,28 @@ const Userpage = () => {
   const socketid = localStorage.getItem("socketid");
 
   //for
-  const [player, setPlayer] = useState(null);
-  useEffect(() => {
-    setPlayer(JSON.parse(sessionStorage.getItem("player")));
-  }, [navigate]);
+  const player = JSON.parse(sessionStorage.getItem("player"));
+  const playerid =
+    localStorage.getItem("userid") || localStorage.getItem("hostid");
 
   //for joining room states
   const [roomId, setRoomId] = useState(roomid || "");
   const [tickets, setTickets] = useState(1);
 
-  //for joining room logic/ points deduction
+  //for checking points are available or not
   const handleJoin = async () => {
-    // Handle join logic here
-    const res = await fetch("http://localhost:3000/api/game/invited", {
+    const pointsRes = await fetch("http://localhost:3000/api/game/available", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: playerid,
+        ticket: tickets,
+      }),
+    });
+    // for checking if player is invited or not
+    const invitedRes = await fetch("http://localhost:3000/api/game/invited", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -38,26 +47,49 @@ const Userpage = () => {
       body: JSON.stringify({
         name: player?.name,
         roomid: roomId,
-        ticket: tickets,
       }),
     });
-    const data = await res.json();
-    if (res.status === 200) {
-      sessionStorage.removeItem("player");
-      updateSessionStorage("player", data.data);
+    const invitedData = await invitedRes.json();
+    const pointsData = await pointsRes.json();
 
+    if (invitedRes.status === 404) {
+      document.querySelector(".message").innerHTML = invitedData.message;
+      return;
+    }
+    if (pointsRes.status === 404) {
+      document.querySelector(".message").innerHTML = pointsData.message;
+      return;
+    }
+    if (pointsRes.status === 200 && invitedRes.status === 200) {
       //connecting to room
-      const newData = JSON.parse(sessionStorage.getItem("player"));
-      socket.emit("join_room", roomId, newData, socketid, tickets);
+      socket.emit("join_room", roomId, player, socketid, tickets);
     } else {
-      document.querySelector(".message").innerHTML = data.message;
+      document.querySelector(".message").innerHTML =
+        invitedData.message || pointsData.message;
     }
   };
 
   //for listening to socket events
   useEffect(() => {
     socket.on("room_joined", (room) => {
-      navigate(`/user/room/${room}`);
+      const dedut = async () => {
+        const res = await fetch("http://localhost:3000/api/game/points", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: playerid,
+            points: tickets,
+          }),
+        });
+        const data = await res.json();
+        if (res.status === 200) {
+          updateSessionStorage("player", data.data);
+          navigate(`/user/room/${room}`);
+        }
+      };
+      dedut();
     });
     socket.on("error", (message) => {
       document.querySelector(".message").innerHTML = message;
