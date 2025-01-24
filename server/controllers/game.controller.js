@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import Host from "../models/host.model.js";
+//using name as unique identifier for player (u can changed it to phoneno)
 
 export const deductPoints = async (req, res) => {
   const { id, points } = req.body;
@@ -26,21 +27,46 @@ export const deductPoints = async (req, res) => {
   }
 };
 
+export const isPointsAvailable = async (req, res) => {
+  const { id, ticket } = req.body;
+  const user = await User.findById(id);
+  const host = await Host.findById(id);
+  if (!user && !host) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  if (user) {
+    if (user.points >= ticket) {
+      return res.status(200).json({ message: "Points available" });
+    } else {
+      return res.status(404).json({ message: "Points not available" });
+    }
+  }
+  if (host) {
+    if (host.points >= ticket) {
+      return res.status(200).json({ message: "Points available" });
+    } else {
+      return res.status(404).json({ message: "Points not available" });
+    }
+  }
+};
+
 export const isPlayerInvited = async (req, res) => {
-  const { name, roomid, ticket } = req.body;
+  const { name, roomid } = req.body;
+
+  // Find the player by name
   const player = await User.findOne({ name });
   if (!player) {
     return res.status(404).json({ message: "Player not found" });
   }
+
+  // Check if the player is invited
   const isInvited = player.invites.includes(roomid);
-  const points = player.points - parseInt(ticket);
-  if (isInvited && points >= 0) {
-    player.points = points;
-    await player.save();
-    return res.status(200).json({ data: player, message: "Player invited" });
-  } else {
-    return res.status(404).json({ message: "Player not invited" });
+
+  if (!isInvited) {
+    return res.status(403).json({ message: "Player not invited" });
   }
+
+  return res.status(200).json({ message: "Player is Invited" });
 };
 
 export const getPlayerData = async (req, res) => {

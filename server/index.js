@@ -55,11 +55,8 @@ io.on("connection", (socket) => {
     }
   });
   //starting game
-  socket.on("start_game", (roomid) => {
-    io.to(roomid).emit("game_started");
-  });
   //assigning numbers to players
-  socket.on("assign_numbers", (roomid) => {
+  socket.on("start_game", (roomid) => {
     const players = assignNumbers(roomid);
     if (players === "Room not found") {
       socket.emit("error", "Room not found");
@@ -75,6 +72,23 @@ io.on("connection", (socket) => {
         room[roomid].players[i].assign_numbers
       );
     }
+    //this drawNumber array to track the numbers which are already drawn
+    const drawNumbers = [];
+    let i = 1;
+    const interval = setInterval(() => {
+      if (i > 90) {
+        clearInterval(interval);
+        return;
+      }
+      const random = Math.floor(Math.random() * 90) + 1;
+      if (drawNumbers.includes(random)) {
+        return;
+      } else {
+        drawNumbers.push(random);
+        io.to(roomid).emit("draw_number", random);
+        i++;
+      }
+    }, 5000); // Adjust the interval time as needed
   });
 });
 
