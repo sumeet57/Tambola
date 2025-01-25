@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import socket from "../socket/websocket";
+import socket from "../utils/websocket";
 import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { updateSessionStorage } from "../utils/storageUtils";
@@ -11,23 +11,24 @@ const Userpage = () => {
   //for navigating
   const navigate = useNavigate();
 
-  //geeting path from url
+  //geeting path from url for conditional rendering(Oulet is used for nested routing)
   const location = useLocation();
 
   //for getting socketid from localstorage
   const socketid = localStorage.getItem("socketid");
 
-  //for
+  //for getting player from sessionstorage and id from localstorage
   const player = JSON.parse(sessionStorage.getItem("player"));
   const playerid =
     localStorage.getItem("userid") || localStorage.getItem("hostid");
 
   //for joining room states
-  const [roomId, setRoomId] = useState(roomid || "");
+  const [roomId, setRoomId] = useState(roomid || ""); //if params is present then set it to roomid else empty string
   const [tickets, setTickets] = useState(1);
 
-  //for checking points are available or not
+  //for handling join room
   const handleJoin = async () => {
+    //for checking if player has enough points
     const pointsRes = await fetch("http://localhost:3000/api/game/available", {
       method: "POST",
       headers: {
@@ -61,7 +62,7 @@ const Userpage = () => {
       return;
     }
     if (pointsRes.status === 200 && invitedRes.status === 200) {
-      //connecting to room
+      //connecting to room with roomid, player data, socketid and tickets
       socket.emit("join_room", roomId, player, socketid, tickets);
     } else {
       document.querySelector(".message").innerHTML =
@@ -71,34 +72,53 @@ const Userpage = () => {
 
   //for listening to socket events
   useEffect(() => {
-    socket.on("room_joined", (room) => {
-      const dedut = async () => {
-        const res = await fetch("http://localhost:3000/api/game/points", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: playerid,
-            points: tickets,
-          }),
-        });
-        const data = await res.json();
-        if (res.status === 200) {
-          updateSessionStorage("player", data.data);
-          navigate(`/user/room/${room}`);
+    const handleRoomJoined = (room) => {
+      console.log("Room joined successfully");
+
+      const deductPoints = async () => {
+        try {
+          const res = await fetch("http://localhost:3000/api/game/points", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: playerid, // Use the latest player ID
+              points: tickets, // Use the latest ticket count
+            }),
+          });
+
+          const data = await res.json();
+          if (res.status === 200) {
+            updateSessionStorage("player", data.data); // Update player session data
+            navigate(`/user/room/${room}`); // Navigate to the room
+          } else {
+            document.querySelector(".message").innerHTML = data.message;
+          }
+        } catch (error) {
+          console.error("Failed to deduct points:", error);
+          document.querySelector(".message").innerHTML =
+            "Failed to deduct points.";
         }
       };
-      dedut();
-    });
+
+      deductPoints();
+    };
+
+    // Set up event listener for room_joined
+    socket.on("room_joined", handleRoomJoined);
+
+    // Handle errors
     socket.on("error", (message) => {
       document.querySelector(".message").innerHTML = message;
     });
 
+    // Cleanup
     return () => {
-      socket.off("room_joined");
+      socket.off("room_joined", handleRoomJoined);
+      socket.off("error");
     };
-  }, [navigate]);
+  }, [tickets, playerid, navigate]);
 
   return (
     <>

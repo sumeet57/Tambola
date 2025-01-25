@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from "react";
-import socket from "../socket/websocket";
+import socket from "../utils/websocket";
 import { useNavigate } from "react-router-dom";
 
 const Userroom = () => {
   const navigate = useNavigate();
 
-  //for getting players joined list from socket
+  //for getting socket events
   const [players, setPlayers] = useState([]);
+
   useEffect(() => {
     const handleUpdatePlayers = (players) => {
       setPlayers(players);
     };
+
+    const handleNumbersAssigned = (numbers) => {
+      navigate(`/game`, { state: { numbers } });
+    };
+
     socket.on("player_update", handleUpdatePlayers);
+    socket.on("started_game", handleNumbersAssigned);
 
     return () => {
-      socket.off("update-players", handleUpdatePlayers);
+      socket.off("player_update", handleUpdatePlayers);
+      socket.off("started_game", handleNumbersAssigned);
     };
   }, [navigate]);
-
-  useEffect(() => {
-    socket.on("numbers_assigned", (numbers) => {
-      navigate(`/game`, { state: { numbers } });
-    });
-  });
 
   return (
     <>

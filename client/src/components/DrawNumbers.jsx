@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import socket from "../socket/websocket";
+import socket from "../utils/websocket";
 
 const DrawNumbers = () => {
   const [drawNumber, setDrawNumber] = useState([]);
   useEffect(() => {
     const handleDrawNumber = (number) => {
-      console.log(number);
       setDrawNumber((prevDrawNumber) => [...prevDrawNumber, number]);
     };
 
@@ -19,7 +18,7 @@ const DrawNumbers = () => {
   return (
     <>
       <h1>the number will draw every 5 sec</h1>
-      <ul>
+      <ul className="flex flex-wrap gap-2">
         {drawNumber.map((number, index) => (
           <li key={index}>{number}</li>
         ))}

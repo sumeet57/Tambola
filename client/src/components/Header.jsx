@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [player, setPlayer] = useState(null);
   useEffect(() => {
     const handleStorageUpdate = () => {

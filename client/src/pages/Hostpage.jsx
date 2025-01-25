@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import socket from "../socket/websocket";
+import socket from "../utils/websocket";
 import { use } from "react";
 import { updateSessionStorage } from "../utils/storageUtils";
 const Hostpage = () => {
@@ -20,49 +20,65 @@ const Hostpage = () => {
   const hostid = localStorage.getItem("hostid");
 
   // session storage for player
-  const host = JSON.parse(sessionStorage.getItem("player"));
+  const player = JSON.parse(sessionStorage.getItem("player"));
 
   const handleCreateRoom = () => {
     // Handle room creation logic here
     if (hostid) {
-      socket.emit("create_room", roomId, ticketCount, host, socketid);
+      socket.emit("create_room", roomId, ticketCount, player, socketid);
     } else {
       document.querySelector(".message").innerHTML = "Host not found";
     }
   };
 
-  //listening to socket events
   useEffect(() => {
-    socket.on("room_created", (room) => {
+    const handleRoomCreated = (room) => {
+      console.log("Received room_created event");
+
       const deductPoints = async () => {
-        const res = await fetch("http://localhost:3000/api/game/points", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: hostid,
-            points: ticketCount,
-          }),
-        });
-        const data = await res.json();
-        if (res.status === 200) {
-          updateSessionStorage("player", data.data);
-        } else {
-          document.querySelector(".message").innerHTML = data.message;
+        try {
+          const res = await fetch("http://localhost:3000/api/game/points", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: hostid,
+              points: ticketCount, // Always uses the latest ticketCount
+            }),
+          });
+
+          const data = await res.json();
+          if (res.status === 200) {
+            updateSessionStorage("player", data.data); // Update player session data
+            setTicketCount(1); // Reset ticket count
+          } else {
+            document.querySelector(".message").innerHTML = data.message;
+          }
+        } catch (error) {
+          console.error("Failed to deduct points:", error);
+          document.querySelector(".message").innerHTML =
+            "Failed to deduct points.";
         }
       };
+
       deductPoints();
       navigate(`/host/room/${room}`);
-    });
+    };
+
+    socket.on("room_created", handleRoomCreated);
+
     socket.on("error", (message) => {
       document.querySelector(".message").innerHTML = message;
     });
 
+    // Cleanup
     return () => {
-      socket.off("room_created");
+      socket.off("room_created", handleRoomCreated);
+      socket.off("error");
     };
-  }, []);
+  }, [ticketCount, hostid, navigate]);
+
   return (
     <>
       <Header />
@@ -95,7 +111,12 @@ const Hostpage = () => {
               <select
                 id="ticketCount"
                 value={ticketCount}
-                onChange={(e) => setTicketCount(Number(e.target.value))}
+                onChange={(e) => {
+                  const selectedValue = Number(e.target.value);
+                  setTicketCount(selectedValue); // Update the state
+                  // Use selectedValue here for immediate usage
+                  console.log("Immediate ticket count:", selectedValue);
+                }}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               >
                 <option value={1}>1</option>

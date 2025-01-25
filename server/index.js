@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
 
     for (let i = 0; i < room[roomid].players.length; i++) {
       io.to(room[roomid].players[i].socketid).emit(
-        "numbers_assigned",
+        "started_game",
         room[roomid].players[i].assign_numbers
       );
     }

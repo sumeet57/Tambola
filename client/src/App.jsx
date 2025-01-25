@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
-import socket from "./socket/websocket";
+import socket from "./utils/websocket.js";
 import { useNavigate } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import {
   updateLocalStorage,
   updateSessionStorage,
 } from "./utils/storageUtils.js";
+
 const App = () => {
+  // for navigation
+  const navigate = useNavigate();
+
   // eastablishing connection with socket
   socket.on(
     "connect",
@@ -19,42 +23,43 @@ const App = () => {
   );
 
   // for getting player from database and storing in sessionstorage
-  if (!sessionStorage.getItem("player") === null) {
-    const rawUserid = localStorage.getItem("userid");
-    const rawHostid = localStorage.getItem("hostid");
-    const initialPlayerid = rawUserid || rawHostid || null;
-    const [playerid, setPlayerid] = useState(initialPlayerid);
+  useEffect(() => {
+    const fetchPlayerData = async () => {
+      // get the id from localstorage and stored available id in playerid
+      const userid = localStorage.getItem("userid");
+      const hostid = localStorage.getItem("hostid");
+      const playerid = userid || hostid;
 
-    useEffect(() => {
-      const getPlayer = async () => {
-        if (!playerid) return; // Prevent fetch if player is null or undefined
+      // if playerid is available then fetch the player data from database
+      if (playerid) {
         const res = await fetch("http://localhost:3000/api/game/player", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ id: playerid }),
+          body: JSON.stringify({
+            id: playerid,
+          }),
         });
-
+        const data = await res.json();
         if (res.status === 200) {
-          const data = await res.json();
-          sessionStorage.removeItem("player");
-          sessionStorage.setItem("player", JSON.stringify(data.player));
+          updateSessionStorage("player", data.data);
         } else {
-          console.error("Error from backend:", rawData);
+          console.log("Failed to fetch player data");
         }
-      };
+      } else {
+        console.log("No player data available");
+        navigate("/login");
+      }
+    };
 
-      getPlayer();
-    }, [playerid]);
-  }
-
-  // for navigation
-  const navigate = useNavigate();
+    fetchPlayerData();
+  }, []);
 
   // for conditional rendering i use sessionstorage/localstorage
   // u can use context api or redux for state management
 
+  // handle click events
   const handleHostClick = () => {
     navigate("/host");
   };
@@ -85,7 +90,7 @@ const App = () => {
     setShowNotifications(true);
   };
 
-  //storing the data in sessionstorage for user reference
+  //get player from sessionstorage
   const [player, setPlayer] = useState(null);
   useEffect(() => {
     const storedPlayer = JSON.parse(sessionStorage.getItem("player"));
@@ -94,6 +99,7 @@ const App = () => {
     }
   }, [showNotifications]);
 
+  //handle room join click
   const handleRoomJoinClick = (room) => {
     navigate(`/user/${room}`);
   };

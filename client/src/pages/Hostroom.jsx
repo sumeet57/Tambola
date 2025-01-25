@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import socket from "../socket/websocket";
+import socket from "../utils/websocket";
 import { updateSessionStorage } from "../utils/storageUtils";
 
 const Hostroom = () => {
+  //for extracting roomid from params if present
   const param = useParams();
   const id = param.roomid;
+
+  //for navigation
   const navigate = useNavigate();
 
   //for inviting players states
@@ -15,14 +18,24 @@ const Hostroom = () => {
 
   //for getting players from socket
   const [players, setPlayers] = useState([]);
+
   useEffect(() => {
     const handleUpdatePlayers = (players) => {
       setPlayers(players);
     };
+
     socket.on("player_update", handleUpdatePlayers);
+    socket.on("started_game", (numbers) => {
+      navigate(`/game`, { state: { numbers } });
+    });
+    socket.on("error", (message) => {
+      console.log(message);
+    });
 
     return () => {
-      socket.off("update-players", handleUpdatePlayers);
+      socket.off("player_update", handleUpdatePlayers);
+      socket.off("started_game");
+      socket.off("error");
     };
   }, [navigate]);
 
@@ -87,17 +100,10 @@ const Hostroom = () => {
     }
   };
 
+  //start game button click logic
   const handleStartClick = async () => {
     socket.emit("start_game", id);
   };
-  useEffect(() => {
-    socket.on("numbers_assigned", (numbers) => {
-      navigate(`/game`, { state: { numbers } });
-    });
-    socket.on("error", (message) => {
-      console.log(message);
-    });
-  });
 
   return (
     <div className="p-4 pt-20">

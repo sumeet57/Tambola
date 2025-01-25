@@ -19,7 +19,7 @@ export const deductPoints = async (req, res) => {
       .json({ data: user, message: "Points deducted successfully" });
   }
   if (host) {
-    host.points -= points;
+    host.points -= parseInt(points);
     await host.save();
     return res
       .status(200)
