@@ -40,7 +40,7 @@ A realtime Multiplayer game using websocket/MERN
 
 - **Deduct Points**: `POST /api/game/points`
 
-  - Request body: `{ id, points }` (host/user both acceptable)
+  - Request body: `{ id, points }` (host/user id both acceptable)
   - Description: Deduct points from player data for their ticket.
 
 - **Check Invitation**: `POST /api/game/invited`
@@ -50,11 +50,11 @@ A realtime Multiplayer game using websocket/MERN
 
 - **Check Points Availability**: `POST /api/game/available`
 
-  - Request body: `{ id, ticket }`
+  - Request body: `{ id, ticket }` (host/user id both acceptable)
   - Description: Check if the points are available to deduct.
 
 - **Get Player Data**: `POST /api/game/player`
-  - Request body: `{ id }` (host/user both acceptable)
+  - Request body: `{ id }` (host/user id both acceptable)
   - Description: Return player data.
 
 ## Environments Variables
