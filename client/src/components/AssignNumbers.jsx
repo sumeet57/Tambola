@@ -1,79 +1,68 @@
 import React, { useEffect, useState } from "react";
+import {
+  distributeNumbersEqually,
+  generateTambolaTicket,
+} from "../utils/game.js";
 
 const AssignNumbers = (props) => {
-  const distributeNumbersEqually = (data) => {
-    let receivedNumbers = data;
-    const ticket_count = Math.floor(receivedNumbers.length / 15); // Total tickets
-    if (ticket_count < 1) return []; // Ensure at least one ticket
-
-    const ranges = Array.from({ length: 9 }, () => []); // Create 9 empty range buckets
-
-    // Step 1: Categorize numbers into respective ranges
-    receivedNumbers.forEach((num) => {
-      let rangeIndex = Math.floor((num - 1) / 10); // Determine range
-      ranges[rangeIndex].push(num);
-    });
-
-    // Step 2: Distribute numbers equally among tickets
-    const tickets = Array.from({ length: ticket_count }, () => []);
-
-    ranges.forEach((rangeNumbers) => {
-      let index = 0;
-      rangeNumbers.forEach((num) => {
-        if (tickets[index % ticket_count].length < 15) {
-          // Ensure each ticket gets at most 15 numbers
-          tickets[index % ticket_count].push(num);
-        }
-        index++;
-      });
-    });
-
-    // Step 3: Balance tickets so each has exactly 15 numbers
-    let allNumbers = tickets.flat(); // Collect all assigned numbers
-    let remainingNumbers = receivedNumbers.filter(
-      (num) => !allNumbers.includes(num)
-    ); // Find unassigned numbers
-
-    tickets.forEach((ticket) => {
-      while (ticket.length > 15) {
-        remainingNumbers.push(ticket.pop()); // Remove extra numbers & store them
-      }
-    });
-
-    tickets.forEach((ticket) => {
-      while (ticket.length < 15 && remainingNumbers.length > 0) {
-        ticket.push(remainingNumbers.pop()); // Fill missing numbers
-      }
-    });
-
-    return tickets;
-  };
-
   const [tickets, setTickets] = useState([]);
+  const [finalTickets, setFinalTickets] = useState({}); // Store final structured tickets
 
   useEffect(() => {
-    const generatedTickets = distributeNumbersEqually(props.data);
-    setTickets(generatedTickets);
+    if (props.data && Array.isArray(props.data) && props.data.length > 0) {
+      console.log("Data: ", props.data); // Debugging step to check the data structure
+      const generatedTickets = distributeNumbersEqually(props.data);
+      setTickets(generatedTickets);
+      console.log("Generated Tickets distributed numbers: ", generatedTickets);
+    }
   }, [props.data]);
+
+  useEffect(() => {
+    if (tickets.length === 0) return;
+
+    console.log("Tickets: ", tickets); // Debugging step to check the tickets' structure
+
+    let ticketsData = {};
+    tickets.forEach((ticket, index) => {
+      ticketsData[index + 1] = generateTambolaTicket(ticket);
+    });
+
+    setFinalTickets(ticketsData);
+  }, [tickets]);
+
+  console.log(finalTickets); // Check if the final tickets are updated properly
 
   return (
     <>
-      <div className="flex flex-col gap-4">
-        {tickets.map((ticket, index) => (
-          <div key={index} className="flex flex-col gap-2">
-            <h3 className="text-lg font-bold">Ticket {index + 1}</h3>
-            <div className="flex flex-wrap gap-2">
-              {ticket.map((num) => (
-                <div
-                  key={num}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white"
-                >
-                  {num}
+      <div className="flex flex-col gap-4 p-2">
+        {finalTickets &&
+          Object.keys(finalTickets).map((ticketIndex) => {
+            return (
+              <div key={ticketIndex} className="mb-1">
+                <h2 className="text-center text-xl font-bold mb-1">
+                  Tambola Ticket {ticketIndex}
+                </h2>
+                <div className="grid grid-cols-9 gap-1 p-2 bg-gray-100 rounded-lg overflow-x-auto">
+                  {finalTickets[ticketIndex].map((row, rowIndex) => (
+                    <React.Fragment key={rowIndex}>
+                      {row.map((num, colIndex) => (
+                        <div
+                          key={`${rowIndex}-${colIndex}`}
+                          className={`h-8 w-8 flex items-center justify-center text-sm font-semibold rounded-md border ${
+                            num !== null && num !== undefined
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {num !== null && num !== undefined ? num : ""}
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+              </div>
+            );
+          })}
       </div>
     </>
   );

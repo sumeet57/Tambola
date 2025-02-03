@@ -17,12 +17,16 @@ const DrawNumbers = () => {
 
   return (
     <>
-      <h1>the number will draw every 5 sec</h1>
-      <ul className="flex flex-wrap gap-2">
-        {drawNumber.map((number, index) => (
-          <li key={index}>{number}</li>
+      <div className="overflow-x-scroll flex flex-row-reverse flex-nowrap gap-2 bg-black p-4 rounded-2xl w-[400px]">
+        {drawNumber.map((num) => (
+          <span
+            key={num}
+            className="px-4 py-3 inline-block text-lg font-semibold rounded-full border bg-gray-500 text-white"
+          >
+            {num}
+          </span>
         ))}
-      </ul>
+      </div>
     </>
   );
 };

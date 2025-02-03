@@ -10,7 +10,10 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// for cors policy
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+
 app.use(cookieParser());
 
 app.get("/", (req, res) => {

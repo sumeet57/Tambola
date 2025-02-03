@@ -24,17 +24,20 @@ const Hostroom = () => {
       setPlayers(players);
     };
 
-    socket.on("player_update", handleUpdatePlayers);
-    socket.on("started_game", (numbers) => {
+    const handleNumbersAssigned = (numbers) => {
       navigate(`/game`, { state: { numbers } });
-    });
+    };
+
+    socket.on("player_update", handleUpdatePlayers);
+    socket.on("started_game", handleNumbersAssigned);
+
     socket.on("error", (message) => {
       console.log(message);
     });
 
     return () => {
       socket.off("player_update", handleUpdatePlayers);
-      socket.off("started_game");
+      socket.off("started_game", handleNumbersAssigned);
       socket.off("error");
     };
   }, [navigate]);

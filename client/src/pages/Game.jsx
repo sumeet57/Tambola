@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import AssignNumbers from "../components/assignNumbers";
+import Header from "../components/Header";
+import AssignNumbers from "../components/AssignNumbers";
 import DrawNumbers from "../components/DrawNumbers";
 import { useLocation } from "react-router-dom";
 
@@ -8,10 +9,13 @@ const Game = () => {
   const assign_no = location.state?.numbers;
   return (
     <>
-      <h1>from game route</h1>
-      <AssignNumbers data={assign_no} />
-      <h1>draw numbers = </h1>
-      <DrawNumbers />
+      <Header />
+      <div className="cont flex flex-col justify-center items-center pt-20">
+        <div className="flex flex-col justify-center items-center max-w-xl">
+          <DrawNumbers />
+          <AssignNumbers data={assign_no} />
+        </div>
+      </div>
     </>
   );
 };

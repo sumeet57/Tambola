@@ -2,23 +2,55 @@ export const assignNumbersToPlayers = (players) => {
   const MAX_NUMBER = 90;
   const numbersPool = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
 
-  // Step 1: Assign random numbers to players
+  const ranges = [
+    [1, 10],
+    [11, 20],
+    [21, 30],
+    [31, 40],
+    [41, 50],
+    [51, 60],
+    [61, 70],
+    [71, 80],
+    [81, 90],
+  ];
+
   players.forEach((player) => {
     player.assign_numbers = [];
     const totalNumbersNeeded = 15 * player.ticket_count;
+    const rangeCount = {};
 
     while (player.assign_numbers.length < totalNumbersNeeded) {
-      const randomIndex = Math.floor(Math.random() * numbersPool.length);
-      const randomNumber = numbersPool[randomIndex];
+      const randomRange = ranges[Math.floor(Math.random() * ranges.length)];
+      const start = randomRange[0];
+      const end = randomRange[1];
 
-      // Ensure unique numbers within the same player
-      if (!player.assign_numbers.includes(randomNumber)) {
-        player.assign_numbers.push(randomNumber);
+      if (!rangeCount[start]) {
+        rangeCount[start] = 0;
+      }
+
+      if (rangeCount[start] < 8) {
+        const rangeNumbers = Array.from(
+          { length: end - start + 1 },
+          (_, i) => start + i
+        );
+
+        const availableNumbers = rangeNumbers.filter(
+          (num) => !player.assign_numbers.includes(num)
+        );
+
+        if (availableNumbers.length > 0) {
+          const numberToAdd =
+            availableNumbers[
+              Math.floor(Math.random() * availableNumbers.length)
+            ];
+
+          player.assign_numbers.push(numberToAdd);
+          rangeCount[start] += 1;
+        }
       }
     }
   });
 
-  // Step 2: Find repeated numbers across players
   const numberFrequency = {};
   players.forEach((player) => {
     player.assign_numbers.forEach((number) => {
@@ -30,7 +62,6 @@ export const assignNumbersToPlayers = (players) => {
     .filter(([_, count]) => count > 1)
     .map(([number]) => parseInt(number));
 
-  // Step 3: Shuffle the repeated numbers
   for (let i = repeatedNumbers.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [repeatedNumbers[i], repeatedNumbers[j]] = [
@@ -39,7 +70,6 @@ export const assignNumbersToPlayers = (players) => {
     ];
   }
 
-  // Step 4: Redistribute repeated numbers
   const usedNumbers = new Set();
   let poolQueue = [...repeatedNumbers];
 
@@ -50,9 +80,8 @@ export const assignNumbersToPlayers = (players) => {
 
         do {
           if (poolQueue.length > 0) {
-            newNumber = poolQueue.shift(); // Try getting a number from the shuffled pool
+            newNumber = poolQueue.shift();
           } else {
-            // If poolQueue is empty, find a number from numbersPool that is not in player's numbers
             const availableNumbers = numbersPool.filter(
               (num) =>
                 !usedNumbers.has(num) && !player.assign_numbers.includes(num)
@@ -71,7 +100,6 @@ export const assignNumbersToPlayers = (players) => {
     });
   });
 
-  // Step 5: Sort each player's numbers for better readability
   players.forEach((player) => {
     player.assign_numbers.sort((a, b) => a - b);
   });
