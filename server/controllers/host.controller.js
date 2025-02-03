@@ -1,6 +1,7 @@
 import Host from "../models/host.model.js";
 import User from "../models/user.model.js";
 
+// /api/host/register
 export const createHost = async (req, res) => {
   const { name, phone, password } = req.body;
 
@@ -15,6 +16,7 @@ export const createHost = async (req, res) => {
   }
 };
 
+// /api/host/login
 export const loginHost = async (req, res) => {
   const { phone, password } = req.body;
 
@@ -32,6 +34,7 @@ export const loginHost = async (req, res) => {
   }
 };
 
+// /api/host/invite
 export const inviteUser = async (req, res) => {
   const { name, roomid, points } = req.body;
 

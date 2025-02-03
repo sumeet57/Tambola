@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 
+// /api/user/register
 export const createUser = async (req, res) => {
   const { name, phone, password } = req.body;
   console.log(req.body);
@@ -14,6 +15,7 @@ export const createUser = async (req, res) => {
   }
 };
 
+// /api/user/login
 export const loginUser = async (req, res) => {
   const { name, password } = req.body;
 
@@ -31,6 +33,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// /api/user/find
 export const findUser = async (req, res) => {
   const { userid } = req.body;
 

@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Host from "../models/host.model.js";
-//using name as unique identifier for player (u can changed it to phoneno)
 
+// /api/game/points
 export const deductPoints = async (req, res) => {
   const { id, points } = req.body;
 
@@ -27,6 +27,7 @@ export const deductPoints = async (req, res) => {
   }
 };
 
+// /api/game/avaliable
 export const isPointsAvailable = async (req, res) => {
   const { id, ticket } = req.body;
   const user = await User.findById(id);
@@ -50,6 +51,7 @@ export const isPointsAvailable = async (req, res) => {
   }
 };
 
+// /api/game/invited
 export const isPlayerInvited = async (req, res) => {
   const { name, roomid } = req.body;
 
@@ -69,6 +71,7 @@ export const isPlayerInvited = async (req, res) => {
   return res.status(200).json({ message: "Player is Invited" });
 };
 
+// /api/game/player
 export const getPlayerData = async (req, res) => {
   const { id } = req.body;
   const user = await User.findById(id);
