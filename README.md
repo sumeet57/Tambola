@@ -8,8 +8,8 @@ A realtime Multiplayer game using websocket/MERN
 
 - **Login**: `POST /api/user/login`
 
-  - Request body: `{ name, phoneno, password }`
-  - Description: Login with name, phone number, and password.
+  - Request body: `{ name, password }`
+  - Description: Login with name and password.
 
 - **Register**: `POST /api/user/register`
 
@@ -24,8 +24,8 @@ A realtime Multiplayer game using websocket/MERN
 
 - **Login**: `POST /api/host/login`
 
-  - Request body: `{ name, phoneno, password }`
-  - Description: Login with name, phone number, and password.
+  - Request body: `{ phoneno, password }`
+  - Description: Login with phone number, and password.
 
 - **Register**: `POST /api/host/register`
 
