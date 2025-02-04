@@ -10,8 +10,8 @@ const Game = () => {
   return (
     <>
       {location.pathname === "/game" ? (
-        <div className="cont flex flex-col justify-center items-center pt-20">
-          <div className="flex flex-col justify-center items-center max-w-[23rem]">
+        <div className="cont flex flex-col justify-center items-center p-4">
+          <div className="flex flex-col justify-center items-center max-w-[21rem] gap-2">
             <DrawNumbers />
             <AssignNumbers data={assign_no} />
           </div>

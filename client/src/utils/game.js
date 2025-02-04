@@ -77,10 +77,111 @@ export const distributeNumbersEqually = (data) => {
 
   return tickets.slice(0, 3); // Ensure we only return 3 tickets
 };
+// export const generateTambolaTickets = (numbers) => {
+//   if (!Array.isArray(numbers)) {
+//     throw new Error("Input to generateTambolaTickets must be an array");
+//   }
+//   let ticketCount = Math.min(3, Math.floor(numbers.length / 15));
+//   let tickets = [];
+//   let usedNumbers = new Set();
+//   let extraNumbers = [];
+
+//   for (let t = 0; t < ticketCount; t++) {
+//     let ticket = Array.from({ length: 3 }, () => Array(9).fill(null));
+//     let columns = Array.from({ length: 9 }, () => []);
+//     let remainingNumbers = [];
+
+//     numbers.forEach((num) => {
+//       if (typeof num !== "number" || usedNumbers.has(num)) return;
+//       let colIndex = Math.floor((num - 1) / 10);
+//       if (columns[colIndex].length < 3) {
+//         columns[colIndex].push(num);
+//         usedNumbers.add(num);
+//       } else {
+//         remainingNumbers.push(num);
+//       }
+//     });
+
+//     columns.forEach((col) => col.sort((a, b) => a - b));
+
+//     let rowCounts = [0, 0, 0];
+//     let rowColumnCount = Array.from({ length: 3 }, () => Array(9).fill(0));
+
+//     for (let c = 0; c < 9; c++) {
+//       let colNumbers = [...columns[c]];
+//       for (let i = 0; i < colNumbers.length; i++) {
+//         let availableRows = rowCounts
+//           .map((count, row) => ({ row, count }))
+//           .filter(
+//             ({ row }) => rowCounts[row] < 5 && rowColumnCount[row][c] === 0
+//           )
+//           .sort((a, b) => a.count - b.count);
+
+//         if (availableRows.length === 0) {
+//           extraNumbers.push(colNumbers[i]);
+//           continue;
+//         }
+
+//         let row = availableRows[0].row;
+//         ticket[row][c] = colNumbers[i];
+//         rowCounts[row]++;
+//         rowColumnCount[row][c] = 1;
+//       }
+//     }
+
+//     for (let r = 0; r < 3; r++) {
+//       let availableCols = [];
+//       for (let c = 0; c < 9; c++) {
+//         if (ticket[r][c] === null) availableCols.push(c);
+//       }
+
+//       while (rowCounts[r] < 5 && availableCols.length > 0) {
+//         let colToFill = availableCols.splice(
+//           Math.floor(Math.random() * availableCols.length),
+//           1
+//         )[0];
+
+//         let possibleNumbers = numbers.filter(
+//           (num) =>
+//             !usedNumbers.has(num) && Math.floor((num - 1) / 10) === colToFill
+//         );
+
+//         if (possibleNumbers.length > 0) {
+//           ticket[r][colToFill] = possibleNumbers.shift();
+//           usedNumbers.add(ticket[r][colToFill]);
+//           rowCounts[r]++;
+//         } else if (extraNumbers.length > 0) {
+//           ticket[r][colToFill] = extraNumbers.pop();
+//           rowCounts[r]++;
+//         }
+//       }
+//     }
+
+//     // Ensure any remaining extra numbers are placed in rows needing more numbers
+//     for (let r = 0; r < 3; r++) {
+//       while (rowCounts[r] < 5 && extraNumbers.length > 0) {
+//         let emptyCols = ticket[r]
+//           .map((num, idx) => (num === null ? idx : -1))
+//           .filter((idx) => idx !== -1);
+//         if (emptyCols.length === 0) break;
+
+//         let colToFill = emptyCols[Math.floor(Math.random() * emptyCols.length)];
+//         ticket[r][colToFill] = extraNumbers.pop();
+//         rowCounts[r]++;
+//       }
+//     }
+
+//     tickets.push(ticket);
+//   }
+
+//   return tickets;
+// };
+
 export const generateTambolaTickets = (numbers) => {
   if (!Array.isArray(numbers)) {
     throw new Error("Input to generateTambolaTickets must be an array");
   }
+
   let ticketCount = Math.min(3, Math.floor(numbers.length / 15));
   let tickets = [];
   let usedNumbers = new Set();
@@ -89,7 +190,6 @@ export const generateTambolaTickets = (numbers) => {
   for (let t = 0; t < ticketCount; t++) {
     let ticket = Array.from({ length: 3 }, () => Array(9).fill(null));
     let columns = Array.from({ length: 9 }, () => []);
-    let remainingNumbers = [];
 
     numbers.forEach((num) => {
       if (typeof num !== "number" || usedNumbers.has(num)) return;
@@ -98,7 +198,7 @@ export const generateTambolaTickets = (numbers) => {
         columns[colIndex].push(num);
         usedNumbers.add(num);
       } else {
-        remainingNumbers.push(num);
+        extraNumbers.push(num); // Store extra numbers but don't place them
       }
     });
 
@@ -118,7 +218,6 @@ export const generateTambolaTickets = (numbers) => {
           .sort((a, b) => a.count - b.count);
 
         if (availableRows.length === 0) {
-          extraNumbers.push(colNumbers[i]);
           continue;
         }
 
@@ -129,49 +228,29 @@ export const generateTambolaTickets = (numbers) => {
       }
     }
 
+    tickets.push(ticket);
+  }
+
+  for (let t = 0; t < ticketCount; t++) {
+    let ticket = tickets[t];
+    let extraNumbersCopy = [...extraNumbers];
+
     for (let r = 0; r < 3; r++) {
-      let availableCols = [];
-      for (let c = 0; c < 9; c++) {
-        if (ticket[r][c] === null) availableCols.push(c);
-      }
-
-      while (rowCounts[r] < 5 && availableCols.length > 0) {
-        let colToFill = availableCols.splice(
-          Math.floor(Math.random() * availableCols.length),
-          1
-        )[0];
-
-        let possibleNumbers = numbers.filter(
-          (num) =>
-            !usedNumbers.has(num) && Math.floor((num - 1) / 10) === colToFill
-        );
-
-        if (possibleNumbers.length > 0) {
-          ticket[r][colToFill] = possibleNumbers.shift();
-          usedNumbers.add(ticket[r][colToFill]);
-          rowCounts[r]++;
-        } else if (extraNumbers.length > 0) {
-          ticket[r][colToFill] = extraNumbers.pop();
-          rowCounts[r]++;
-        }
-      }
-    }
-
-    // Ensure any remaining extra numbers are placed in rows needing more numbers
-    for (let r = 0; r < 3; r++) {
-      while (rowCounts[r] < 5 && extraNumbers.length > 0) {
+      let numbersInRow = ticket[r].filter((num) => num !== null);
+      if (numbersInRow.length === 5) continue;
+      if (numbersInRow.length < 5) {
         let emptyCols = ticket[r]
           .map((num, idx) => (num === null ? idx : -1))
           .filter((idx) => idx !== -1);
-        if (emptyCols.length === 0) break;
-
-        let colToFill = emptyCols[Math.floor(Math.random() * emptyCols.length)];
-        ticket[r][colToFill] = extraNumbers.pop();
-        rowCounts[r]++;
+        while (numbersInRow.length < 5 && extraNumbersCopy.length > 0) {
+          let colToFill = emptyCols.shift();
+          ticket[r][colToFill] = extraNumbersCopy.shift();
+          numbersInRow.push(ticket[r][colToFill]);
+        }
       }
+      if (extraNumbersCopy.length === 0) break;
     }
-
-    tickets.push(ticket);
+    if (extraNumbersCopy.length === 0) break;
   }
 
   return tickets;

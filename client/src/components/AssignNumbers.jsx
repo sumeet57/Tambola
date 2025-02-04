@@ -49,7 +49,6 @@ const AssignNumbers = (props) => {
       }
     }
   };
-
   const [drawNumber, setDrawNumber] = useState([]);
   useEffect(() => {
     const handleDrawNumber = (number) => {
@@ -136,6 +135,7 @@ const AssignNumbers = (props) => {
             const pattern = id;
             // console.log(roomid, userid, pattern);
             socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
@@ -166,8 +166,9 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-            console.log(roomid, userid, pattern);
+            // console.log(roomid, userid, pattern);
             socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
@@ -198,8 +199,8 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-            console.log(roomid, userid, pattern);
             socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
@@ -221,8 +222,8 @@ const AssignNumbers = (props) => {
                 localStorage.getItem("userid") ||
                 localStorage.getItem("hostid");
               const pattern = id;
-              console.log(roomid, userid, pattern);
               socket.emit("claim", roomid, userid, pattern);
+              claimMenuToggle();
             } else {
               handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
               setDisqualify((prev) => [...prev, selectedTicket]);
@@ -269,8 +270,9 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-            console.log(roomid, userid, pattern);
+
             socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
@@ -305,8 +307,9 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-            // console.log(roomid, userid, pattern);
+
             socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
@@ -321,14 +324,14 @@ const AssignNumbers = (props) => {
 
   return (
     <>
-      <div className="flex flex-col gap-4 p-2">
+      <div className="flex flex-col gap-1">
         {Object.keys(finalTickets).map((ticketIndex) => (
           <>
             <div
               key={ticketIndex}
-              className="bg-white p-4 h-fit rounded-lg relative overflow-hidden shadow-md w-[370px]"
+              className="bg-white h-fit rounded-xl relative overflow-hidden border-4 border-black"
             >
-              <h2 className="text-center text-lg font-bold mb-2">
+              <h2 className="text-center text-lg font-bold mb-1">
                 Tambola Ticket {parseInt(ticketIndex)}
               </h2>
               <div className="grid grid-cols-9 bg-gray-200 p-1 rounded-md">
@@ -342,7 +345,7 @@ const AssignNumbers = (props) => {
                             onClick={(e) =>
                               num !== null && handleNumberClick(e)
                             }
-                            className={`h-10 w-10 flex items-center justify-center text-lg font-semibold rounded-none border ${
+                            className={`w-9 h-9 flex items-center justify-center text-md font-semibold rounded-none border ${
                               num !== null
                                 ? selectedNumbers.includes(num)
                                   ? "bg-blue-500 text-white"
@@ -357,7 +360,7 @@ const AssignNumbers = (props) => {
                   ))}
               </div>
               <button
-                className="mt-4 bg-blue-500 text-center text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                className="mt-1 bg-blue-500 text-center text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
                 onClick={() => claimMenuToggle(ticketIndex)}
               >
                 Claim
@@ -373,7 +376,7 @@ const AssignNumbers = (props) => {
         ))}
 
         {claimMenu && (
-          <div className="cont absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-500 rounded-lg shadow-lg">
+          <div className="cont absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-500 rounded-3xl shadow-lg">
             <div
               onClick={claimMenuToggle}
               className="closeButton absolute top-0 right-0 text-xl px-4 py-2 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white transition duration-300"

@@ -99,8 +99,7 @@ io.on("connection", (socket) => {
       io.to(roomid).emit("game_over");
     });
   });
-
-  //for claims
+  //claiming points
   socket.on("claim", (roomid, userid, pattern) => {
     const res = claimPoint(roomid, userid, pattern);
     if (res === "Room not found") {
@@ -131,6 +130,23 @@ io.on("connection", (socket) => {
         }
         io.to(roomid).emit("game_over");
         socket.emit("game_over");
+      }
+    }
+  });
+  socket.on("disconnect", () => {
+    for (let roomId in room) {
+      if (room[roomId].players[socket.id]) {
+        delete room[roomId].players[socket.id]; // Remove player
+
+        io.to(roomId).emit(
+          "updatePlayers",
+          Object.values(room[roomId].players)
+        );
+
+        if (Object.keys(room[roomId].players).length === 0) {
+          delete room[roomId]; // Delete empty rooms
+        }
+        break;
       }
     }
   });

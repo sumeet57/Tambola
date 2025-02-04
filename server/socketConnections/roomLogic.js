@@ -1,5 +1,6 @@
 import room from "./room.js";
 import Room from "../models/room.model.js";
+import User from "../models/user.model.js";
 //internal functions of logic
 import { assignNumbersToPlayers } from "./assignNumberLogic.js";
 
@@ -127,6 +128,20 @@ export const storeRoom = (roomid, roomData) => {
       isCompleted: roomData.isCompleted,
     });
     newRoom.save();
+
+    // Update the user's room
+    roomData.players.forEach(async (player) => {
+      try {
+        const user = await User.findById(player.playerid);
+        if (user) {
+          // Remove the roomid from invites array
+          user.invites = [];
+          await user.save();
+        }
+      } catch (err) {
+        console.error(`Error updating user ${player.playerid}:`, err);
+      }
+    });
     // Delete the room from the memory
     delete room[roomid];
     return "Room saved successfully";
