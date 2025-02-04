@@ -24,6 +24,8 @@ import {
   createRoom,
   joinRoom,
   assignNumbers,
+  claimPoint,
+  storeRoom,
 } from "./socketConnections/roomLogic.js";
 
 // Handle WebSocket connections
@@ -80,15 +82,57 @@ io.on("connection", (socket) => {
         clearInterval(interval);
         return;
       }
-      const random = Math.floor(Math.random() * 90) + 1;
-      if (drawNumbers.includes(random)) {
-        return;
-      } else {
-        drawNumbers.push(random);
-        io.to(roomid).emit("draw_number", random);
-        i++;
+      let random;
+      do {
+        random = Math.floor(Math.random() * 90) + 1;
+      } while (drawNumbers.includes(random));
+
+      drawNumbers.push(random);
+      io.to(roomid).emit("draw_number", random);
+      i++;
+    }, 1000);
+
+    // Listen for game over event to stop the interval
+    socket.on("game_over", () => {
+      clearInterval(interval);
+      console.log("entered and cleared interval");
+      io.to(roomid).emit("game_over");
+    });
+  });
+
+  //for claims
+  socket.on("claim", (roomid, userid, pattern) => {
+    const res = claimPoint(roomid, userid, pattern);
+    if (res === "Room not found") {
+      socket.emit("error", "Room not found");
+      return;
+    } else if (res === "Player not found") {
+      socket.emit("error", "Player not found");
+      return;
+    } else if (res === "Pattern already claimed") {
+      socket.emit("error", "Pattern already claimed");
+      return;
+    } else {
+      io.to(roomid).emit("claim_update", room[roomid].claimList);
+      io.to(roomid).emit("claimed", pattern);
+      if (room[roomid].claimList.includes(6)) {
+        const res = storeRoom(roomid, room[roomid]);
+        if (res === "Room not found") {
+          socket.emit("error", "Room not found while storing room data");
+          return;
+        }
+        if (res === "Room data not found") {
+          socket.emit("error", "Room data not found while storing room data");
+          return;
+        }
+        if (res === "Room saved successfully") {
+          // console.log("Room saved successfully");
+          io.to(roomid).emit("room_data_stored");
+        }
+        io.to(roomid).emit("game_over");
+        socket.emit("game_over");
       }
-    }, 5000); // Adjust the interval time as needed
+    }
   });
 });
 

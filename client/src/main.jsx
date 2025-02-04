@@ -18,6 +18,7 @@ import Userroom from "./pages/Userroom.jsx";
 import Userpage from "./pages/Userpage.jsx";
 import Hostpage from "./pages/Hostpage.jsx";
 import Game from "./pages/Game.jsx";
+import GameOver from "./pages/GameOver.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -59,6 +60,12 @@ const router = createBrowserRouter([
   {
     path: "/game",
     element: <Game />,
+    children: [
+      {
+        path: "gameover",
+        element: <GameOver />,
+      },
+    ],
   },
 ]);
 

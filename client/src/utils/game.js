@@ -1,146 +1,178 @@
 export const distributeNumbersEqually = (data) => {
-  let receivedNumbers = [...new Set(data)]; // Remove duplicates
+  let receivedNumbers = [...new Set(data)]; // Remove duplicates from input
 
+  // Ensure we have enough numbers to form tickets
   const ticketCount = Math.min(3, Math.floor(receivedNumbers.length / 15));
   if (ticketCount < 1) return [];
 
-  const ranges = Array.from({ length: 9 }, () => []); // Create 9 empty buckets for number ranges
+  const ranges = Array.from({ length: 9 }, () => []); // Create 9 empty range buckets
 
   // Step 1: Categorize numbers into their respective ranges
   receivedNumbers.forEach((num) => {
-    let rangeIndex = Math.floor((num - 1) / 10);
+    let rangeIndex = Math.floor((num - 1) / 10); // Determine range
     ranges[rangeIndex].push(num);
   });
 
-  // Step 2: Distribute numbers across tickets, ensuring at most 3 per range per ticket
+  // Step 2: Determine the max numbers per ticket per range (capped at 3)
+  const maxPerRangePerTicket = ranges.map((range) =>
+    Math.min(3, Math.max(1, Math.floor(range.length / ticketCount)))
+  );
+
+  // Step 3: Distribute numbers across tickets ensuring balance
   const tickets = Array.from({ length: ticketCount }, () => []);
+  const assignedNumbers = new Set(); // Track assigned numbers to prevent duplication
+  const remainingNumbers = [];
 
-  let remainingNumbers = [];
-
-  ranges.forEach((rangeNumbers) => {
-    rangeNumbers.sort((a, b) => a - b);
-
-    let assignedCount = 0;
-    let ticketIndex = 0;
+  ranges.forEach((rangeNumbers, rangeIndex) => {
+    let assigned = Array(ticketCount).fill(0); // Track how many numbers assigned per ticket in this range
+    rangeNumbers.sort((a, b) => a - b); // Sort range numbers for consistency
 
     rangeNumbers.forEach((num) => {
-      if (assignedCount >= 3 * ticketCount) {
-        remainingNumbers.push(num);
-        return;
-      }
+      let ticketIndex = assigned.findIndex(
+        (count) => count < maxPerRangePerTicket[rangeIndex]
+      );
 
-      if (
-        tickets[ticketIndex].length < 15 &&
-        tickets[ticketIndex].filter(
-          (n) => Math.floor((n - 1) / 10) === Math.floor((num - 1) / 10)
-        ).length < 3
-      ) {
+      if (ticketIndex !== -1 && !assignedNumbers.has(num)) {
         tickets[ticketIndex].push(num);
-        assignedCount++;
+        assignedNumbers.add(num);
+        assigned[ticketIndex]++;
+      } else {
+        remainingNumbers.push(num); // Store remaining numbers for redistribution
       }
-
-      ticketIndex = (ticketIndex + 1) % ticketCount;
     });
   });
 
-  // Step 3: Fill missing numbers (if any)
-  let index = 0;
-  tickets.forEach((ticket) => {
-    while (ticket.length < 15 && index < remainingNumbers.length) {
-      let num = remainingNumbers[index++];
-      let rangeCount = ticket.filter(
-        (n) => Math.floor((n - 1) / 10) === Math.floor((num - 1) / 10)
-      ).length;
+  // Step 4: Ensure each ticket has exactly 15 numbers
+  let extraNumbers = remainingNumbers.filter(
+    (num) => !assignedNumbers.has(num)
+  );
 
-      if (rangeCount < 3 && !ticket.includes(num)) {
+  // If a ticket has less than 15 numbers, fill it with extra numbers
+  tickets.forEach((ticket) => {
+    while (ticket.length < 15 && extraNumbers.length > 0) {
+      let num = extraNumbers.pop();
+      if (!ticket.includes(num)) {
         ticket.push(num);
+        assignedNumbers.add(num);
       }
     }
   });
 
-  // If tickets are still missing numbers, add any remaining numbers to ensure exactly 15 numbers per ticket
-  index = 0;
-  tickets.forEach((ticket) => {
-    while (ticket.length < 15 && index < receivedNumbers.length) {
-      let num = receivedNumbers[index++];
-      let rangeCount = ticket.filter(
-        (n) => Math.floor((n - 1) / 10) === Math.floor((num - 1) / 10)
-      ).length;
+  // If some tickets still have < 15 numbers (rare case), pull numbers from tickets with > 15
+  while (tickets.some((ticket) => ticket.length < 15)) {
+    for (let i = 0; i < ticketCount; i++) {
+      let ticket = tickets[i];
 
-      if (rangeCount < 3 && !ticket.includes(num)) {
-        ticket.push(num);
+      if (ticket.length < 15) {
+        for (let j = 0; j < ticketCount; j++) {
+          if (tickets[j].length > 15) {
+            let movedNum = tickets[j].pop();
+            ticket.push(movedNum);
+          }
+          if (ticket.length === 15) break;
+        }
       }
     }
-  });
-
-  return tickets;
-};
-
-export const generateTambolaTicket = (numbers) => {
-  if (!Array.isArray(numbers)) {
-    throw new Error("Input to generateTambolaTicket must be an array");
   }
 
-  let ticket = Array.from({ length: 3 }, () => Array(9).fill(null));
-  let columns = Array.from({ length: 9 }, () => []);
+  return tickets.slice(0, 3); // Ensure we only return 3 tickets
+};
+export const generateTambolaTickets = (numbers) => {
+  if (!Array.isArray(numbers)) {
+    throw new Error("Input to generateTambolaTickets must be an array");
+  }
+  let ticketCount = Math.min(3, Math.floor(numbers.length / 15));
+  let tickets = [];
+  let usedNumbers = new Set();
+  let extraNumbers = [];
 
-  numbers.forEach((num) => {
-    if (typeof num !== "number") {
-      throw new Error("All elements in the ticket array must be numbers");
-    }
-    let colIndex = Math.floor((num - 1) / 10);
-    if (colIndex >= 0 && colIndex < columns.length) {
+  for (let t = 0; t < ticketCount; t++) {
+    let ticket = Array.from({ length: 3 }, () => Array(9).fill(null));
+    let columns = Array.from({ length: 9 }, () => []);
+    let remainingNumbers = [];
+
+    numbers.forEach((num) => {
+      if (typeof num !== "number" || usedNumbers.has(num)) return;
+      let colIndex = Math.floor((num - 1) / 10);
       if (columns[colIndex].length < 3) {
         columns[colIndex].push(num);
+        usedNumbers.add(num);
+      } else {
+        remainingNumbers.push(num);
+      }
+    });
+
+    columns.forEach((col) => col.sort((a, b) => a - b));
+
+    let rowCounts = [0, 0, 0];
+    let rowColumnCount = Array.from({ length: 3 }, () => Array(9).fill(0));
+
+    for (let c = 0; c < 9; c++) {
+      let colNumbers = [...columns[c]];
+      for (let i = 0; i < colNumbers.length; i++) {
+        let availableRows = rowCounts
+          .map((count, row) => ({ row, count }))
+          .filter(
+            ({ row }) => rowCounts[row] < 5 && rowColumnCount[row][c] === 0
+          )
+          .sort((a, b) => a.count - b.count);
+
+        if (availableRows.length === 0) {
+          extraNumbers.push(colNumbers[i]);
+          continue;
+        }
+
+        let row = availableRows[0].row;
+        ticket[row][c] = colNumbers[i];
+        rowCounts[row]++;
+        rowColumnCount[row][c] = 1;
       }
     }
-  });
 
-  columns.forEach((col) => col.sort((a, b) => a - b));
+    for (let r = 0; r < 3; r++) {
+      let availableCols = [];
+      for (let c = 0; c < 9; c++) {
+        if (ticket[r][c] === null) availableCols.push(c);
+      }
 
-  let rowCounts = [0, 0, 0]; // To track the number of numbers in each row
-  let rowColumnCount = Array.from({ length: 3 }, () => Array(9).fill(0)); // To prevent row overflow in columns
+      while (rowCounts[r] < 5 && availableCols.length > 0) {
+        let colToFill = availableCols.splice(
+          Math.floor(Math.random() * availableCols.length),
+          1
+        )[0];
 
-  for (let c = 0; c < 9; c++) {
-    let colNumbers = [...columns[c]];
-    for (let i = 0; i < colNumbers.length; i++) {
-      let availableRows = rowCounts
-        .map((count, row) => ({ row, count }))
-        .filter(({ row }) => rowCounts[row] < 5 && rowColumnCount[row][c] === 0) // Ensure 5 numbers per row, 1 per column
-        .sort((a, b) => a.count - b.count);
+        let possibleNumbers = numbers.filter(
+          (num) =>
+            !usedNumbers.has(num) && Math.floor((num - 1) / 10) === colToFill
+        );
 
-      if (availableRows.length === 0) continue;
-
-      let row = availableRows[0].row;
-      ticket[row][c] = colNumbers[i];
-      rowCounts[row]++;
-      rowColumnCount[row][c] = 1;
-    }
-  }
-
-  // If a row has less than 5 numbers, fill remaining slots
-  for (let r = 0; r < 3; r++) {
-    let availableCols = [];
-    for (let c = 0; c < 9; c++) {
-      if (ticket[r][c] === null) availableCols.push(c);
+        if (possibleNumbers.length > 0) {
+          ticket[r][colToFill] = possibleNumbers.shift();
+          usedNumbers.add(ticket[r][colToFill]);
+          rowCounts[r]++;
+        } else if (extraNumbers.length > 0) {
+          ticket[r][colToFill] = extraNumbers.pop();
+          rowCounts[r]++;
+        }
+      }
     }
 
-    while (rowCounts[r] < 5 && availableCols.length > 0) {
-      let colToFill = availableCols.splice(
-        Math.floor(Math.random() * availableCols.length),
-        1
-      )[0];
+    // Ensure any remaining extra numbers are placed in rows needing more numbers
+    for (let r = 0; r < 3; r++) {
+      while (rowCounts[r] < 5 && extraNumbers.length > 0) {
+        let emptyCols = ticket[r]
+          .map((num, idx) => (num === null ? idx : -1))
+          .filter((idx) => idx !== -1);
+        if (emptyCols.length === 0) break;
 
-      let possibleNumbers = columns[colToFill].filter(
-        (num) => !ticket.flat().includes(num)
-      );
-
-      if (possibleNumbers.length > 0) {
-        ticket[r][colToFill] = possibleNumbers[0];
+        let colToFill = emptyCols[Math.floor(Math.random() * emptyCols.length)];
+        ticket[r][colToFill] = extraNumbers.pop();
         rowCounts[r]++;
       }
     }
+
+    tickets.push(ticket);
   }
 
-  return ticket;
+  return tickets;
 };

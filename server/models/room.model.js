@@ -21,14 +21,12 @@ const roomSchema = new mongoose.Schema(
           type: String,
           required: [true, "Name is required"],
         },
-        claims: [
-          {
-            type: String,
-            default: [],
-          },
-        ],
+        claims: {
+          type: [String], // Array of strings
+          default: [],
+        },
         assign_numbers: {
-          type: Array,
+          type: [Number], // Array of numbers
           default: [],
         },
         ticket_count: {

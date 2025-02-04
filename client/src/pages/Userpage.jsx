@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import socket from "../utils/websocket";
 import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import { updateSessionStorage } from "../utils/storageUtils";
+import {
+  updateLocalStorage,
+  updateSessionStorage,
+} from "../utils/storageUtils";
 
 const Userpage = () => {
   //for extracting roomid from params if present
@@ -64,6 +67,7 @@ const Userpage = () => {
     if (pointsRes.status === 200 && invitedRes.status === 200) {
       //connecting to room with roomid, player data, socketid and tickets
       socket.emit("join_room", roomId, player, socketid, tickets);
+      updateLocalStorage("roomid", roomId);
     } else {
       document.querySelector(".message").innerHTML =
         invitedData.message || pointsData.message;

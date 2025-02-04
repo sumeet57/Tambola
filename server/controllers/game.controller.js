@@ -84,3 +84,6 @@ export const getPlayerData = async (req, res) => {
     return res.status(200).json({ data: host, message: "Host found" });
   }
 };
+
+// for storing room data in databse
+// export const storeRoomData = async (req, res) => {};

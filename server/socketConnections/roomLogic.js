@@ -1,5 +1,5 @@
 import room from "./room.js";
-
+import Room from "../models/room.model.js";
 //internal functions of logic
 import { assignNumbersToPlayers } from "./assignNumberLogic.js";
 
@@ -13,17 +13,17 @@ export const createRoom = (roomid, player, socketid, ticket_count) => {
   room[roomid] = {
     players: [
       {
-        userid: player._id,
+        playerid: player._id,
         socketid: socketid,
         name: player.name,
         claims: [],
-        points: 0,
         assign_numbers: [],
         ticket_count: ticket_count,
       },
     ],
     isCompleted: false,
     playersList: [player.name],
+    claimList: [],
   };
   return room;
 };
@@ -38,7 +38,7 @@ export const joinRoom = (roomId, player, socketid, ticket_count) => {
   }
 
   room[roomId].players.push({
-    userid: player._id,
+    playerid: player._id,
     socketid: socketid,
     name: player.name,
     claims: [],
@@ -52,21 +52,45 @@ export const joinRoom = (roomId, player, socketid, ticket_count) => {
   return room;
 };
 
-export const claimPoint = (roomid, player, points, claim) => {
+export const claimPoint = (roomid, userid, pattern) => {
   // Find the room
   if (!room[roomid]) {
     return "Room not found";
   }
   // Find the player
   const playerIndex = room[roomid].players.findIndex(
-    (p) => p.userid === player._id
+    (p) => p.playerid === userid
   );
   if (playerIndex === -1) {
     return "Player not found";
   }
   // Update the player's points
-  room[roomid].players[playerIndex].points += points;
-  room[roomid].players[playerIndex].claims.push(claim);
+  if (room[roomid].claimList.includes(pattern)) {
+    return "Pattern already claimed";
+  }
+  switch (pattern) {
+    case 1:
+      room[roomid].players[playerIndex].claims.push("first line");
+      break;
+    case 2:
+      room[roomid].players[playerIndex].claims.push("second line");
+      break;
+    case 3:
+      room[roomid].players[playerIndex].claims.push("third line");
+      break;
+    case 4:
+      room[roomid].players[playerIndex].claims.push("early five");
+      break;
+    case 5:
+      room[roomid].players[playerIndex].claims.push("corners");
+      break;
+    case 6:
+      room[roomid].players[playerIndex].claims.push("full house");
+      break;
+    default:
+      return "Invalid pattern";
+  }
+  room[roomid].claimList.push(pattern);
 
   return room;
 };
@@ -89,4 +113,24 @@ export const assignNumbers = (roomid) => {
   room[roomid].isCompleted = true;
 
   return room;
+};
+
+export const storeRoom = (roomid, roomData) => {
+  // console.log("Room data", roomData);
+  if (!room[roomid]) {
+    return "Room not found";
+  }
+  if (roomData) {
+    const newRoom = new Room({
+      roomid: roomid,
+      players: roomData.players,
+      isCompleted: roomData.isCompleted,
+    });
+    newRoom.save();
+    // Delete the room from the memory
+    delete room[roomid];
+    return "Room saved successfully";
+  } else {
+    return "Room data not found";
+  }
 };

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import socket from "../utils/websocket";
-import { updateSessionStorage } from "../utils/storageUtils";
+import {
+  updateLocalStorage,
+  updateSessionStorage,
+} from "../utils/storageUtils";
 
 const Hostroom = () => {
   //for extracting roomid from params if present
@@ -25,6 +28,7 @@ const Hostroom = () => {
     };
 
     const handleNumbersAssigned = (numbers) => {
+      console.log("Numbers assigned", numbers);
       navigate(`/game`, { state: { numbers } });
     };
 
@@ -106,6 +110,7 @@ const Hostroom = () => {
   //start game button click logic
   const handleStartClick = async () => {
     socket.emit("start_game", id);
+    updateLocalStorage("roomid", id);
   };
 
   return (
