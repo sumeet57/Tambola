@@ -6,6 +6,9 @@ import {
   updateSessionStorage,
 } from "../utils/storageUtils";
 
+//import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Hostroom = () => {
   //for extracting roomid from params if present
   const param = useParams();
@@ -63,7 +66,7 @@ const Hostroom = () => {
         return;
       }
       if (hostid) {
-        const resPlayer = await fetch("http://localhost:3000/api/host/invite", {
+        const resPlayer = await fetch(`${apiBaseUrl}/api/host/invite`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -77,7 +80,7 @@ const Hostroom = () => {
         });
 
         //deducting points from host
-        const resPoints = await fetch("http://localhost:3000/api/game/points", {
+        const resPoints = await fetch(`${apiBaseUrl}/api/game/points`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -90,16 +93,21 @@ const Hostroom = () => {
         });
 
         if (resPlayer.status === 404 || resPoints.status === 404) {
-          console.log("Resource not found");
+          if (resPlayer.status === 404) {
+            document.querySelector(".message").textContent = "Player not found";
+          }
+          if (resPoints.status === 404) {
+            document.querySelector(".message").textContent =
+              "Insufficient points";
+          }
         } else {
           const dataPoints = await resPoints.json();
-          const dataPlayer = await resPlayer.json();
           if (resPlayer.status === 200 && resPoints.status === 200) {
             sessionStorage.clear();
             updateSessionStorage("player", dataPoints.data);
             handleClosePopup();
           } else {
-            console.log(dataPlayer.message || dataPoints.message);
+            document.querySelector(".message").textContent = "Invite failed";
           }
           setPlayerName("");
         }
@@ -110,7 +118,6 @@ const Hostroom = () => {
   //start game button click logic
   const handleStartClick = async () => {
     socket.emit("start_game", id);
-    updateLocalStorage("roomid", id);
   };
 
   return (
@@ -148,6 +155,7 @@ const Hostroom = () => {
               <option value="2">2</option>
               <option value="3">3</option>
             </select>
+            <p className="message text-red-500"></p>
             <button
               className="bg-green-500 text-white px-4 py-2 rounded"
               onClick={handleInvitePlayer}

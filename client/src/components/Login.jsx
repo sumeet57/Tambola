@@ -5,6 +5,9 @@ import {
   updateSessionStorage,
 } from "../utils/storageUtils.js";
 
+//import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Login = () => {
   const navigate = useNavigate();
 
@@ -14,7 +17,7 @@ const Login = () => {
 
   const submitUser = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/api/user/login", {
+    const res = await fetch(`${apiBaseUrl}/api/user/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,7 +40,7 @@ const Login = () => {
 
   const submitHost = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/api/host/login", {
+    const res = await fetch(`${apiBaseUrl}/api/host/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

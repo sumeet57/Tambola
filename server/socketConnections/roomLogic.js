@@ -12,25 +12,27 @@ export const createRoom = (roomid, player, socketid, ticket_count) => {
 
   // Create a new room
   room[roomid] = {
-    players: [],
-    isCompleted: false,
+    players: [
+      {
+        playerid: player._id,
+        socketid: socketid,
+        name: player.name,
+        claims: [],
+        assign_numbers: [],
+        ticket_count: ticket_count,
+      },
+    ],
     playersList: [player.name],
     claimList: [],
+    isCompleted: false,
   };
-
-  room[roomid].players.push({
-    playerid: player._id,
-    socketid: socketid,
-    name: player.name,
-    claims: [],
-    assign_numbers: [],
-    ticket_count: ticket_count,
-  });
+  // console.log("Room created", room[roomid].players);
 
   return room;
 };
 
 export const joinRoom = (roomId, player, socketid, ticket_count) => {
+  // console.log("Joining room", roomId, player, socketid, ticket_count);
   // Check if the room exists
   if (!room[roomId]) {
     return "Room not found";
@@ -49,6 +51,7 @@ export const joinRoom = (roomId, player, socketid, ticket_count) => {
   });
 
   room[roomId].playersList.push(player.name);
+  // console.log("Room joined", room[roomId].players);
 
   return room;
 };
@@ -110,6 +113,7 @@ export const assignNumbers = (roomid) => {
     return "Numbers already assigned";
   }
   // Assign numbers to the player
+  // console.log("Assigning numbers to players", room[roomid].players);
   const playersWithAssignNumbers = assignNumbersToPlayers(room[roomid].players);
   // Update the room
   room[roomid].players = playersWithAssignNumbers;

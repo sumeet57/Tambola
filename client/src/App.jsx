@@ -7,6 +7,9 @@ import {
   updateSessionStorage,
 } from "./utils/storageUtils.js";
 
+//import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const App = () => {
   // for navigation
   const navigate = useNavigate();
@@ -34,7 +37,7 @@ const App = () => {
 
       // if playerid is available then fetch the player data from database
       if (playerid) {
-        const res = await fetch("http://localhost:3000/api/game/player", {
+        const res = await fetch(`${apiBaseUrl}/api/game/player`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -76,7 +79,7 @@ const App = () => {
     setShowNotifications(false);
   };
   const handleNotificationClick = async () => {
-    const res = await fetch("http://localhost:3000/api/user/find", {
+    const res = await fetch(`${apiBaseUrl}/api/user/find`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

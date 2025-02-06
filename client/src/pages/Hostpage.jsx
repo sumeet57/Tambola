@@ -4,6 +4,10 @@ import Header from "../components/Header";
 import socket from "../utils/websocket";
 import { use } from "react";
 import { updateSessionStorage } from "../utils/storageUtils";
+
+//import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Hostpage = () => {
   //for navigation
   const navigate = useNavigate();
@@ -25,48 +29,72 @@ const Hostpage = () => {
   const handleCreateRoom = () => {
     // Handle room creation logic here
     if (hostid) {
-      socket.emit("create_room", roomId, ticketCount, player, socketid);
+      handleRoomCreated();
     } else {
       document.querySelector(".message").innerHTML = "Host not found";
     }
   };
+  const deductPoints = async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/game/points`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: hostid,
+          points: ticketCount, // Always uses the latest ticketCount
+        }),
+      });
+
+      const data = await res.json();
+      if (res.status === 200) {
+        updateSessionStorage("player", data.data); // Update player session data
+        setTicketCount(1); // Reset ticket count
+      } else {
+        document.querySelector(".message").innerHTML = data.message;
+      }
+    } catch (error) {
+      document.querySelector(".message").innerHTML = "Failed to deduct points.";
+      console.error("Failed to deduct points:", error);
+    }
+  };
+  const checkPoints = async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/game/available`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: hostid,
+          ticket: ticketCount,
+        }),
+      });
+      const pointRes = await res.json();
+      if (res.status === 404) {
+        document.querySelector(".message").innerHTML = pointRes.message;
+        console.log(pointRes);
+      }
+      if (res.status === 200) {
+        socket.emit("create_room", roomId, ticketCount, player, socketid);
+      }
+    } catch (error) {
+      document.querySelector(".message").innerHTML = "Failed to check points";
+    }
+  };
+
+  const handleRoomCreated = () => {
+    checkPoints();
+  };
+  const handleRoomJoin = (room) => {
+    updateSessionStorage("roomid", parseInt(room));
+    deductPoints();
+    navigate(`/host/room/${room}`);
+  };
 
   useEffect(() => {
-    const handleRoomCreated = (room) => {
-      console.log("Received room_created event");
-
-      const deductPoints = async () => {
-        try {
-          const res = await fetch("http://localhost:3000/api/game/points", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: hostid,
-              points: ticketCount, // Always uses the latest ticketCount
-            }),
-          });
-
-          const data = await res.json();
-          if (res.status === 200) {
-            updateSessionStorage("player", data.data); // Update player session data
-            setTicketCount(1); // Reset ticket count
-          } else {
-            document.querySelector(".message").innerHTML = data.message;
-          }
-        } catch (error) {
-          console.error("Failed to deduct points:", error);
-          document.querySelector(".message").innerHTML =
-            "Failed to deduct points.";
-        }
-      };
-
-      deductPoints();
-      navigate(`/host/room/${room}`);
-    };
-
-    socket.on("room_created", handleRoomCreated);
+    socket.on("room_created", handleRoomJoin);
 
     socket.on("error", (message) => {
       document.querySelector(".message").innerHTML = message;
@@ -74,7 +102,7 @@ const Hostpage = () => {
 
     // Cleanup
     return () => {
-      socket.off("room_created", handleRoomCreated);
+      socket.off("room_created", handleRoomJoin);
       socket.off("error");
     };
   }, [ticketCount, hostid, navigate]);
@@ -114,8 +142,6 @@ const Hostpage = () => {
                 onChange={(e) => {
                   const selectedValue = Number(e.target.value);
                   setTicketCount(selectedValue); // Update the state
-                  // Use selectedValue here for immediate usage
-                  console.log("Immediate ticket count:", selectedValue);
                 }}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               >

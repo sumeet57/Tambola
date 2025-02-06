@@ -4,6 +4,10 @@ import {
   updateLocalStorage,
   updateSessionStorage,
 } from "../utils/storageUtils.js";
+
+// import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Register = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -12,7 +16,7 @@ const Register = () => {
 
   const submitUser = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/api/user/register", {
+    const res = await fetch(`${apiBaseUrl}/api/user/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -22,7 +26,7 @@ const Register = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      // remove host id and host from storage (utils/storageUtils.js)
+      // remove host id and host from storage
       localStorage.removeItem("userid");
       sessionStorage.clear();
       updateLocalStorage("userid", data.userid);
@@ -36,7 +40,7 @@ const Register = () => {
 
   const submitHost = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/api/host/register", {
+    const res = await fetch(`${apiBaseUrl}/api/host/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -7,6 +7,9 @@ import {
   updateSessionStorage,
 } from "../utils/storageUtils";
 
+//import env
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Userpage = () => {
   //for extracting roomid from params if present
   const { roomid } = useParams();
@@ -32,7 +35,7 @@ const Userpage = () => {
   //for handling join room
   const handleJoin = async () => {
     //for checking if player has enough points
-    const pointsRes = await fetch("http://localhost:3000/api/game/available", {
+    const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +46,7 @@ const Userpage = () => {
       }),
     });
     // for checking if player is invited or not
-    const invitedRes = await fetch("http://localhost:3000/api/game/invited", {
+    const invitedRes = await fetch(`${apiBaseUrl}/api/game/invited`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,8 +69,9 @@ const Userpage = () => {
     }
     if (pointsRes.status === 200 && invitedRes.status === 200) {
       //connecting to room with roomid, player data, socketid and tickets
-      socket.emit("join_room", roomId, player, socketid, tickets);
-      updateLocalStorage("roomid", roomId);
+      // console.log("Joining room", roomId, player, socketid, tickets);
+      socket.emit("join_room", roomId, player, tickets);
+      updateSessionStorage("roomid", parseInt(roomId));
     } else {
       document.querySelector(".message").innerHTML =
         invitedData.message || pointsData.message;
@@ -77,11 +81,9 @@ const Userpage = () => {
   //for listening to socket events
   useEffect(() => {
     const handleRoomJoined = (room) => {
-      console.log("Room joined successfully");
-
       const deductPoints = async () => {
         try {
-          const res = await fetch("http://localhost:3000/api/game/points", {
+          const res = await fetch(`${apiBaseUrl}/api/game/points`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -143,7 +145,9 @@ const Userpage = () => {
                 type="text"
                 id="roomId"
                 value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
+                onChange={(e) => {
+                  setRoomId(e.target.value);
+                }}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               />
             </div>
@@ -157,7 +161,11 @@ const Userpage = () => {
               <select
                 id="tickets"
                 value={tickets}
-                onChange={(e) => setTickets(Number(e.target.value))}
+                onChange={(e) => {
+                  const selectedTickets = parseInt(e.target.value);
+                  setTickets(selectedTickets);
+                  console.log("Selected tickets:", selectedTickets);
+                }}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               >
                 <option value={1}>1</option>

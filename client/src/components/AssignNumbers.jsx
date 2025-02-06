@@ -14,6 +14,7 @@ const AssignNumbers = (props) => {
 
   useEffect(() => {
     if (props.data && Array.isArray(props.data) && props.data.length > 0) {
+      console.log("number from server", props.data);
       const generatedTickets = distributeNumbersEqually(props.data);
       setTickets(generatedTickets);
     }
