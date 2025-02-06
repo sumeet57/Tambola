@@ -24,7 +24,7 @@ const Login = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      localStorage.clear();
+      localStorage.removeItem("userid");
       sessionStorage.clear();
       updateLocalStorage("userid", data.userid);
       updateSessionStorage("player", data.user);
@@ -47,7 +47,7 @@ const Login = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
-      localStorage.clear();
+      localStorage.removeItem("hostid");
       sessionStorage.clear();
       updateLocalStorage("hostid", data.hostid);
       updateSessionStorage("player", data.host);

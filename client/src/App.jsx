@@ -12,15 +12,17 @@ const App = () => {
   const navigate = useNavigate();
 
   // eastablishing connection with socket
-  socket.on(
-    "connect",
-    () => {
+  useEffect(() => {
+    socket.on("connect", () => {
       console.log(`Connected with ID: ${socket.id}`);
       localStorage.removeItem("socketid");
       updateLocalStorage("socketid", socket.id);
-    },
-    []
-  );
+    });
+
+    return () => {
+      socket.off("connect");
+    };
+  }, []);
 
   // for getting player from database and storing in sessionstorage
   useEffect(() => {

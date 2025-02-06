@@ -11,15 +11,15 @@ const roomSchema = new mongoose.Schema(
       {
         playerid: {
           type: String,
-          required: [true, "Player ID is required"],
+          default: "",
         },
         socketid: {
           type: String,
-          required: [true, "Socket ID is required"],
+          default: "",
         },
         name: {
           type: String,
-          required: [true, "Name is required"],
+          default: "",
         },
         claims: {
           type: [String], // Array of strings

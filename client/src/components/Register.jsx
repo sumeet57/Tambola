@@ -23,7 +23,7 @@ const Register = () => {
     const data = await res.json();
     if (res.status === 200) {
       // remove host id and host from storage (utils/storageUtils.js)
-      localStorage.clear();
+      localStorage.removeItem("userid");
       sessionStorage.clear();
       updateLocalStorage("userid", data.userid);
       updateSessionStorage("player", data.user);
@@ -47,7 +47,7 @@ const Register = () => {
     const data = await res.json();
     if (res.status === 200) {
       // remove user id and user from storage (utils/storageUtils.js)
-      localStorage.clear();
+      localStorage.removeItem("hostid");
       sessionStorage.clear();
       updateLocalStorage("hostid", data.hostid);
       updateSessionStorage("player", data.host);

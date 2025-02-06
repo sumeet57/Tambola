@@ -14,13 +14,11 @@ const AssignNumbers = (props) => {
 
   useEffect(() => {
     if (props.data && Array.isArray(props.data) && props.data.length > 0) {
-      console.log("TicketsNumber from server:", props.data);
       const generatedTickets = distributeNumbersEqually(props.data);
       setTickets(generatedTickets);
-      console.log("TicketsNumber after distributing:", generatedTickets);
     }
   }, [props.data]);
-  // console.log("TicketsNumber after distributing:", tickets);
+
   useEffect(() => {
     if (tickets.length === 0) return;
 
@@ -30,10 +28,7 @@ const AssignNumbers = (props) => {
     });
 
     setFinalTickets(ticketsData);
-    console.log("Final Tickets:", ticketsData);
   }, [tickets]);
-
-  // console.log("Final Tickets:", finalTickets);
 
   // for claims and click on number
   const [selectedNumbers, setSelectedNumbers] = useState([]);
@@ -74,7 +69,6 @@ const AssignNumbers = (props) => {
       socket.off("claim_update", setClaimHistory);
     };
   }, []);
-  // console.log("Draw Numbers:", drawNumber);
 
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ClaimHistory, setClaimHistory] = useState([]);
@@ -88,7 +82,6 @@ const AssignNumbers = (props) => {
   };
   const [messageBox, setMessageBox] = useState("");
   const handleMessageBox = (pattern) => {
-    console.log("received message:", pattern);
     if (pattern === 1) {
       setMessageBox("First Line Claimed");
     } else if (pattern === 2) {
@@ -211,26 +204,36 @@ const AssignNumbers = (props) => {
     } else if (id === 4) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
-          if (selectedNumbers.length >= 5) {
-            let earlyFiveNumbers = selectedNumbers.slice(0, 5);
-            let isClaimed = earlyFiveNumbers.every((num) =>
-              drawNumber.includes(num)
-            );
-            if (isClaimed) {
-              let roomid = localStorage.getItem("roomid");
-              let userid =
-                localStorage.getItem("userid") ||
-                localStorage.getItem("hostid");
-              const pattern = id;
-              socket.emit("claim", roomid, userid, pattern);
-              claimMenuToggle();
-            } else {
-              handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
-              setDisqualify((prev) => [...prev, selectedTicket]);
-              claimMenuToggle();
-            }
+          let earlyFiveNumbers = [];
+          finalTickets[selectedTicket].forEach((row) => {
+            row.forEach((num) => {
+              if (num !== null && num !== undefined) {
+                earlyFiveNumbers.push(num);
+              }
+            });
+          });
+          let isvalid = earlyFiveNumbers.every((num) => {
+            return selectedNumbers.includes(num);
+          });
+          if (!isvalid) {
+            handleMessageBox("Select all Numbers for Early Five");
+            claimMenuToggle();
+            return;
+          }
+          let isClaimed = earlyFiveNumbers.every(
+            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+          );
+          if (isClaimed) {
+            let roomid = localStorage.getItem("roomid");
+            let userid =
+              localStorage.getItem("userid") || localStorage.getItem("hostid");
+            const pattern = id;
+
+            socket.emit("claim", roomid, userid, pattern);
+            claimMenuToggle();
           } else {
-            handleMessageBox("Select at least 5 numbers");
+            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
         }
@@ -257,7 +260,10 @@ const AssignNumbers = (props) => {
               }
             }
           });
-          if (cornerNumbers.length < 4) {
+          let isvalid = cornerNumbers.every((num) => {
+            return selectedNumbers.includes(num);
+          });
+          if (!isvalid) {
             handleMessageBox("Select all Valid Corner Numbers");
             claimMenuToggle();
             return;
@@ -282,51 +288,63 @@ const AssignNumbers = (props) => {
       }
     } else if (id === 6) {
       if (!disqualify.includes(selectedTicket)) {
-        if (finalTickets && Object.keys(finalTickets).length > 0) {
-          let fullHouseNumbers = [];
-          finalTickets[selectedTicket].forEach((row) => {
-            row.forEach((num) => {
-              if (num !== null && num !== undefined) {
-                fullHouseNumbers.push(num);
-              }
+        if (
+          ClaimHistory.includes(1) &&
+          ClaimHistory.includes(2) &&
+          ClaimHistory.includes(3) &&
+          ClaimHistory.includes(4) &&
+          ClaimHistory.includes(5)
+        ) {
+          if (finalTickets && Object.keys(finalTickets).length > 0) {
+            let fullHouseNumbers = [];
+            finalTickets[selectedTicket].forEach((row) => {
+              row.forEach((num) => {
+                if (num !== null && num !== undefined) {
+                  fullHouseNumbers.push(num);
+                }
+              });
             });
-          });
-          let isvalid = fullHouseNumbers.every((num) => {
-            return selectedNumbers.includes(num);
-          });
-          if (!isvalid) {
-            handleMessageBox("Select all Numbers for full house");
-            claimMenuToggle();
-            return;
-          }
-          let isClaimed = fullHouseNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
-          );
-          if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
-            const pattern = id;
+            let isvalid = fullHouseNumbers.every((num) => {
+              return selectedNumbers.includes(num);
+            });
+            if (!isvalid) {
+              handleMessageBox("Select all Numbers for full house");
+              claimMenuToggle();
+              return;
+            }
+            let isClaimed = fullHouseNumbers.every(
+              (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+            );
+            if (isClaimed) {
+              let roomid = localStorage.getItem("roomid");
+              let userid =
+                localStorage.getItem("userid") ||
+                localStorage.getItem("hostid");
+              const pattern = id;
 
-            socket.emit("claim", roomid, userid, pattern);
-            claimMenuToggle();
-          } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
-            claimMenuToggle();
+              socket.emit("claim", roomid, userid, pattern);
+              claimMenuToggle();
+            } else {
+              handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+              setDisqualify((prev) => [...prev, selectedTicket]);
+              claimMenuToggle();
+            }
           }
+        } else {
+          handleMessageBox(
+            "Claim remaining patterns before claiming Full House"
+          );
+          claimMenuToggle();
         }
       }
     }
   };
 
-  console.log(disqualify);
-
   return (
-    <>
-      <div className="flex flex-col gap-1">
+    <React.Fragment>
+      <div className="flex flex-col gap-1 items-center relative">
         {Object.keys(finalTickets).map((ticketIndex) => (
-          <>
+          <React.Fragment key={ticketIndex}>
             <div
               key={ticketIndex}
               className="bg-white h-fit rounded-xl relative overflow-hidden border-4 border-black"
@@ -372,18 +390,18 @@ const AssignNumbers = (props) => {
                 </div>
               )}
             </div>
-          </>
+          </React.Fragment>
         ))}
 
         {claimMenu && (
-          <div className="cont absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-gray-500 rounded-3xl shadow-lg">
+          <div className="cont w-80 h-80 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-zinc-900 rounded-3xl shadow-lg">
             <div
               onClick={claimMenuToggle}
-              className="closeButton absolute top-0 right-0 text-xl px-4 py-2 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white transition duration-300"
+              className="closeButton absolute grid place-items-center top-2 right-2 text-xl w-10 h-10 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white transition duration-300"
             >
-              X
+              &times;
             </div>
-            <div className="claimsButton pt-4 flex flex-wrap gap-2">
+            <div className="claimsButton pt-14 grid grid-cols-2 gap-4">
               {[
                 { name: "First Line", id: 1 },
                 { name: "Second Line", id: 2 },
@@ -414,7 +432,7 @@ const AssignNumbers = (props) => {
           </div>
         )}
       </div>
-    </>
+    </React.Fragment>
   );
 };
 

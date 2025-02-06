@@ -12,20 +12,21 @@ export const createRoom = (roomid, player, socketid, ticket_count) => {
 
   // Create a new room
   room[roomid] = {
-    players: [
-      {
-        playerid: player._id,
-        socketid: socketid,
-        name: player.name,
-        claims: [],
-        assign_numbers: [],
-        ticket_count: ticket_count,
-      },
-    ],
+    players: [],
     isCompleted: false,
     playersList: [player.name],
     claimList: [],
   };
+
+  room[roomid].players.push({
+    playerid: player._id,
+    socketid: socketid,
+    name: player.name,
+    claims: [],
+    assign_numbers: [],
+    ticket_count: ticket_count,
+  });
+
   return room;
 };
 
@@ -43,7 +44,6 @@ export const joinRoom = (roomId, player, socketid, ticket_count) => {
     socketid: socketid,
     name: player.name,
     claims: [],
-    points: 0,
     assign_numbers: [],
     ticket_count: ticket_count,
   });
@@ -69,6 +69,9 @@ export const claimPoint = (roomid, userid, pattern) => {
   if (room[roomid].claimList.includes(pattern)) {
     return "Pattern already claimed";
   }
+
+  room[roomid].claimList.push(pattern);
+
   switch (pattern) {
     case 1:
       room[roomid].players[playerIndex].claims.push("first line");
@@ -91,7 +94,6 @@ export const claimPoint = (roomid, userid, pattern) => {
     default:
       return "Invalid pattern";
   }
-  room[roomid].claimList.push(pattern);
 
   return room;
 };
