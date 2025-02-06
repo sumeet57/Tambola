@@ -5,13 +5,16 @@ const DrawNumbers = () => {
   const [drawNumber, setDrawNumber] = useState([]);
   useEffect(() => {
     const handleDrawNumber = (number) => {
-      setDrawNumber((prevDrawNumber) => [number, ...prevDrawNumber]);
+      if (drawNumber.length > 90) {
+      } else {
+        setDrawNumber((prevDrawNumber) => [number, ...prevDrawNumber]);
+      }
     };
 
-    socket.on("draw_number", handleDrawNumber);
+    socket.on("number_drawn", handleDrawNumber);
 
     return () => {
-      socket.off("draw_number", handleDrawNumber);
+      socket.off("number_drawn", handleDrawNumber);
     };
   }, []);
 
@@ -28,6 +31,7 @@ const DrawNumbers = () => {
             {num}
           </span>
         ))}
+        {/* {console.log("Draw Number", drawNumber)} */}
       </div>
     </>
   );

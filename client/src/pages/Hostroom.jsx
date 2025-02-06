@@ -30,9 +30,10 @@ const Hostroom = () => {
       setPlayers(players);
     };
 
+    const roomid = sessionStorage.getItem("roomid");
     const handleNumbersAssigned = (numbers) => {
-      console.log("Numbers assigned", numbers);
-      navigate(`/game`, { state: { numbers } });
+      // console.log("Numbers assigned", numbers);
+      navigate(`/game`, { state: { numbers, roomid } });
     };
 
     socket.on("player_update", handleUpdatePlayers);
@@ -103,7 +104,6 @@ const Hostroom = () => {
         } else {
           const dataPoints = await resPoints.json();
           if (resPlayer.status === 200 && resPoints.status === 200) {
-            sessionStorage.clear();
             updateSessionStorage("player", dataPoints.data);
             handleClosePopup();
           } else {

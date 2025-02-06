@@ -27,6 +27,7 @@ const Login = () => {
     });
     const data = await res.json();
     if (res.status === 200) {
+      localStorage.removeItem("hostid");
       localStorage.removeItem("userid");
       sessionStorage.clear();
       updateLocalStorage("userid", data.userid);
@@ -51,6 +52,7 @@ const Login = () => {
     const data = await res.json();
     if (res.status === 200) {
       localStorage.removeItem("hostid");
+      localStorage.removeItem("userid");
       sessionStorage.clear();
       updateLocalStorage("hostid", data.hostid);
       updateSessionStorage("player", data.host);

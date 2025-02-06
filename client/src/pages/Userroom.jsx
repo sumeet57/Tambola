@@ -14,7 +14,7 @@ const Userroom = () => {
     };
 
     const handleNumbersAssigned = (numbers) => {
-      console.log("Numbers assigned", numbers);
+      // console.log("Numbers assigned", numbers);
       navigate(`/game`, { state: { numbers } });
     };
 

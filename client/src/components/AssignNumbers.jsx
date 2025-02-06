@@ -14,7 +14,6 @@ const AssignNumbers = (props) => {
 
   useEffect(() => {
     if (props.data && Array.isArray(props.data) && props.data.length > 0) {
-      console.log("number from server", props.data);
       const generatedTickets = distributeNumbersEqually(props.data);
       setTickets(generatedTickets);
     }
@@ -57,17 +56,18 @@ const AssignNumbers = (props) => {
       }, 2000);
     };
 
-    socket.on("draw_number", handleDrawNumber);
+    socket.on("number_drawn", handleDrawNumber);
     socket.on("claimed", handleMessageBox);
     socket.on("error", handleMessageBox);
     socket.on("claim_update", setClaimHistory);
     socket.on("room_data_stored", handleGameOver);
 
     return () => {
-      socket.off("draw_number", handleDrawNumber);
+      socket.off("number_drawn", handleDrawNumber);
       socket.off("claimed", handleMessageBox);
       socket.off("error", handleMessageBox);
       socket.off("claim_update", setClaimHistory);
+      socket.off("room_data_stored", handleGameOver);
     };
   }, []);
 
@@ -123,7 +123,7 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
+            let roomid = sessionStorage.getItem("roomid");
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
@@ -156,7 +156,7 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
+            let roomid = sessionStorage.getItem("roomid");
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
@@ -189,7 +189,7 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
+            let roomid = sessionStorage.getItem("roomid");
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
@@ -203,6 +203,7 @@ const AssignNumbers = (props) => {
         }
       }
     } else if (id === 4) {
+      // console.log(drawNumber);
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let earlyFiveNumbers = [];
@@ -213,19 +214,20 @@ const AssignNumbers = (props) => {
               }
             });
           });
-          let isvalid = earlyFiveNumbers.every((num) => {
-            return selectedNumbers.includes(num);
-          });
+
+          let isvalid =
+            selectedNumbers.filter((num) => earlyFiveNumbers.includes(num))
+              .length >= 5;
           if (!isvalid) {
             handleMessageBox("Select all Numbers for Early Five");
             claimMenuToggle();
             return;
           }
-          let isClaimed = earlyFiveNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+          let isClaimed = selectedNumbers.some(
+            (num) => drawNumber.includes(num) && earlyFiveNumbers.includes(num)
           );
           if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
+            let roomid = sessionStorage.getItem("roomid");
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
@@ -273,7 +275,7 @@ const AssignNumbers = (props) => {
             return selectedNumbers.includes(num) && drawNumber.includes(num);
           });
           if (isClaimed) {
-            let roomid = localStorage.getItem("roomid");
+            let roomid = sessionStorage.getItem("roomid");
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
@@ -317,7 +319,7 @@ const AssignNumbers = (props) => {
               (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
             );
             if (isClaimed) {
-              let roomid = localStorage.getItem("roomid");
+              let roomid = sessionStorage.getItem("roomid");
               let userid =
                 localStorage.getItem("userid") ||
                 localStorage.getItem("hostid");

@@ -79,27 +79,8 @@ io.on("connection", (socket) => {
       }
     }, 1000);
 
-    //this drawNumber array to track the numbers which are already drawn
-    const drawNumbers = [];
-    let i = 1;
-    const interval = setInterval(() => {
-      if (i > 90) {
-        clearInterval(interval);
-        return;
-      }
-      let random;
-      do {
-        random = Math.floor(Math.random() * 90) + 1;
-      } while (drawNumbers.includes(random));
-
-      drawNumbers.push(random);
-      io.to(roomid).emit("draw_number", random);
-      i++;
-    }, 1000);
-
     // Listen for game over event to stop the interval
     socket.on("game_over", () => {
-      clearInterval(interval);
       // console.log("entered and cleared interval");
       io.to(roomid).emit("game_over");
     });
@@ -136,6 +117,21 @@ io.on("connection", (socket) => {
         io.to(roomid).emit("game_over");
         socket.emit("game_over");
       }
+    }
+  });
+  //pick number
+  let drawno = [];
+  socket.on("pick_number", (roomid) => {
+    if (drawno.length === 90) {
+      socket.emit("error", "All numbers are drawn");
+      drawno = [];
+    } else if (drawno.length < 90) {
+      let number = Math.floor(Math.random() * 90) + 1;
+      while (drawno.includes(number)) {
+        number = Math.floor(Math.random() * 90) + 1;
+      }
+      drawno.push(number);
+      io.to(roomid).emit("number_drawn", number);
     }
   });
   socket.on("disconnect", () => {
