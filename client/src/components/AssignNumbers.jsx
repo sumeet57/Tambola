@@ -223,9 +223,11 @@ const AssignNumbers = (props) => {
             claimMenuToggle();
             return;
           }
-          let isClaimed = selectedNumbers.some(
-            (num) => drawNumber.includes(num) && earlyFiveNumbers.includes(num)
-          );
+          let isClaimed =
+            selectedNumbers.filter(
+              (num) =>
+                drawNumber.includes(num) && earlyFiveNumbers.includes(num)
+            ).length >= 5;
           if (isClaimed) {
             let roomid = sessionStorage.getItem("roomid");
             let userid =
@@ -350,11 +352,8 @@ const AssignNumbers = (props) => {
           <React.Fragment key={ticketIndex}>
             <div
               key={ticketIndex}
-              className="bg-white h-fit rounded-xl relative overflow-hidden border-4 border-black"
+              className="bg-white h-fit p-1 relative overflow-hidden border-2 border-zinc-900"
             >
-              <h2 className="text-center text-lg font-bold mb-1">
-                Tambola Ticket {parseInt(ticketIndex)}
-              </h2>
               <div className="grid grid-cols-9 bg-gray-200 p-1 rounded-md">
                 {Array.isArray(finalTickets[ticketIndex]) &&
                   finalTickets[ticketIndex].map((row, rowIndex) => (
@@ -381,7 +380,7 @@ const AssignNumbers = (props) => {
                   ))}
               </div>
               <button
-                className="mt-1 bg-blue-500 text-center text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                className="mt-1 bg-blue-500 text-center text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition duration-300"
                 onClick={() => claimMenuToggle(ticketIndex)}
               >
                 Claim

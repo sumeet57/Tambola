@@ -30,21 +30,35 @@ const Game = () => {
   return (
     <>
       {location.pathname === "/game" ? (
-        <div className="cont flex flex-col justify-center items-center p-4">
-          <div className="flex flex-col justify-center items-center max-w-[21rem] gap-2">
+        <div className="cont flex flex-col items-center p-4 w-full min-h-screen bg-gray-100">
+          <div className="w-full max-w-sm flex flex-col items-center gap-4">
             {hostid && (
-              <>
+              <div className="w-full flex flex-col items-center">
                 <div className="message hidden opacity-0"></div>
                 <button
                   onClick={handlePickNumberClick}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  className="w-full bg-blue-600 hover:bg-blue-400 active:scale-[0.9] text-white font-bold py-3 rounded-lg shadow-md transition-all"
                 >
                   Pick Number
                 </button>
-              </>
+              </div>
             )}
-            <DrawNumbers />
-            <AssignNumbers data={assign_no} />
+
+            {/* Drawn Numbers Section */}
+            <div className="w-full flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Drawn Numbers
+              </h3>
+              <DrawNumbers />
+            </div>
+
+            {/* Tickets Section */}
+            <div className="w-full bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700 text-center mb-2">
+                Your Tickets
+              </h3>
+              <AssignNumbers data={assign_no} />
+            </div>
           </div>
         </div>
       ) : (

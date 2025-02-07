@@ -134,6 +134,7 @@ io.on("connection", (socket) => {
       io.to(roomid).emit("number_drawn", number);
     }
   });
+  //remove player from room on disconnect
   socket.on("disconnect", () => {
     for (let roomId in room) {
       if (room[roomId].players[socket.id]) {

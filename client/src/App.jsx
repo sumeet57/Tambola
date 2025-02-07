@@ -6,6 +6,7 @@ import {
   updateLocalStorage,
   updateSessionStorage,
 } from "./utils/storageUtils.js";
+import { use } from "react";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -54,7 +55,7 @@ const App = () => {
         }
       } else {
         console.log("No player data available");
-        navigate("/login");
+        // navigate("/login");
       }
     };
 
@@ -74,6 +75,7 @@ const App = () => {
 
   //to update invitation ,finding user by its id
   const userid = localStorage.getItem("userid");
+  const hostid = localStorage.getItem("hostid");
   const [showNotifications, setShowNotifications] = useState(false);
   const handleNotificationCloseClick = () => {
     setShowNotifications(false);
@@ -109,30 +111,61 @@ const App = () => {
     navigate(`/user/${room}`);
   };
 
+  //button click events
+  const handleRegisterClick = () => {
+    navigate("/register");
+  };
+  const handleLoginClick = () => {
+    navigate("/login");
+  };
+
   return (
     <>
       <Header />
       <div className="w-full pt-10 h-screen flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-300 p-4">
-        <button
-          className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
-          onClick={handleHostClick}
-        >
-          Host a Game
-        </button>
-        <button
-          className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
-          onClick={handleJoinClick}
-        >
-          Join a Game
-        </button>
-        <button
-          className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
-          onClick={handleNotificationClick}
-        >
-          Invitations
-        </button>
+        {hostid || userid ? (
+          <>
+            {hostid && (
+              <button
+                className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+                onClick={handleHostClick}
+              >
+                Host a Game
+              </button>
+            )}
+            <button
+              className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+              onClick={handleJoinClick}
+            >
+              Join a Game
+            </button>
+            {userid && (
+              <button
+                className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                onClick={handleNotificationClick}
+              >
+                Invitations
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+              onClick={handleRegisterClick}
+            >
+              Register
+            </button>
+            <button
+              className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+              onClick={handleLoginClick}
+            >
+              Login
+            </button>
+          </>
+        )}
       </div>
-      {showNotifications && (
+      {showNotifications && userid && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 overflow-x-scroll">
           <div className="bg-white p-6 rounded shadow-lg relative">
             <button
