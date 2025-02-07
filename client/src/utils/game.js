@@ -1,81 +1,21 @@
 export const distributeNumbersEqually = (data) => {
-  let receivedNumbers = [...new Set(data)]; // Remove duplicates from input
+  let arr = [...data];
 
-  // Ensure we have enough numbers to form tickets
-  const ticketCount = Math.min(3, Math.floor(receivedNumbers.length / 15));
-  if (ticketCount < 1) return [];
+  let ticketSize = 15;
+  let maxNumbersAllowed = Math.floor(arr.length / ticketSize) * ticketSize; // Max valid numbers
+  arr = arr.slice(0, maxNumbersAllowed); // Remove extra numbers
 
-  const ranges = Array.from({ length: 9 }, () => []); // Create 9 empty range buckets
+  let ticketCount = Math.ceil(arr.length / ticketSize);
+  let tickets = Array.from({ length: ticketCount }, () => []);
 
-  // Step 1: Categorize numbers into their respective ranges
-  receivedNumbers.forEach((num) => {
-    let rangeIndex = Math.floor((num - 1) / 10); // Determine range
-    ranges[rangeIndex].push(num);
-  });
-
-  // Step 2: Determine the max numbers per ticket per range (capped at 3)
-  const maxPerRangePerTicket = ranges.map((range) =>
-    Math.min(3, Math.max(1, Math.floor(range.length / ticketCount)))
-  );
-
-  // Step 3: Distribute numbers across tickets ensuring balance
-  const tickets = Array.from({ length: ticketCount }, () => []);
-  const assignedNumbers = new Set(); // Track assigned numbers to prevent duplication
-  const remainingNumbers = [];
-
-  ranges.forEach((rangeNumbers, rangeIndex) => {
-    let assigned = Array(ticketCount).fill(0); // Track how many numbers assigned per ticket in this range
-    rangeNumbers.sort((a, b) => a - b); // Sort range numbers for consistency
-
-    rangeNumbers.forEach((num) => {
-      let ticketIndex = assigned.findIndex(
-        (count) => count < maxPerRangePerTicket[rangeIndex]
-      );
-
-      if (ticketIndex !== -1 && !assignedNumbers.has(num)) {
-        tickets[ticketIndex].push(num);
-        assignedNumbers.add(num);
-        assigned[ticketIndex]++;
-      } else {
-        remainingNumbers.push(num); // Store remaining numbers for redistribution
-      }
-    });
-  });
-
-  // Step 4: Ensure each ticket has exactly 15 numbers
-  let extraNumbers = remainingNumbers.filter(
-    (num) => !assignedNumbers.has(num)
-  );
-
-  // If a ticket has less than 15 numbers, fill it with extra numbers
-  tickets.forEach((ticket) => {
-    while (ticket.length < 15 && extraNumbers.length > 0) {
-      let num = extraNumbers.pop();
-      if (!ticket.includes(num)) {
-        ticket.push(num);
-        assignedNumbers.add(num);
-      }
-    }
-  });
-
-  // If some tickets still have < 15 numbers (rare case), pull numbers from tickets with > 15
-  while (tickets.some((ticket) => ticket.length < 15)) {
-    for (let i = 0; i < ticketCount; i++) {
-      let ticket = tickets[i];
-
-      if (ticket.length < 15) {
-        for (let j = 0; j < ticketCount; j++) {
-          if (tickets[j].length > 15) {
-            let movedNum = tickets[j].pop();
-            ticket.push(movedNum);
-          }
-          if (ticket.length === 15) break;
-        }
-      }
-    }
+  let ticketIndex = 0;
+  for (let i = 0; i < arr.length; i++) {
+    tickets[ticketIndex].push(arr[i]);
+    ticketIndex = (ticketIndex + 1) % ticketCount;
   }
 
-  return tickets.slice(0, 3); // Ensure we only return 3 tickets
+  console.log(tickets);
+  return tickets;
 };
 // export const generateTambolaTickets = (numbers) => {
 //   if (!Array.isArray(numbers)) {
@@ -255,3 +195,81 @@ export const generateTambolaTickets = (numbers) => {
 
   return tickets;
 };
+
+// let receivedNumbers = [...new Set(data)]; // Remove duplicates from input
+
+//   // Ensure we have enough numbers to form tickets
+//   const ticketCount = Math.min(3, Math.floor(receivedNumbers.length / 15));
+//   if (ticketCount < 1) return [];
+
+//   const ranges = Array.from({ length: 9 }, () => []); // Create 9 empty range buckets
+
+//   // Step 1: Categorize numbers into their respective ranges
+//   receivedNumbers.forEach((num) => {
+//     let rangeIndex = Math.floor((num - 1) / 10); // Determine range
+//     ranges[rangeIndex].push(num);
+//   });
+
+//   // Step 2: Determine the max numbers per ticket per range (capped at 3)
+//   const maxPerRangePerTicket = ranges.map((range) =>
+//     Math.min(3, Math.max(1, Math.floor(range.length / ticketCount)))
+//   );
+
+//   // Step 3: Distribute numbers across tickets ensuring balance
+//   const tickets = Array.from({ length: ticketCount }, () => []);
+//   const assignedNumbers = new Set(); // Track assigned numbers to prevent duplication
+//   const remainingNumbers = [];
+
+//   ranges.forEach((rangeNumbers, rangeIndex) => {
+//     let assigned = Array(ticketCount).fill(0); // Track how many numbers assigned per ticket in this range
+//     rangeNumbers.sort((a, b) => a - b); // Sort range numbers for consistency
+
+//     rangeNumbers.forEach((num) => {
+//       let ticketIndex = assigned.findIndex(
+//         (count) => count < maxPerRangePerTicket[rangeIndex]
+//       );
+
+//       if (ticketIndex !== -1 && !assignedNumbers.has(num)) {
+//         tickets[ticketIndex].push(num);
+//         assignedNumbers.add(num);
+//         assigned[ticketIndex]++;
+//       } else {
+//         remainingNumbers.push(num); // Store remaining numbers for redistribution
+//       }
+//     });
+//   });
+
+//   // Step 4: Ensure each ticket has exactly 15 numbers
+//   let extraNumbers = remainingNumbers.filter(
+//     (num) => !assignedNumbers.has(num)
+//   );
+
+//   // If a ticket has less than 15 numbers, fill it with extra numbers
+//   tickets.forEach((ticket) => {
+//     while (ticket.length < 15 && extraNumbers.length > 0) {
+//       let num = extraNumbers.pop();
+//       if (!ticket.includes(num)) {
+//         ticket.push(num);
+//         assignedNumbers.add(num);
+//       }
+//     }
+//   });
+
+//   // If some tickets still have < 15 numbers (rare case), pull numbers from tickets with > 15
+//   while (tickets.some((ticket) => ticket.length < 15)) {
+//     for (let i = 0; i < ticketCount; i++) {
+//       let ticket = tickets[i];
+
+//       if (ticket.length < 15) {
+//         for (let j = 0; j < ticketCount; j++) {
+//           if (tickets[j].length > 15) {
+//             let movedNum = tickets[j].pop();
+//             ticket.push(movedNum);
+//           }
+//           if (ticket.length === 15) break;
+//         }
+//       }
+//     }
+//   }
+
+//   return tickets.slice(0, 3); // Ensure we only return 3 tickets
