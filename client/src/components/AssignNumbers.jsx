@@ -9,8 +9,17 @@ import { useNavigate } from "react-router-dom";
 
 const AssignNumbers = (props) => {
   const navigate = useNavigate();
+  const [player, setPlayer] = useState("");
   const [tickets, setTickets] = useState([]);
   const [finalTickets, setFinalTickets] = useState([]); // Store final structured tickets
+
+  useEffect(() => {
+    const playerData = sessionStorage.getItem("player");
+    if (playerData) {
+      const player = JSON.parse(playerData);
+      setPlayer(player);
+    }
+  }, []);
 
   useEffect(() => {
     if (props.data && Array.isArray(props.data) && props.data.length > 0) {
@@ -50,7 +59,7 @@ const AssignNumbers = (props) => {
       setDrawNumber((prevDrawNumber) => [...prevDrawNumber, number]);
     };
     const handleGameOver = () => {
-      handleMessageBox("All the tickets claimed");
+      // handleMessageBox("All the tickets claimed");
       setTimeout(() => {
         navigate("gameover");
       }, 2000);
@@ -82,19 +91,19 @@ const AssignNumbers = (props) => {
     setClaimMenu(!claimMenu);
   };
   const [messageBox, setMessageBox] = useState("");
-  const handleMessageBox = (pattern) => {
+  const handleMessageBox = (pattern, name) => {
     if (pattern === 1) {
-      setMessageBox("First Line Claimed");
+      setMessageBox("First Line Claimed by " + name);
     } else if (pattern === 2) {
-      setMessageBox("Second Line Claimed");
+      setMessageBox("Second Line Claimed by " + name);
     } else if (pattern === 3) {
-      setMessageBox("Third Line Claimed");
+      setMessageBox("Third Line Claimed by " + name);
     } else if (pattern === 4) {
-      setMessageBox("Early Five Claimed");
+      setMessageBox("Early Five Claimed by " + name);
     } else if (pattern === 5) {
-      setMessageBox("Corner Claimed");
+      setMessageBox("Corner Claimed by " + name);
     } else if (pattern === 6) {
-      setMessageBox("Full House Claimed");
+      setMessageBox("Full House Claimed by " + name);
     } else {
       setMessageBox(pattern);
     }
@@ -127,8 +136,9 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
+
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", roomid, userid, pattern);
+            socket.emit("claim", roomid, userid, pattern, player?.name);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -161,7 +171,7 @@ const AssignNumbers = (props) => {
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", roomid, userid, pattern);
+            socket.emit("claim", roomid, userid, pattern, player?.name);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -193,7 +203,7 @@ const AssignNumbers = (props) => {
             let userid =
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-            socket.emit("claim", roomid, userid, pattern);
+            socket.emit("claim", roomid, userid, pattern, player?.name);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -234,7 +244,7 @@ const AssignNumbers = (props) => {
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
 
-            socket.emit("claim", roomid, userid, pattern);
+            socket.emit("claim", roomid, userid, pattern, player?.name);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -282,7 +292,7 @@ const AssignNumbers = (props) => {
               localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
 
-            socket.emit("claim", roomid, userid, pattern);
+            socket.emit("claim", roomid, userid, pattern, player?.name);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -327,7 +337,7 @@ const AssignNumbers = (props) => {
                 localStorage.getItem("hostid");
               const pattern = id;
 
-              socket.emit("claim", roomid, userid, pattern);
+              socket.emit("claim", roomid, userid, pattern, player?.name);
               claimMenuToggle();
             } else {
               handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);

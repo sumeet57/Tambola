@@ -16,7 +16,25 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const submitUser = async (e) => {
+    // validate user input
     e.preventDefault();
+    // validate user input
+    if (!name || !phone || !password) {
+      document.querySelector(".message").innerHTML = "Please fill all fields";
+      return;
+    } else if (!/^\d{10}$/.test(phone)) {
+      document.querySelector(".message").innerHTML =
+        "Phone number should be 10 digits and contain only numbers";
+      return;
+    } else if (password.length < 6 || password.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Password should be between 6 to 20 characters";
+      return;
+    } else if (name.length < 3 || name.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Name should be between 3 to 20 characters";
+      return;
+    }
     const res = await fetch(`${apiBaseUrl}/api/user/login`, {
       method: "POST",
       headers: {
@@ -41,6 +59,23 @@ const Login = () => {
 
   const submitHost = async (e) => {
     e.preventDefault();
+    // validate user input
+    if (!name || !phone || !password) {
+      document.querySelector(".message").innerHTML = "Please fill all fields";
+      return;
+    } else if (!/^\d{10}$/.test(phone)) {
+      document.querySelector(".message").innerHTML =
+        "Phone number should be 10 digits and contain only numbers";
+      return;
+    } else if (password.length < 6 || password.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Password should be between 6 to 20 characters";
+      return;
+    } else if (name.length < 3 || name.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Name should be between 3 to 20 characters";
+      return;
+    }
     const res = await fetch(`${apiBaseUrl}/api/host/login`, {
       method: "POST",
       headers: {
@@ -78,6 +113,7 @@ const Login = () => {
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               type="text"
+              required
               name="name"
               id="name"
               value={name}
@@ -93,7 +129,8 @@ const Login = () => {
             </label>
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              type="text"
+              type="tel"
+              required
               name="phone"
               id="phone"
               value={phone}
@@ -110,6 +147,7 @@ const Login = () => {
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               type="password"
+              required
               name="password"
               id="password"
               value={password}

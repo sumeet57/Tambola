@@ -31,25 +31,28 @@ import {
 // Handle WebSocket connections
 io.on("connection", (socket) => {
   //creating room
-  socket.on("create_room", (roomid, ticket_count, player) => {
-    const res = createRoom(roomid, player, socket.id, ticket_count);
+  socket.on("create_room", async (roomid, ticket_count, player) => {
+    const res = await createRoom(roomid, player, socket.id, ticket_count);
     if (res === "Room already exists") {
       socket.emit("error", "Room already exists");
       return;
     }
     socket.join(roomid);
     socket.emit("room_created", roomid);
-    io.to(roomid).emit("player_update", room[roomid].playersList);
+    io.to(roomid).emit("player_update", room[roomid]?.playersList);
   });
   //joining room
-  socket.on("join_room", (roomid, user, ticket_count) => {
+  socket.on("join_room", async (roomid, user, ticket_count) => {
     // console.log("Joining room", roomid, user, socket.id, ticket_count);
-    const res = joinRoom(roomid, user, socket.id, ticket_count);
+    const res = await joinRoom(roomid, user, socket.id, ticket_count);
     if (res === "Room not found") {
       socket.emit("error", "Room not found");
       return;
     } else if (res === "Room is already started") {
       socket.emit("error", "Room is already started");
+      return;
+    } else if (res === "Player already exists") {
+      socket.emit("error", "Player already exists");
       return;
     } else {
       socket.join(roomid);
@@ -86,7 +89,7 @@ io.on("connection", (socket) => {
     });
   });
   //claiming points
-  socket.on("claim", (roomid, userid, pattern) => {
+  socket.on("claim", async (roomid, userid, pattern, name) => {
     const res = claimPoint(roomid, userid, pattern);
     if (res === "Room not found") {
       socket.emit("error", "Room not found");
@@ -99,9 +102,9 @@ io.on("connection", (socket) => {
       return;
     } else {
       io.to(roomid).emit("claim_update", room[roomid].claimList);
-      io.to(roomid).emit("claimed", pattern);
+      io.to(roomid).emit("claimed", pattern, name);
       if (room[roomid].claimList.includes(6)) {
-        const res = storeRoom(roomid, room[roomid]);
+        const res = await storeRoom(roomid, room[roomid]);
         if (res === "Room not found") {
           socket.emit("error", "Room not found while storing room data");
           return;
@@ -136,21 +139,32 @@ io.on("connection", (socket) => {
   });
   //remove player from room on disconnect
   socket.on("disconnect", () => {
+    // console.log("User disconnected", socket.id);
     for (let roomId in room) {
-      if (room[roomId].players[socket.id]) {
-        delete room[roomId].players[socket.id]; // Remove player
-
-        io.to(roomId).emit(
-          "updatePlayers",
-          Object.values(room[roomId].players)
+      const playerIndex = room[roomId].players.findIndex(
+        (player) => player.socketid === socket.id
+      );
+      if (playerIndex !== -1) {
+        room[roomId].players.splice(playerIndex, 1); // Remove player
+        // console.log("Player removed", room[roomId].players);
+        room[roomId].playersList = room[roomId].players.map(
+          (player) => player.name
         );
+        // console.log("Players list", room[roomId].playersList);
+        io.to(roomId).emit("player_update", room[roomId].playersList);
 
-        if (Object.keys(room[roomId].players).length === 0) {
+        io.to(roomId).emit("updatePlayers", room[roomId].players);
+
+        if (room[roomId].players.length === 0) {
           delete room[roomId]; // Delete empty rooms
         }
         break;
       }
     }
+  });
+  //message socket
+  socket.on("message", (message, roomid, playerName) => {
+    io.to(roomid).emit("messageReceived", message, playerName);
   });
 });
 

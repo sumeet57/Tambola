@@ -16,6 +16,25 @@ const Register = () => {
 
   const submitUser = async (e) => {
     e.preventDefault();
+    // validate user input
+    if (!name || !phone || !password) {
+      document.querySelector(".message").innerHTML = "Please fill all fields";
+      return;
+    } else if (!/^\d{10}$/.test(phone)) {
+      document.querySelector(".message").innerHTML =
+        "Phone number should be 10 digits and contain only numbers";
+      return;
+    } else if (password.length < 6 || password.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Password should be between 6 to 20 characters";
+      return;
+    } else if (name.length < 3 || name.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Name should be between 3 to 20 characters";
+      return;
+    }
+
+    // e.preventDefault();
     const res = await fetch(`${apiBaseUrl}/api/user/register`, {
       method: "POST",
       headers: {
@@ -41,6 +60,24 @@ const Register = () => {
 
   const submitHost = async (e) => {
     e.preventDefault();
+    // validate user input
+    if (!name || !phone || !password) {
+      document.querySelector(".message").innerHTML = "Please fill all fields";
+      return;
+    } else if (!/^\d{10}$/.test(phone)) {
+      document.querySelector(".message").innerHTML =
+        "Phone number should be 10 digits and contain only numbers";
+      return;
+    } else if (password.length < 6 || password.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Password should be between 6 to 20 characters";
+      return;
+    } else if (name.length < 3 || name.length > 20) {
+      document.querySelector(".message").innerHTML =
+        "Name should be between 3 to 20 characters";
+      return;
+    }
+
     const res = await fetch(`${apiBaseUrl}/api/host/register`, {
       method: "POST",
       headers: {
@@ -79,6 +116,7 @@ const Register = () => {
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               type="text"
+              required
               name="name"
               id="name"
               value={name}
@@ -94,7 +132,9 @@ const Register = () => {
             </label>
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              type="text"
+              type="tel"
+              required
+              pattern="[0-9]{10}"
               name="phone"
               id="phone"
               value={phone}
@@ -111,6 +151,7 @@ const Register = () => {
             <input
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               type="password"
+              required
               name="password"
               id="password"
               value={password}

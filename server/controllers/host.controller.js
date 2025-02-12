@@ -3,7 +3,33 @@ import User from "../models/user.model.js";
 
 // /api/host/register
 export const createHost = async (req, res) => {
-  const { name, phone, password } = req.body;
+  let { name, phone, password } = req.body;
+  phone = phone.toString().trim();
+  name = name.toString().trim();
+  password = password.toString().trim();
+
+  //vallidations
+  if (!name || !phone || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  } else if (phone.length !== 10) {
+    return res
+      .status(400)
+      .json({ message: "Phone number should be 10 digits" });
+  } else if (password.length < 6 || password.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Password should be between 6 to 20 characters" });
+  } else if (name.length < 3 || name.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Name should be between 3 to 20 characters" });
+  }
+
+  const hostExists =
+    (await Host.findOne({ phone })) || (await User.findOne({ phone }));
+  if (hostExists) {
+    return res.status(400).json({ message: "Phone is already register" });
+  }
 
   try {
     const host = await Host.create({ name, phone, password });
@@ -18,12 +44,27 @@ export const createHost = async (req, res) => {
 
 // /api/host/login
 export const loginHost = async (req, res) => {
-  const { phone, password } = req.body;
+  let { phone, password } = req.body;
+  phone = phone.toString().trim();
+  password = password.toString().trim();
+
+  //vallidations
+  if (!phone || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  } else if (phone.length !== 10) {
+    return res
+      .status(400)
+      .json({ message: "Phone number should be 10 digits" });
+  } else if (password.length < 6 || password.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Password should be between 6 to 20 characters" });
+  }
 
   try {
     const host = await Host.findOne({ phone, password });
     if (!host) {
-      return res.status(400).json({ message: "Host not found" });
+      return res.status(400).json({ message: "Host not register" });
     }
     const hostid = host._id;
     res
@@ -36,12 +77,17 @@ export const loginHost = async (req, res) => {
 
 // /api/host/invite
 export const inviteUser = async (req, res) => {
-  const { name, roomid, points } = req.body;
+  let { phone, roomid, points } = req.body;
+  phone = phone.toString().trim();
 
   try {
-    const user = await User.findOne({ name });
+    const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "player not found" });
+    }
+    const playerInvited = user.invites.includes(roomid);
+    if (playerInvited) {
+      return res.status(400).json({ message: "Player already invited" });
     }
 
     user.invites.push(roomid);

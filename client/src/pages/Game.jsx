@@ -3,8 +3,10 @@ import AssignNumbers from "../components/AssignNumbers";
 import DrawNumbers from "../components/DrawNumbers";
 import { useLocation, Outlet } from "react-router-dom";
 import socket from "../utils/websocket";
+import Message from "../components/Message";
 
 const Game = () => {
+  const [drawNumber, setDrawNumber] = useState([]);
   const location = useLocation();
   const assign_no = location.state?.numbers;
   const roomid = location.state?.roomid;
@@ -12,20 +14,28 @@ const Game = () => {
   const hostid = localStorage.getItem("hostid");
 
   const handlePickNumberClick = () => {
-    // console.log("Pick Number Clicked");
-    if (hostid) {
-      socket.emit("pick_number", roomid);
-    } else {
-      console.log("Host not found");
+    if (drawNumber.length >= 90) {
+      console.log(drawNumber);
+      document.querySelector(".message").innerHTML = "All numbers are drawn!";
+      return;
     }
+    socket.emit("pick_number", roomid);
   };
 
   useEffect(() => {
     socket.on("error", (message) => {
-      console.log(message);
       document.querySelector(".message").innerHTML = message;
     });
-  });
+    const pickedNumber = (number) => {
+      setDrawNumber((prevDrawNumber) => [number, ...prevDrawNumber]);
+    };
+    socket.on("number_drawn", pickedNumber);
+
+    return () => {
+      socket.off("number_drawn", pickedNumber);
+      socket.off("error");
+    };
+  }, []);
 
   return (
     <>
@@ -36,20 +46,29 @@ const Game = () => {
               <div className="w-full flex flex-col items-center">
                 <div className="message hidden opacity-0"></div>
                 <button
-                  onClick={handlePickNumberClick}
-                  className="w-full bg-blue-600 hover:bg-blue-400 active:scale-[0.9] text-white font-bold py-3 rounded-lg shadow-md transition-all"
+                  onClick={
+                    drawNumber.length >= 90 ? null : handlePickNumberClick
+                  }
+                  className={`w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition-all ${
+                    drawNumber.length >= 90
+                      ? "cursor-not-allowed"
+                      : "cursor-pointer hover:bg-blue-400 active:scale-[0.9]"
+                  }`}
                 >
-                  Pick Number
+                  {drawNumber.length >= 90
+                    ? "All numbers are drawn!"
+                    : "Pick Number"}
                 </button>
               </div>
             )}
 
             {/* Drawn Numbers Section */}
             <div className="w-full flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700">
-                Drawn Numbers
-              </h3>
               <DrawNumbers />
+            </div>
+            {/* message section */}
+            <div className="w-full flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
+              <Message />
             </div>
 
             {/* Tickets Section */}

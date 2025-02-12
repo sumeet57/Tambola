@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Outlet, useNavigate } from "react-router-dom";
+import { useLocation, Outlet, useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import socket from "../utils/websocket";
-import { use } from "react";
 import { updateSessionStorage } from "../utils/storageUtils";
-
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -16,7 +14,9 @@ const Hostpage = () => {
   const location = useLocation();
 
   // for storing the room id and ticket count
-  const [roomId, setRoomId] = useState("");
+  const temproomid = useParams();
+
+  const [roomId, setRoomId] = useState(temproomid.roomid || "");
   const [ticketCount, setTicketCount] = useState(1);
 
   // for getting the socket id from local storage
@@ -72,9 +72,8 @@ const Hostpage = () => {
         }),
       });
       const pointRes = await res.json();
-      if (res.status === 404) {
+      if (res.status === 400) {
         document.querySelector(".message").innerHTML = pointRes.message;
-        console.log(pointRes);
       }
       if (res.status === 200) {
         socket.emit("create_room", roomId, ticketCount, player, socketid);
@@ -92,9 +91,40 @@ const Hostpage = () => {
     deductPoints();
     navigate(`/host/room/${room}`);
   };
+  const handleJoinedRoom = (room) => {
+    updateSessionStorage("roomid", parseInt(room));
+    navigate(`/host/room/${room}`);
+  };
+
+  const handleJoinRoom = async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/game/invited`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: player?.phone,
+          roomid: roomId,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.status === 400) {
+        document.querySelector(".message").innerHTML = data.message;
+        return;
+      } else if (res.status === 200) {
+        socket.emit("join_room", roomId, player, ticketCount);
+      }
+    } catch (error) {
+      document.querySelector(".message").innerHTML = "Failed to join room";
+    }
+  };
 
   useEffect(() => {
     socket.on("room_created", handleRoomJoin);
+
+    socket.on("room_joined", handleJoinedRoom);
 
     socket.on("error", (message) => {
       document.querySelector(".message").innerHTML = message;
@@ -110,7 +140,8 @@ const Hostpage = () => {
   return (
     <>
       <Header />
-      {location.pathname === "/host" ? (
+      {location.pathname === "/host" ||
+      location.pathname === `/host/${roomId}` ? (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
           <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
             <h1 className="text-2xl font-bold mb-6 text-center">Create Room</h1>
@@ -153,9 +184,15 @@ const Hostpage = () => {
             <p className="message text-red-500"></p>
             <button
               onClick={handleCreateRoom}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold mr-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               Create Room
+            </button>
+            <button
+              onClick={handleJoinRoom}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold mx-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Join Room
             </button>
           </div>
         </div>

@@ -6,7 +6,6 @@ import {
   updateLocalStorage,
   updateSessionStorage,
 } from "./utils/storageUtils.js";
-import { use } from "react";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -81,18 +80,18 @@ const App = () => {
     setShowNotifications(false);
   };
   const handleNotificationClick = async () => {
-    const res = await fetch(`${apiBaseUrl}/api/user/find`, {
+    const res = await fetch(`${apiBaseUrl}/api/game/player`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        userid,
+        id: userid || hostid,
       }),
     });
     const data = await res.json();
     if (res.status === 200) {
-      updateSessionStorage("player", data.user);
+      updateSessionStorage("player", data.data);
     }
     setShowNotifications(true);
   };
@@ -108,7 +107,14 @@ const App = () => {
 
   //handle room join click
   const handleRoomJoinClick = (room) => {
-    navigate(`/user/${room}`);
+    if (userid) {
+      navigate(`/user/${room}`);
+      // navigate(`/user/${room}`);
+    } else if (hostid) {
+      navigate(`/host/${room}`);
+    } else {
+      navigate("/login");
+    }
   };
 
   //button click events
@@ -133,20 +139,22 @@ const App = () => {
                 Host a Game
               </button>
             )}
-            <button
-              className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
-              onClick={handleJoinClick}
-            >
-              Join a Game
-            </button>
             {userid && (
-              <button
-                className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
-                onClick={handleNotificationClick}
-              >
-                Invitations
-              </button>
+              <>
+                <button
+                  className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+                  onClick={handleJoinClick}
+                >
+                  Join a Game
+                </button>
+              </>
             )}
+            <button
+              className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+              onClick={handleNotificationClick}
+            >
+              Invitations
+            </button>
           </>
         ) : (
           <>
@@ -165,7 +173,7 @@ const App = () => {
           </>
         )}
       </div>
-      {showNotifications && userid && (
+      {showNotifications && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 overflow-x-scroll">
           <div className="bg-white p-6 rounded shadow-lg relative">
             <button

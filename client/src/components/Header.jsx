@@ -29,14 +29,7 @@ const Header = () => {
               Points : {player?.points || 0}
             </div>
           ) : (
-            <>
-              <div className="bg-blue-500 text-white px-4 py-2 rounded">
-                <button onClick={() => navigate("/login")}>Login</button>
-              </div>
-              <div className="bg-blue-500 text-white px-4 py-2 rounded">
-                <button onClick={() => navigate("/register")}>Register</button>
-              </div>
-            </>
+            <>""</>
           )}
         </div>
       </nav>

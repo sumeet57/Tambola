@@ -4,6 +4,7 @@ import Host from "../models/host.model.js";
 // /api/game/points
 export const deductPoints = async (req, res) => {
   const { id, points } = req.body;
+  // id = id.trim();
 
   const user = await User.findById(id);
   const host = await Host.findById(id);
@@ -33,39 +34,50 @@ export const isPointsAvailable = async (req, res) => {
   const user = await User.findById(id);
   const host = await Host.findById(id);
   if (!user && !host) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(400).json({ message: "User not found" });
   }
   if (user) {
     if (user.points >= ticket) {
       return res.status(200).json({ message: "Points available" });
     } else {
-      return res.status(404).json({ message: "Points not available" });
+      return res.status(400).json({ message: "Points not available" });
     }
   }
   if (host) {
     if (host.points >= ticket) {
       return res.status(200).json({ message: "Points available" });
     } else {
-      return res.status(404).json({ message: "Points not available" });
+      return res.status(400).json({ message: "Points not available" });
     }
   }
 };
 
 // /api/game/invited
 export const isPlayerInvited = async (req, res) => {
-  const { name, roomid } = req.body;
+  let { phone, roomid } = req.body;
+  phone = phone.toString().trim();
+
+  //validation
+  if (!phone || !roomid) {
+    return res.status(400).json({ message: "All fields are required" });
+  } else if (phone.length !== 10) {
+    return res
+      .status(400)
+      .json({ message: "Phone number must be 10 digits (login back)" });
+  }
 
   // Find the player by name
-  const player = await User.findOne({ name });
+  const player =
+    (await User.findOne({ phone })) || (await Host.findOne({ phone }));
   if (!player) {
-    return res.status(404).json({ message: "Player not found" });
+    return res.status(400).json({ message: "Player not found" });
   }
 
   // Check if the player is invited
   const isInvited = player.invites.includes(roomid);
 
   if (!isInvited) {
-    return res.status(403).json({ message: "Player not invited" });
+    return res.status(400).json({ message: "Player not invited" });
   }
 
   return res.status(200).json({ message: "Player is Invited" });
@@ -77,7 +89,7 @@ export const getPlayerData = async (req, res) => {
   const user = await User.findById(id);
   const host = await Host.findById(id);
   if (!user && !host) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(400).json({ message: "User not found" });
   } else if (user) {
     return res.status(200).json({ data: user, message: "User found" });
   } else if (host) {

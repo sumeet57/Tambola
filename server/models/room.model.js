@@ -39,6 +39,10 @@ const roomSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    winner: {
+      type: Object,
+      default: {},
+    },
   },
   { timestamps: true }
 );

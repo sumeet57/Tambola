@@ -1,9 +1,35 @@
+import Host from "../models/host.model.js";
 import User from "../models/user.model.js";
 
 // /api/user/register
 export const createUser = async (req, res) => {
-  const { name, phone, password } = req.body;
-  console.log(req.body);
+  let { name, phone, password } = req.body;
+  phone = phone.toString().trim();
+  password = password.toString().trim();
+  name = name.toString().trim();
+
+  //validation
+  if (!name || !phone || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  } else if (phone.length !== 10) {
+    return res.status(400).json({ message: "Phone number must be 10 digits" });
+  } else if (password.length < 6 || password.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Password must be between 6 to 20 characters" });
+  } else if (name.length < 3 || name.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Name must be between 3 to 20 characters" });
+  }
+
+  const existingUser =
+    (await User.findOne({ phone })) || (await Host.findOne({ phone }));
+
+  if (existingUser) {
+    return res.status(400).json({ message: "Phone is already register" });
+  }
+
   try {
     const user = await User.create({ name, phone, password });
     const userid = user._id;
@@ -17,12 +43,29 @@ export const createUser = async (req, res) => {
 
 // /api/user/login
 export const loginUser = async (req, res) => {
-  const { name, password } = req.body;
+  let { phone, password } = req.body;
+  phone = phone.toString().trim();
+  password = password.toString().trim();
+
+  //validation
+  if (!phone || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  } else if (phone.length !== 10) {
+    return res.status(400).json({ message: "Phone number must be 10 digits" });
+  } else if (password.length < 6 || password.length > 20) {
+    return res
+      .status(400)
+      .json({ message: "Password must be between 6 to 20 characters" });
+  }
 
   try {
-    const user = await User.findOne({ name, password });
+    const user = await User.findOne({ phone });
+    const passwordMatch = user.password === password;
     if (!user) {
       return res.status(400).json({ message: "User not found" });
+    }
+    if (!passwordMatch) {
+      return res.status(400).json({ message: "Invalid password" });
     }
     const userid = user._id;
     res
@@ -35,7 +78,8 @@ export const loginUser = async (req, res) => {
 
 // /api/user/find
 export const findUser = async (req, res) => {
-  const { userid } = req.body;
+  let { userid } = req.body;
+  userid = userid.toString().trim();
 
   try {
     const user = await User.findById(userid);

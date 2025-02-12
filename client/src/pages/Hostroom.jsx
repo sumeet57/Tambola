@@ -19,7 +19,8 @@ const Hostroom = () => {
 
   //for inviting players states
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [playerName, setPlayerName] = useState("");
+  const [playerPhone, setPlayerPhone] = useState("");
+  // const [playerName, setPlayerName] = useState("");
   const [playerPoints, setPlayerPoints] = useState(1);
 
   //for getting players from socket
@@ -60,9 +61,12 @@ const Hostroom = () => {
 
   //invite player and deduct points of host logic
   const handleInvitePlayer = async () => {
+    console.log(playerPhone, "clicked");
     const hostid = localStorage.getItem("hostid");
-    if (playerName) {
-      if (players.includes(playerName)) {
+
+    // console.log("Host id", hostid);
+    if (playerPhone) {
+      if (players.includes(playerPhone)) {
         alert("Player already invited");
         return;
       }
@@ -74,11 +78,12 @@ const Hostroom = () => {
           },
           credentials: "include",
           body: JSON.stringify({
-            name: playerName,
+            phone: playerPhone,
             roomid: id,
             points: playerPoints,
           }),
         });
+        // console.log(resPlayer, "resPlayer received");
 
         //deducting points from host
         const resPoints = await fetch(`${apiBaseUrl}/api/game/points`, {
@@ -92,25 +97,24 @@ const Hostroom = () => {
             points: playerPoints,
           }),
         });
+        const dataPoints = await resPoints.json();
+        const dataPlayer = await resPlayer.json();
 
-        if (resPlayer.status === 404 || resPoints.status === 404) {
-          if (resPlayer.status === 404) {
-            document.querySelector(".message").textContent = "Player not found";
-          }
-          if (resPoints.status === 404) {
-            document.querySelector(".message").textContent =
-              "Insufficient points";
-          }
+        if (resPlayer.status === 400 || resPoints.status === 400) {
+          document.querySelector(".message").textContent =
+            dataPlayer.message || dataPoints.message;
         } else {
-          const dataPoints = await resPoints.json();
+          // const dataPoints = await resPoints.json();
           if (resPlayer.status === 200 && resPoints.status === 200) {
             updateSessionStorage("player", dataPoints.data);
             handleClosePopup();
           } else {
             document.querySelector(".message").textContent = "Invite failed";
           }
-          setPlayerName("");
+          setPlayerPhone("");
         }
+      } else {
+        alert("Host not found");
       }
     }
   };
@@ -142,9 +146,9 @@ const Hostroom = () => {
             <input
               type="text"
               className="border p-2 w-full mb-2"
-              placeholder="Enter player name"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Enter player phone no"
+              value={playerPhone}
+              onChange={(e) => setPlayerPhone(e.target.value)}
             />
             Points :{" "}
             <select
@@ -169,7 +173,7 @@ const Hostroom = () => {
       <div className="mt-4">
         <h2 className="text-xl mb-2">Players</h2>
         <div className="border p-4 rounded">
-          {players.map((player, index) => (
+          {players?.map((player, index) => (
             <span key={index} className="m-2 border-2 p-2 rounded">
               {player}
             </span>

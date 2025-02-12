@@ -55,6 +55,10 @@ const router = createBrowserRouter([
         path: "room/:roomid",
         element: <Hostroom />,
       },
+      {
+        path: ":roomid",
+        element: <Hostpage />,
+      },
     ],
   },
   {

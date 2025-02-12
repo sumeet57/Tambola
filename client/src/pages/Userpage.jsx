@@ -52,18 +52,18 @@ const Userpage = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: player?.name,
+        phone: player?.phone,
         roomid: roomId,
       }),
     });
     const invitedData = await invitedRes.json();
     const pointsData = await pointsRes.json();
 
-    if (invitedRes.status === 404) {
+    if (invitedRes.status === 400) {
       document.querySelector(".message").innerHTML = invitedData.message;
       return;
     }
-    if (pointsRes.status === 404) {
+    if (pointsRes.status === 400) {
       document.querySelector(".message").innerHTML = pointsData.message;
       return;
     }
