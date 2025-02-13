@@ -33,6 +33,7 @@ io.on("connection", (socket) => {
   //creating room
   socket.on("create_room", async (roomid, ticket_count, player) => {
     const res = await createRoom(roomid, player, socket.id, ticket_count);
+    // console.log("res", res);
     if (res === "Room already exists") {
       socket.emit("error", "Room already exists");
       return;
@@ -42,9 +43,9 @@ io.on("connection", (socket) => {
     io.to(roomid).emit("player_update", room[roomid]?.playersList);
   });
   //joining room
-  socket.on("join_room", async (roomid, user, ticket_count) => {
+  socket.on("join_room", (roomid, user, ticket_count) => {
     // console.log("Joining room", roomid, user, socket.id, ticket_count);
-    const res = await joinRoom(roomid, user, socket.id, ticket_count);
+    const res = joinRoom(roomid, user, socket.id, ticket_count);
     if (res === "Room not found") {
       socket.emit("error", "Room not found");
       return;

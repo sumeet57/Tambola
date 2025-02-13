@@ -364,7 +364,7 @@ const AssignNumbers = (props) => {
               key={ticketIndex}
               className="bg-white h-fit p-1 relative overflow-hidden border-2 border-zinc-900"
             >
-              <div className="grid grid-cols-9 bg-gray-200 p-1 rounded-md">
+              <div className="grid grid-cols-9 bg-gray-200 rounded-md">
                 {Array.isArray(finalTickets[ticketIndex]) &&
                   finalTickets[ticketIndex].map((row, rowIndex) => (
                     <React.Fragment key={rowIndex}>
@@ -375,12 +375,16 @@ const AssignNumbers = (props) => {
                             onClick={(e) =>
                               num !== null && handleNumberClick(e)
                             }
-                            className={`w-9 h-9 flex items-center justify-center text-md font-semibold rounded-none border ${
+                            className={`w-9 h-9 flex items-center justify-center text-base font-semibold rounded-none border ${
                               num !== null
                                 ? selectedNumbers.includes(num)
                                   ? "bg-blue-500 text-white"
                                   : "bg-white text-black"
                                 : "bg-gray-300"
+                            } ${
+                              window.innerWidth < 400
+                                ? "w-8 h-8 text-[12px]"
+                                : ""
                             }`}
                           >
                             {num !== null ? num : ""}
@@ -390,7 +394,7 @@ const AssignNumbers = (props) => {
                   ))}
               </div>
               <button
-                className="mt-1 bg-blue-500 text-center text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition duration-300"
+                className="mt-1 bg-blue-500 text-center text-white px-3 py-[6px] transition-all active:scale-90 rounded-lg hover:bg-blue-600"
                 onClick={() => claimMenuToggle(ticketIndex)}
               >
                 Claim
@@ -409,7 +413,7 @@ const AssignNumbers = (props) => {
           <div className="cont w-80 h-80 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-zinc-900 rounded-3xl shadow-lg">
             <div
               onClick={claimMenuToggle}
-              className="closeButton absolute grid place-items-center top-2 right-2 text-xl w-10 h-10 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white transition duration-300"
+              className="closeButton absolute grid place-items-center top-2 right-2 text-3xl transition-all active:scale-90 w-10 h-10 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white"
             >
               &times;
             </div>
@@ -426,7 +430,7 @@ const AssignNumbers = (props) => {
                   <button
                     onClick={() => claimClick(claim.id)}
                     key={claim.id}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all active:scale-90"
                   >
                     {claim.name}
                   </button>

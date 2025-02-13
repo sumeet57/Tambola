@@ -6,6 +6,7 @@ import {
   updateLocalStorage,
   updateSessionStorage,
 } from "./utils/storageUtils.js";
+import Loading from "./components/Loading.jsx";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -13,17 +14,26 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 const App = () => {
   // for navigation
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(!socket.connected); // Check initial connection
 
-  // eastablishing connection with socket
   useEffect(() => {
-    socket.on("connect", () => {
+    const handleConnect = () => {
       console.log(`Connected with ID: ${socket.id}`);
+      setLoading(false);
       localStorage.removeItem("socketid");
       updateLocalStorage("socketid", socket.id);
-    });
+    };
+
+    if (socket.connected) {
+      handleConnect(); // If already connected, call it immediately
+    } else {
+      setLoading(true); // If not connected, wait for the "connect" event
+    }
+
+    socket.on("connect", handleConnect);
 
     return () => {
-      socket.off("connect");
+      socket.off("connect", handleConnect);
     };
   }, []);
 
@@ -127,87 +137,93 @@ const App = () => {
 
   return (
     <>
-      <Header />
-      <div className="w-full pt-10 h-screen flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-300 p-4">
-        {hostid || userid ? (
-          <>
-            {hostid && (
-              <button
-                className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
-                onClick={handleHostClick}
-              >
-                Host a Game
-              </button>
-            )}
-            {userid && (
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <Header />
+          <div className="w-full pt-10 h-screen flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-300 p-4">
+            {hostid || userid ? (
+              <>
+                {hostid && (
+                  <button
+                    className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+                    onClick={handleHostClick}
+                  >
+                    Host a Game
+                  </button>
+                )}
+                {userid && (
+                  <>
+                    <button
+                      className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+                      onClick={handleJoinClick}
+                    >
+                      Join a Game
+                    </button>
+                  </>
+                )}
+                <button
+                  className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                  onClick={handleNotificationClick}
+                >
+                  Invitations
+                </button>
+              </>
+            ) : (
               <>
                 <button
-                  className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
-                  onClick={handleJoinClick}
+                  className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+                  onClick={handleRegisterClick}
                 >
-                  Join a Game
+                  Register
+                </button>
+                <button
+                  className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
+                  onClick={handleLoginClick}
+                >
+                  Login
                 </button>
               </>
             )}
-            <button
-              className="bg-red-400 text-white w-40 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
-              onClick={handleNotificationClick}
-            >
-              Invitations
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className="bg-green-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
-              onClick={handleRegisterClick}
-            >
-              Register
-            </button>
-            <button
-              className="bg-yellow-500 text-white w-40 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
-              onClick={handleLoginClick}
-            >
-              Login
-            </button>
-          </>
-        )}
-      </div>
-      {showNotifications && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 overflow-x-scroll">
-          <div className="bg-white p-6 rounded shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500"
-              onClick={handleNotificationCloseClick}
-            >
-              &times;
-            </button>
-            <h2 className="text-xl font-bold mb-4">Notifications</h2>
-            {player?.invites?.length > 0 ? (
-              player.invites.map((invite) => {
-                return (
-                  <div
-                    key={invite}
-                    className="flex items-center justify-between p-2 border-b"
-                  >
-                    <div>{invite}</div>
-                    <div>
-                      <button
-                        onClick={() => handleRoomJoinClick(invite)}
-                        className="bg-green-500 text-white ml-3 px-4 py-2 rounded"
-                      >
-                        Join
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div>No invitations available</div>
-            )}
-            <div className="msg text-red-500"></div>
           </div>
-        </div>
+          {showNotifications && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 overflow-x-scroll">
+              <div className="bg-white p-6 rounded shadow-lg relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-500"
+                  onClick={handleNotificationCloseClick}
+                >
+                  &times;
+                </button>
+                <h2 className="text-xl font-bold mb-4">Notifications</h2>
+                {player?.invites?.length > 0 ? (
+                  player.invites.map((invite) => {
+                    return (
+                      <div
+                        key={invite}
+                        className="flex items-center justify-between p-2 border-b"
+                      >
+                        <div>{invite}</div>
+                        <div>
+                          <button
+                            onClick={() => handleRoomJoinClick(invite)}
+                            className="bg-green-500 text-white ml-3 px-4 py-2 rounded"
+                          >
+                            Join
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div>No invitations available</div>
+                )}
+                <div className="msg text-red-500"></div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );

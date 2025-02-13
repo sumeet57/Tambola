@@ -52,7 +52,7 @@ const Game = () => {
                   className={`w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition-all ${
                     drawNumber.length >= 90
                       ? "cursor-not-allowed"
-                      : "cursor-pointer hover:bg-blue-400 active:scale-[0.9]"
+                      : "cursor-pointer active:bg-blue-400 active:scale-[0.9]"
                   }`}
                 >
                   {drawNumber.length >= 90
@@ -72,7 +72,7 @@ const Game = () => {
             </div>
 
             {/* Tickets Section */}
-            <div className="w-full bg-white p-4 rounded-lg shadow-md">
+            <div className="w-full bg-white p-2 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 text-center mb-2">
                 Your Tickets
               </h3>

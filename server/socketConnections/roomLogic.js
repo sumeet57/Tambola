@@ -6,15 +6,13 @@ import Host from "../models/host.model.js";
 //internal functions of logic
 import { assignNumbersToPlayers } from "./assignNumberLogic.js";
 
-// console.log("Room in db from roomlogic:", roomInDb);
-
 export const createRoom = async (roomid, player, socketid, ticket_count) => {
   //validations
+
   const roomExists = room[roomid] || roomInDb.includes(roomid);
   if (roomExists) {
     return "Room already exists";
   }
-  // console.log(room);
 
   // Create a new room
   room[roomid] = {
@@ -38,16 +36,18 @@ export const createRoom = async (roomid, player, socketid, ticket_count) => {
   try {
     // console.log("Player", player._id);
     const host = await Host.findById(player._id);
-    // console.log("Host", host);
+
     if (host) {
-      host.invites.push(roomid);
+      let roomIdExists = host.invites.includes(roomid);
+      if (!roomIdExists) {
+        host.invites.push(roomid);
+      }
     }
     await host.save();
   } catch (err) {
     console.error(`Error updating host ${player._id}:`, err);
   }
   // console.log("Room created", room[roomid].players);
-
   return room;
 };
 

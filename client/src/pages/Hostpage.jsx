@@ -3,6 +3,7 @@ import { useLocation, Outlet, useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import socket from "../utils/websocket";
 import { updateSessionStorage } from "../utils/storageUtils";
+import Loading from "../components/Loading";
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,6 +19,16 @@ const Hostpage = () => {
 
   const [roomId, setRoomId] = useState(temproomid.roomid || "");
   const [ticketCount, setTicketCount] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const [messageStore, setMessageStore] = useState("");
+  const [messageToggle, setMessageToggle] = useState(false);
+
+  const messageHandler = (message) => {
+    setMessageToggle(false);
+    setMessageStore(message);
+    setMessageToggle(true);
+  };
 
   // for getting the socket id from local storage
   const socketid = localStorage.getItem("socketid");
@@ -28,10 +39,15 @@ const Hostpage = () => {
 
   const handleCreateRoom = () => {
     // Handle room creation logic here
+    // setLoading(true);
     if (hostid) {
+      if (roomId === "") {
+        messageHandler("Room ID cannot be empty");
+        return;
+      }
       handleRoomCreated();
     } else {
-      document.querySelector(".message").innerHTML = "Host not found";
+      messageHandler("Host not found");
     }
   };
   const deductPoints = async () => {
@@ -52,14 +68,15 @@ const Hostpage = () => {
         updateSessionStorage("player", data.data); // Update player session data
         setTicketCount(1); // Reset ticket count
       } else {
-        document.querySelector(".message").innerHTML = data.message;
+        messageHandler(data.message);
       }
     } catch (error) {
-      document.querySelector(".message").innerHTML = "Failed to deduct points.";
+      messageHandler("Failed to deduct points");
       console.error("Failed to deduct points:", error);
     }
   };
   const checkPoints = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${apiBaseUrl}/api/game/available`, {
         method: "POST",
@@ -72,14 +89,17 @@ const Hostpage = () => {
         }),
       });
       const pointRes = await res.json();
+      setLoading(false);
       if (res.status === 400) {
-        document.querySelector(".message").innerHTML = pointRes.message;
+        messageHandler(pointRes.message);
+        return;
       }
       if (res.status === 200) {
         socket.emit("create_room", roomId, ticketCount, player, socketid);
       }
     } catch (error) {
-      document.querySelector(".message").innerHTML = "Failed to check points";
+      messageHandler("Failed to check points");
+      console.error("Failed to check points:", error);
     }
   };
 
@@ -97,6 +117,7 @@ const Hostpage = () => {
   };
 
   const handleJoinRoom = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${apiBaseUrl}/api/game/invited`, {
         method: "POST",
@@ -110,14 +131,16 @@ const Hostpage = () => {
       });
 
       const data = await res.json();
+      setLoading(false);
       if (res.status === 400) {
-        document.querySelector(".message").innerHTML = data.message;
+        messageHandler(data.message);
         return;
       } else if (res.status === 200) {
         socket.emit("join_room", roomId, player, ticketCount);
       }
     } catch (error) {
-      document.querySelector(".message").innerHTML = "Failed to join room";
+      messageHandler("Failed to join room");
+      console.error("Failed to join room:", error);
     }
   };
 
@@ -127,7 +150,7 @@ const Hostpage = () => {
     socket.on("room_joined", handleJoinedRoom);
 
     socket.on("error", (message) => {
-      document.querySelector(".message").innerHTML = message;
+      messageHandler(message);
     });
 
     // Cleanup
@@ -139,65 +162,75 @@ const Hostpage = () => {
 
   return (
     <>
-      <Header />
-      {location.pathname === "/host" ||
-      location.pathname === `/host/${roomId}` ? (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-          <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h1 className="text-2xl font-bold mb-6 text-center">Create Room</h1>
-            <div className="mb-4">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="roomId"
-              >
-                Room ID
-              </label>
-              <input
-                type="text"
-                id="roomId"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              />
-            </div>
-            <div className="mb-6">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="ticketCount"
-              >
-                Number of Tickets
-              </label>
-              <select
-                id="ticketCount"
-                value={ticketCount}
-                onChange={(e) => {
-                  const selectedValue = Number(e.target.value);
-                  setTicketCount(selectedValue); // Update the state
-                }}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-              </select>
-            </div>
-            <p className="message text-red-500"></p>
-            <button
-              onClick={handleCreateRoom}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold mr-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Create Room
-            </button>
-            <button
-              onClick={handleJoinRoom}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold mx-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Join Room
-            </button>
-          </div>
-        </div>
+      {loading ? (
+        <Loading />
       ) : (
-        <Outlet />
+        <>
+          <Header />
+          {location.pathname === "/host" ||
+          location.pathname === `/host/${roomId}` ? (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+              <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+                <h1 className="text-2xl font-bold mb-6 text-center">
+                  Create Room
+                </h1>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                    htmlFor="roomId"
+                  >
+                    Room ID
+                  </label>
+                  <input
+                    type="text"
+                    id="roomId"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                </div>
+                <div className="mb-6">
+                  <label
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                    htmlFor="ticketCount"
+                  >
+                    Number of Tickets
+                  </label>
+                  <select
+                    id="ticketCount"
+                    value={ticketCount}
+                    onChange={(e) => {
+                      const selectedValue = Number(e.target.value);
+                      setTicketCount(selectedValue); // Update the state
+                    }}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                  </select>
+                </div>
+                {messageToggle && (
+                  <p className="text-red-500 text-center">{messageStore}</p>
+                )}
+                <button
+                  onClick={handleCreateRoom}
+                  className="bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold mr-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                  Create Room
+                </button>
+                <button
+                  onClick={handleJoinRoom}
+                  className="bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold mx-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                  Join Room
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Outlet />
+          )}
+        </>
       )}
     </>
   );
