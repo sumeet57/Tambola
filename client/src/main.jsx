@@ -12,7 +12,7 @@ import {
 
 //import components
 import Login from "./components/Login.jsx";
-import Register from "./components/register.jsx";
+import Register from "./components/Register.jsx";
 import Hostroom from "./pages/Hostroom.jsx";
 import Userroom from "./pages/Userroom.jsx";
 import Userpage from "./pages/Userpage.jsx";
