@@ -47,6 +47,7 @@ const Userpage = () => {
   //for handling join room
   const handleJoin = async () => {
     //for checking if player has enough points
+    setLoading(true);
     const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
       method: "POST",
       headers: {
@@ -70,7 +71,7 @@ const Userpage = () => {
     });
     const invitedData = await invitedRes.json();
     const pointsData = await pointsRes.json();
-
+    setLoading(false);
     if (invitedRes.status === 400) {
       messageHandler(invitedData.message);
       return;
