@@ -60,10 +60,10 @@ export const loginUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ phone });
-    const passwordMatch = user.password === password;
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
+    const passwordMatch = user.password === password;
     if (!passwordMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
