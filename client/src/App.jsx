@@ -90,6 +90,7 @@ const App = () => {
     setShowNotifications(false);
   };
   const handleNotificationClick = async () => {
+    setLoading(true);
     const res = await fetch(`${apiBaseUrl}/api/game/player`, {
       method: "POST",
       headers: {
@@ -100,6 +101,7 @@ const App = () => {
       }),
     });
     const data = await res.json();
+    setLoading(false);
     if (res.status === 200) {
       updateSessionStorage("player", data.data);
     }
