@@ -95,6 +95,7 @@ const Hostpage = () => {
         return;
       }
       if (res.status === 200) {
+        setLoading(true);
         socket.emit("create_room", roomId, ticketCount, player, socketid);
       }
     } catch (error) {
@@ -107,11 +108,13 @@ const Hostpage = () => {
     checkPoints();
   };
   const handleRoomJoin = (room) => {
+    setLoading(false);
     updateSessionStorage("roomid", parseInt(room));
     deductPoints();
     navigate(`/host/room/${room}`);
   };
   const handleJoinedRoom = (room) => {
+    setLoading(false);
     updateSessionStorage("roomid", parseInt(room));
     navigate(`/host/room/${room}`);
   };
@@ -136,6 +139,7 @@ const Hostpage = () => {
         messageHandler(data.message);
         return;
       } else if (res.status === 200) {
+        setLoading(true);
         socket.emit("join_room", roomId, player, ticketCount);
       }
     } catch (error) {
@@ -150,6 +154,7 @@ const Hostpage = () => {
     socket.on("room_joined", handleJoinedRoom);
 
     socket.on("error", (message) => {
+      setLoading(false);
       messageHandler(message);
     });
 
