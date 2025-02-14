@@ -75,6 +75,10 @@ const Hostroom = () => {
   const handleInvitePlayer = async () => {
     const hostid = localStorage.getItem("hostid");
     if (playerPhone) {
+      if (playerPhone.length !== 10) {
+        messageHandler("Enter valid phone number");
+        return;
+      }
       if (hostid) {
         setLoading(true);
         const resPlayer = await fetch(`${apiBaseUrl}/api/host/invite`, {
@@ -158,9 +162,10 @@ const Hostroom = () => {
                   </button>
                   <h2 className="text-lg mb-2">Invite Player</h2>
                   <input
-                    type="text"
+                    type="tel"
                     className="border p-2 w-full mb-2"
-                    placeholder="Enter player phone no"
+                    placeholder="Enter player PhoneNo"
+                    required
                     value={playerPhone}
                     onChange={(e) => setPlayerPhone(e.target.value)}
                   />
