@@ -62,9 +62,13 @@ export const loginHost = async (req, res) => {
   }
 
   try {
-    const host = await Host.findOne({ phone, password });
+    const host = await Host.findOne({ phone });
     if (!host) {
       return res.status(400).json({ message: "Host not register" });
+    }
+    let isMatch = host.password === password;
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password" });
     }
     const hostid = host._id;
     res
