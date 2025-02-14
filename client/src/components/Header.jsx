@@ -44,7 +44,7 @@ const Header = () => {
           )}
           <button
             onClick={toggleMenu}
-            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow md:hidden hover:bg-blue-700 transition duration-300"
+            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow hover:bg-blue-700 transition duration-300"
           >
             Menu
           </button>
