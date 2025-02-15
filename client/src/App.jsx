@@ -191,36 +191,40 @@ const App = () => {
           </div>
           {showNotifications && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded shadow-lg relative overflow-y-scroll max-w-[400px]">
-                <button
-                  className="absolute top-2 right-2 text-gray-500"
-                  onClick={handleNotificationCloseClick}
-                >
-                  &times;
-                </button>
-                <h2 className="text-xl font-bold mb-4">Notifications</h2>
-                {player?.invites?.length > 0 ? (
-                  player.invites.map((invite) => {
-                    return (
-                      <div
-                        key={invite}
-                        className="flex items-center justify-between p-2 border-b"
-                      >
-                        <div>{invite}</div>
-                        <div>
-                          <button
-                            onClick={() => handleRoomJoinClick(invite)}
-                            className="bg-green-500 text-white ml-3 px-4 py-2 rounded"
-                          >
-                            Join
-                          </button>
+              <div className="bg-white p-6 rounded shadow-lg relative overflow-y-scroll w-[200px] max-h-[400px]">
+                <div className="inviteTextCont border-b-2 border-black absolute top-0 left-0 w-full p-2 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">Invites</h2>
+                  <button
+                    className=" text-gray-700 text-3xl"
+                    onClick={handleNotificationCloseClick}
+                  >
+                    &times;
+                  </button>
+                </div>
+                <div className="pt-8">
+                  {player?.invites?.length > 0 ? (
+                    player.invites.map((invite) => {
+                      return (
+                        <div
+                          key={invite}
+                          className="flex items-center justify-between p-2 border-b"
+                        >
+                          <div className="text-lg">{invite}</div>
+                          <div>
+                            <button
+                              onClick={() => handleRoomJoinClick(invite)}
+                              className="bg-green-500 text-white ml-3 px-5 py-2 rounded"
+                            >
+                              Join
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div>No invitations available</div>
-                )}
+                      );
+                    })
+                  ) : (
+                    <div>No invitations available</div>
+                  )}
+                </div>
                 <div className="msg text-red-500"></div>
               </div>
             </div>
