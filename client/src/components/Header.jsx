@@ -123,7 +123,7 @@ const Header = () => {
                 </button>
               </li>
             </ul>
-            <p className="text-base mt-10 opacity-80 text-center text-gray-800 py-4 bg-gray-100/50 backdrop-blur-sm">
+            <p className="text-base mt-10 opacity-80 text-center text-gray-800 py-4">
               Developed by{" "}
               <a
                 href="https://github.com/sumeet57"
