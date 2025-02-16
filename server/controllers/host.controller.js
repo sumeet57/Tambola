@@ -94,6 +94,7 @@ export const inviteUser = async (req, res) => {
       return res.status(400).json({ message: "Player already invited" });
     }
 
+    user.invites = [];
     user.invites.push(roomid);
     user.points += parseInt(points);
     user.save();

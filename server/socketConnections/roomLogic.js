@@ -38,6 +38,7 @@ export const createRoom = async (roomid, player, socketid, ticket_count) => {
     const host = await Host.findById(player._id);
 
     if (host) {
+      host.invites = [];
       let roomIdExists = host.invites.includes(roomid);
       if (!roomIdExists) {
         host.invites.push(roomid);
