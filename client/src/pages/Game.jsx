@@ -30,14 +30,14 @@ const Game = () => {
     socket.emit("pick_number", roomid);
   };
 
-  const [timer, setTimer] = useState(5);
+  const [timer, setTimer] = useState(3);
   const handleTimer = () => {
     const interval = setInterval(() => {
       setTimer((prevTimer) => {
         if (prevTimer <= 1) {
           clearInterval(interval);
           setTimerToggled(false);
-          return 5;
+          return 3;
         }
         return prevTimer - 1;
       });
