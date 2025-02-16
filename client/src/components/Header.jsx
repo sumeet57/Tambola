@@ -54,7 +54,11 @@ const Header = () => {
       </nav>
       {isMenuOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex justify-end">
-          <div className="bg-white relative w-64 h-full shadow-lg p-6">
+          <div
+            className={`bg-white relative w-64 h-full shadow-lg p-6 ${
+              window.innerHeight < 350 ? "overflow-y-auto" : ""
+            }`}
+          >
             <div
               onClick={toggleMenu}
               className="text-lg mb-4 w-full text-right"
@@ -74,7 +78,7 @@ const Header = () => {
               </button>
             </div>
 
-            <ul className="space-y-6 h-[300px]">
+            <ul className="space-y-6">
               <li>
                 <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
                   {host && <p className="text-red-500">Host</p>}
@@ -119,7 +123,7 @@ const Header = () => {
                 </button>
               </li>
             </ul>
-            <p className="absolute text-base bottom-0 left-0 right-0 opacity-80 text-center text-gray-800 py-4 bg-gray-100/50 backdrop-blur-sm">
+            <p className="text-base mt-10 opacity-80 text-center text-gray-800 py-4 bg-gray-100/50 backdrop-blur-sm">
               Developed by{" "}
               <a
                 href="https://github.com/sumeet57"
