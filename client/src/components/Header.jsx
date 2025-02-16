@@ -6,6 +6,8 @@ const Header = () => {
   const [player, setPlayer] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const host = localStorage.getItem("hostid");
+
   useEffect(() => {
     const handleStorageUpdate = () => {
       const playerData = JSON.parse(sessionStorage.getItem("player"));
@@ -71,14 +73,34 @@ const Header = () => {
                 </svg>
               </button>
             </div>
+
             <ul className="space-y-6">
+              <li>
+                <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
+                  {host && <p className="text-red-500">Host</p>}
+                  <div className="flex flex-col">
+                    {" "}
+                    {/* Stack name and phone vertically */}
+                    {player?.name && ( // Conditionally render name
+                      <h2 className="text-2xl font-semibold mb-2">
+                        {player.name}
+                      </h2>
+                    )}
+                    {player?.phone && ( // Conditionally render phone
+                      <div className="flex items-center">
+                        <p className="text-gray-800 text-lg">{player.phone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </li>
               <li>
                 <button
                   onClick={() => {
                     navigate("/");
                     toggleMenu();
                   }}
-                  className="text-gray-800 hover:bg-gray-200 w-full text-left px-4 py-2 rounded-full shadow transition duration-300"
+                  className="text-gray-800 bg-blue-200 hover:bg-gray-200 w-full text-left px-4 py-2 rounded-full shadow transition duration-300"
                 >
                   Home
                 </button>
@@ -93,7 +115,7 @@ const Header = () => {
                     navigate("/");
                     toggleMenu();
                   }}
-                  className="text-gray-800 hover:bg-gray-200 w-full text-left px-4 py-2 rounded-full shadow transition duration-300"
+                  className="text-gray-800 bg-blue-200 hover:bg-gray-200 w-full text-left px-4 py-2 rounded-full shadow transition duration-300"
                 >
                   Logout
                 </button>
