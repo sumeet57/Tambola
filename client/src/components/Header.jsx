@@ -74,7 +74,7 @@ const Header = () => {
               </button>
             </div>
 
-            <ul className="space-y-6">
+            <ul className="space-y-6 h-[300px]">
               <li>
                 <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
                   {host && <p className="text-red-500">Host</p>}
