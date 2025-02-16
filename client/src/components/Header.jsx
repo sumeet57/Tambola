@@ -54,7 +54,7 @@ const Header = () => {
       </nav>
       {isMenuOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex justify-end">
-          <div className="bg-white w-64 h-full shadow-lg p-6">
+          <div className="bg-white relative w-64 h-full shadow-lg p-6">
             <div
               onClick={toggleMenu}
               className="text-lg mb-4 w-full text-right"
@@ -79,14 +79,12 @@ const Header = () => {
                 <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
                   {host && <p className="text-red-500">Host</p>}
                   <div className="flex flex-col">
-                    {" "}
-                    {/* Stack name and phone vertically */}
-                    {player?.name && ( // Conditionally render name
+                    {player?.name && (
                       <h2 className="text-2xl font-semibold mb-2">
                         {player.name}
                       </h2>
                     )}
-                    {player?.phone && ( // Conditionally render phone
+                    {player?.phone && (
                       <div className="flex items-center">
                         <p className="text-gray-800 text-lg">{player.phone}</p>
                       </div>
@@ -121,6 +119,16 @@ const Header = () => {
                 </button>
               </li>
             </ul>
+            <p className="absolute text-base bottom-0 left-0 right-0 opacity-80 text-center text-gray-800 py-4 bg-gray-100/50 backdrop-blur-sm">
+              Developed by{" "}
+              <a
+                href="https://github.com/sumeet57"
+                target="_blank"
+                className="text-gray-500 hover:underline hover:text-blue-600 transition-colors duration-300"
+              >
+                Sumeet
+              </a>
+            </p>
           </div>
         </div>
       )}
