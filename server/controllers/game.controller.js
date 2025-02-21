@@ -12,6 +12,9 @@ export const deductPoints = async (req, res) => {
     return res.status(400).json({ message: "User not found" });
   }
   if (user) {
+    if (user.points < points) {
+      return res.status(400).json({ message: "Insufficient points" });
+    }
     user.points -= parseInt(points);
     await user.save();
 
@@ -20,6 +23,9 @@ export const deductPoints = async (req, res) => {
       .json({ data: user, message: "Points deducted successfully" });
   }
   if (host) {
+    if (host.points < points) {
+      return res.status(400).json({ message: "Insufficient points" });
+    }
     host.points -= parseInt(points);
     await host.save();
     return res
@@ -37,14 +43,14 @@ export const isPointsAvailable = async (req, res) => {
     return res.status(400).json({ message: "User not found" });
   }
   if (user) {
-    if (user.points >= ticket) {
+    if (user.points >= parseInt(ticket)) {
       return res.status(200).json({ message: "Points available" });
     } else {
       return res.status(400).json({ message: "Points not available" });
     }
   }
   if (host) {
-    if (host.points >= ticket) {
+    if (host.points >= parseInt(ticket)) {
       return res.status(200).json({ message: "Points available" });
     } else {
       return res.status(400).json({ message: "Points not available" });

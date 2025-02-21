@@ -15,6 +15,21 @@ const App = () => {
   // for navigation
   const navigate = useNavigate();
   const [loading, setLoading] = useState(!socket.connected); // Check initial connection
+  const [player, setPlayer] = useState(null);
+
+  useEffect(() => {
+    const storedPlayer = sessionStorage.getItem("player");
+    if (
+      storedPlayer &&
+      storedPlayer !== "undefined" &&
+      storedPlayer !== "null"
+    ) {
+      setPlayer(JSON.parse(storedPlayer));
+    }
+    if (storedPlayer) {
+      setPlayer(storedPlayer);
+    }
+  }, []);
 
   useEffect(() => {
     const handleConnect = () => {
@@ -90,30 +105,37 @@ const App = () => {
     setShowNotifications(false);
   };
   const handleNotificationClick = async () => {
-    setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/game/player`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: userid || hostid,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.status === 200) {
-      updateSessionStorage("player", data.data);
+    if (player) {
+      setLoading(true);
+      const res = await fetch(`${apiBaseUrl}/api/game/player`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: userid || hostid,
+        }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (res.status === 200) {
+        updateSessionStorage("player", data.data);
+      }
+      setShowNotifications(true);
+    } else {
+      navigate("/login");
     }
-    setShowNotifications(true);
   };
 
   //get player from sessionstorage
-  const [player, setPlayer] = useState(null);
   useEffect(() => {
-    const storedPlayer = JSON.parse(sessionStorage.getItem("player"));
-    if (storedPlayer) {
-      setPlayer(storedPlayer);
+    const storedPlayer = sessionStorage.getItem("player");
+    if (
+      storedPlayer &&
+      storedPlayer !== "undefined" &&
+      storedPlayer !== "null"
+    ) {
+      setPlayer(JSON.parse(storedPlayer));
     }
   }, [showNotifications]);
 

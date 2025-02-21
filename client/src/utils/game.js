@@ -91,5 +91,25 @@ export const generateTambolaTickets = (numbers) => {
     if (extraNumbersCopy.length === 0) break;
   }
 
+  // **Sort each column in ascending order**
+  tickets.forEach((ticket) => {
+    for (let c = 0; c < 9; c++) {
+      let colNumbers = [];
+      for (let r = 0; r < 3; r++) {
+        if (ticket[r][c] !== null) {
+          colNumbers.push(ticket[r][c]);
+        }
+      }
+      colNumbers.sort((a, b) => a - b);
+
+      let index = 0;
+      for (let r = 0; r < 3; r++) {
+        if (ticket[r][c] !== null) {
+          ticket[r][c] = colNumbers[index++];
+        }
+      }
+    }
+  });
+
   return tickets;
 };

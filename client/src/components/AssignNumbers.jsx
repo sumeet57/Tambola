@@ -58,10 +58,10 @@ const AssignNumbers = (props) => {
     const handleDrawNumber = (number) => {
       setDrawNumber((prevDrawNumber) => [...prevDrawNumber, number]);
     };
-    const handleGameOver = () => {
-      // handleMessageBox("All the tickets claimed");
+
+    const handleGameOver = (name) => {
       setTimeout(() => {
-        navigate("gameover");
+        navigate("gameover", { state: { name } });
       }, 2000);
     };
 
@@ -375,7 +375,7 @@ const AssignNumbers = (props) => {
                             onClick={(e) =>
                               num !== null && handleNumberClick(e)
                             }
-                            className={`w-9 h-9 flex items-center justify-center text-base font-semibold rounded-none border ${
+                            className={`w-9 h-9 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
                               num !== null
                                 ? selectedNumbers.includes(num)
                                   ? "bg-blue-500 text-white"

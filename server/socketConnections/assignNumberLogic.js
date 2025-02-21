@@ -19,6 +19,13 @@ export const assignNumbersToPlayers = (players) => {
     const totalNumbersNeeded = 15 * player.ticket_count;
     const rangeCount = {};
 
+    const maxPerRange =
+      {
+        1: 2, // Max 2 numbers per range for ticket count = 1
+        2: 5, // Max 5 numbers per range for ticket count = 2
+        3: 8, // Max 8 numbers per range for ticket count = 3
+      }[player.ticket_count] || 8;
+
     while (player.assign_numbers.length < totalNumbersNeeded) {
       const randomRange = ranges[Math.floor(Math.random() * ranges.length)];
       const start = randomRange[0];
@@ -28,7 +35,7 @@ export const assignNumbersToPlayers = (players) => {
         rangeCount[start] = 0;
       }
 
-      if (rangeCount[start] < 8) {
+      if (rangeCount[start] < maxPerRange) {
         const rangeNumbers = Array.from(
           { length: end - start + 1 },
           (_, i) => start + i

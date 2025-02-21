@@ -36,7 +36,11 @@ const Userpage = () => {
   const socketid = localStorage.getItem("socketid");
 
   //for getting player from sessionstorage and id from localstorage
-  const player = JSON.parse(sessionStorage.getItem("player"));
+  let player = null;
+  const getplayer = sessionStorage.getItem("player");
+  if (getplayer && getplayer !== "undefined" && getplayer !== "null") {
+    player = JSON.parse(getplayer);
+  }
   const playerid =
     localStorage.getItem("userid") || localStorage.getItem("hostid");
 
@@ -47,47 +51,50 @@ const Userpage = () => {
   //for handling join room
   const handleJoin = async () => {
     //for checking if player has enough points
-    setLoading(true);
-    const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: playerid,
-        ticket: tickets,
-      }),
-    });
-    // for checking if player is invited or not
-    const invitedRes = await fetch(`${apiBaseUrl}/api/game/invited`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phone: player?.phone,
-        roomid: roomId,
-      }),
-    });
-    const invitedData = await invitedRes.json();
-    const pointsData = await pointsRes.json();
-    setLoading(false);
-    if (invitedRes.status === 400) {
-      messageHandler(invitedData.message);
-      return;
-    }
-    if (pointsRes.status === 400) {
-      messageHandler(pointsData.message);
-      return;
-    }
-    if (pointsRes.status === 200 && invitedRes.status === 200) {
-      //connecting to room with roomid, player data, socketid and tickets
-      // console.log("Joining room", roomId, player, socketid, tickets);
-      socket.emit("join_room", roomId, player, tickets);
-      updateSessionStorage("roomid", parseInt(roomId));
+    if (player) {
+      const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: playerid,
+          ticket: tickets,
+        }),
+      });
+      // for checking if player is invited or not
+      const invitedRes = await fetch(`${apiBaseUrl}/api/game/invited`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: player?.phone,
+          roomid: roomId,
+        }),
+      });
+      const invitedData = await invitedRes.json();
+      const pointsData = await pointsRes.json();
+      setLoading(false);
+      if (invitedRes.status === 400) {
+        messageHandler(invitedData.message);
+        return;
+      }
+      if (pointsRes.status === 400) {
+        messageHandler(pointsData.message);
+        return;
+      }
+      if (pointsRes.status === 200 && invitedRes.status === 200) {
+        //connecting to room with roomid, player data, socketid and tickets
+        // console.log("Joining room", roomId, player, socketid, tickets);
+        socket.emit("join_room", roomId, player, tickets);
+        updateSessionStorage("roomid", parseInt(roomId));
+      } else {
+        const message = pointsData.message || invitedData.message;
+        messageHandler(message);
+      }
     } else {
-      const message = pointsData.message || invitedData.message;
-      messageHandler(message);
+      messageHandler("Please login to join a room");
     }
   };
 
@@ -179,9 +186,9 @@ const Userpage = () => {
                     id="tickets"
                     value={tickets}
                     onChange={(e) => {
-                      const selectedTickets = parseInt(e.target.value);
-                      setTickets(selectedTickets);
-                      console.log("Selected tickets:", selectedTickets);
+                      let selectedPoints = parseInt(e.target.value);
+                      // console.log("Selected points:", selectedPoints);
+                      setTickets(selectedPoints);
                     }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   >

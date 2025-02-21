@@ -10,8 +10,11 @@ const Header = () => {
 
   useEffect(() => {
     const handleStorageUpdate = () => {
-      const playerData = JSON.parse(sessionStorage.getItem("player"));
-      setPlayer(playerData);
+      const playerData = sessionStorage.getItem("player");
+      if (playerData && playerData !== "undefined" && playerData !== "null") {
+        setPlayer(JSON.parse(playerData));
+      }
+      // setPlayer(playerData);
     };
     // Listen for custom event
     window.addEventListener("sessionStorageUpdated", handleStorageUpdate);

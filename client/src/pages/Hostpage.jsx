@@ -17,6 +17,19 @@ const Hostpage = () => {
   // for storing the room id and ticket count
   const temproomid = useParams();
 
+  // for getting the socket id from local storage
+  const socketid = localStorage.getItem("socketid");
+  const hostid = localStorage.getItem("hostid");
+
+  useEffect(() => {
+    if (!hostid) {
+      navigate("/login");
+    }
+    if (!socketid) {
+      navigate("/login");
+    }
+  }, []);
+
   const [roomId, setRoomId] = useState(temproomid.roomid || "");
   const [ticketCount, setTicketCount] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -30,17 +43,17 @@ const Hostpage = () => {
     setMessageToggle(true);
   };
 
-  // for getting the socket id from local storage
-  const socketid = localStorage.getItem("socketid");
-  const hostid = localStorage.getItem("hostid");
-
   // session storage for player
-  const player = JSON.parse(sessionStorage.getItem("player"));
+  let player = null;
+  const getplayer = sessionStorage.getItem("player");
+  if (getplayer && getplayer !== "undefined" && getplayer !== "null") {
+    player = JSON.parse(getplayer);
+  }
 
   const handleCreateRoom = () => {
     // Handle room creation logic here
     // setLoading(true);
-    if (hostid) {
+    if (hostid && player) {
       if (roomId === "") {
         messageHandler("Room ID cannot be empty");
         return;
@@ -51,56 +64,64 @@ const Hostpage = () => {
     }
   };
   const deductPoints = async () => {
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/game/points`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: hostid,
-          points: ticketCount, // Always uses the latest ticketCount
-        }),
-      });
+    if (hostid && player) {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/game/points`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: hostid,
+            points: ticketCount, // Always uses the latest ticketCount
+          }),
+        });
 
-      const data = await res.json();
-      if (res.status === 200) {
-        updateSessionStorage("player", data.data); // Update player session data
-        setTicketCount(1); // Reset ticket count
-      } else {
-        messageHandler(data.message);
+        const data = await res.json();
+        if (res.status === 200) {
+          updateSessionStorage("player", data.data); // Update player session data
+          setTicketCount(1); // Reset ticket count
+        } else {
+          messageHandler(data.message);
+        }
+      } catch (error) {
+        messageHandler("Failed to deduct points");
+        console.error("Failed to deduct points:", error);
       }
-    } catch (error) {
-      messageHandler("Failed to deduct points");
-      console.error("Failed to deduct points:", error);
+    } else {
+      messageHandler("Host not found");
     }
   };
   const checkPoints = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/game/available`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: hostid,
-          ticket: ticketCount,
-        }),
-      });
-      const pointRes = await res.json();
-      setLoading(false);
-      if (res.status === 400) {
-        messageHandler(pointRes.message);
-        return;
+    if (hostid && player) {
+      setLoading(true);
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/game/available`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: hostid,
+            ticket: ticketCount,
+          }),
+        });
+        const pointRes = await res.json();
+        setLoading(false);
+        if (res.status === 400) {
+          messageHandler(pointRes.message);
+          return;
+        }
+        if (res.status === 200) {
+          setLoading(true);
+          socket.emit("create_room", roomId, ticketCount, player, socketid);
+        }
+      } catch (error) {
+        messageHandler("Failed to check points");
+        console.error("Failed to check points:", error);
       }
-      if (res.status === 200) {
-        setLoading(true);
-        socket.emit("create_room", roomId, ticketCount, player, socketid);
-      }
-    } catch (error) {
-      messageHandler("Failed to check points");
-      console.error("Failed to check points:", error);
+    } else {
+      messageHandler("Host not found");
     }
   };
 
@@ -109,9 +130,13 @@ const Hostpage = () => {
   };
   const handleRoomJoin = (room) => {
     setLoading(false);
-    updateSessionStorage("roomid", parseInt(room));
-    deductPoints();
-    navigate(`/host/room/${room}`);
+    if (hostid && player) {
+      updateSessionStorage("roomid", parseInt(room));
+      deductPoints();
+      navigate(`/host/room/${room}`);
+    } else {
+      messageHandler("Host not found");
+    }
   };
   const handleJoinedRoom = (room) => {
     setLoading(false);
@@ -120,31 +145,35 @@ const Hostpage = () => {
   };
 
   const handleJoinRoom = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/game/invited`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: player?.phone,
-          roomid: roomId,
-        }),
-      });
+    if (hostid && player) {
+      setLoading(true);
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/game/invited`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: player?.phone,
+            roomid: roomId,
+          }),
+        });
 
-      const data = await res.json();
-      setLoading(false);
-      if (res.status === 400) {
-        messageHandler(data.message);
-        return;
-      } else if (res.status === 200) {
-        setLoading(true);
-        socket.emit("join_room", roomId, player, ticketCount);
+        const data = await res.json();
+        setLoading(false);
+        if (res.status === 400) {
+          messageHandler(data.message);
+          return;
+        } else if (res.status === 200) {
+          setLoading(true);
+          socket.emit("join_room", roomId, player, ticketCount);
+        }
+      } catch (error) {
+        messageHandler("Failed to join room");
+        console.error("Failed to join room:", error);
       }
-    } catch (error) {
-      messageHandler("Failed to join room");
-      console.error("Failed to join room:", error);
+    } else {
+      messageHandler("Host not found");
     }
   };
 

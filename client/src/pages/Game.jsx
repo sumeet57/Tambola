@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import AssignNumbers from "../components/AssignNumbers";
 import DrawNumbers from "../components/DrawNumbers";
-import { useLocation, Outlet } from "react-router-dom";
+import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import socket from "../utils/websocket";
 import Message from "../components/Message";
 
 const Game = () => {
   const [drawNumber, setDrawNumber] = useState([]);
+  const navigate = useNavigate();
   const location = useLocation();
   const assign_no = location.state?.numbers;
-  const roomid = location.state?.roomid;
+  // console.log("Assign No", assign_no);
+  const roomid = location.state?.roomid || sessionStorage.getItem("roomid");
   // const roomid = sessionStorage.getItem("roomid");
   const hostid = localStorage.getItem("hostid");
 
@@ -23,11 +25,11 @@ const Game = () => {
     setTimerToggled(!timerToggled);
     handleTimer();
     if (drawNumber.length >= 90) {
-      // console.log(drawNumber);
       document.querySelector(".message").innerHTML = "All numbers are drawn!";
       return;
+    } else if (drawNumber.length < 90) {
+      socket.emit("pick_number", roomid);
     }
-    socket.emit("pick_number", roomid);
   };
 
   const [timer, setTimer] = useState(3);
@@ -58,6 +60,32 @@ const Game = () => {
       socket.off("error");
     };
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleBackButton = (event) => {
+      event.preventDefault();
+      navigate(1); // Move forward in history (block going back)
+    };
+
+    window.history.pushState(null, null, window.location.pathname);
+    window.addEventListener("popstate", handleBackButton);
+
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
+  }, [navigate]);
 
   return (
     <>

@@ -28,6 +28,16 @@ const Hostroom = () => {
   const [messageStore, setMessageStore] = useState("");
   const [messageToggle, setMessageToggle] = useState(false);
 
+  //for getting hostid from localstorage
+
+  const hostid = localStorage.getItem("hostid");
+
+  useEffect(() => {
+    if (!hostid) {
+      navigate("/login");
+    }
+  }, []);
+
   const messageHandler = (message) => {
     setMessageToggle(false);
     setMessageStore(message);
@@ -41,12 +51,10 @@ const Hostroom = () => {
     const handleUpdatePlayers = (players) => {
       setPlayers(players);
     };
-
-    const roomid = sessionStorage.getItem("roomid");
     const handleNumbersAssigned = (numbers) => {
       // console.log("Numbers assigned", numbers);
       setLoading(false);
-      navigate(`/game`, { state: { numbers, roomid } });
+      navigate(`/game`, { state: { numbers, roomid: id } });
     };
 
     socket.on("player_update", handleUpdatePlayers);
@@ -72,8 +80,7 @@ const Hostroom = () => {
   };
 
   //invite player and deduct points of host logic
-  const handleInvitePlayer = async () => {
-    const hostid = localStorage.getItem("hostid");
+  const handleInvitePlayer = async (e) => {
     if (playerPhone) {
       if (playerPhone.length !== 10) {
         messageHandler("Enter valid phone number");
@@ -81,6 +88,8 @@ const Hostroom = () => {
       }
       if (hostid) {
         setLoading(true);
+        // console.log("Inviting player", playerPhone, playerPoints);
+
         const resPlayer = await fetch(`${apiBaseUrl}/api/host/invite`, {
           method: "POST",
           headers: {
@@ -91,39 +100,20 @@ const Hostroom = () => {
             phone: playerPhone,
             roomid: id,
             points: playerPoints,
-          }),
-        });
-        // console.log(resPlayer, "resPlayer received");
-
-        //deducting points from host
-        const resPoints = await fetch(`${apiBaseUrl}/api/game/points`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
             id: hostid,
-            points: playerPoints,
           }),
         });
-        const dataPoints = await resPoints.json();
+
         const dataPlayer = await resPlayer.json();
         setLoading(false);
-
-        if (resPlayer.status === 400 || resPoints.status === 400) {
-          let message = dataPlayer.message || dataPoints.message;
-          messageHandler(message);
-        } else {
-          // const dataPoints = await resPoints.json();
-          if (resPlayer.status === 200 && resPoints.status === 200) {
-            updateSessionStorage("player", dataPoints.data);
-            handleClosePopup();
-          } else {
-            let message = dataPlayer.message || dataPoints.message;
-            messageHandler(message);
-          }
+        if (resPlayer.status === 200) {
+          updateSessionStorage("player", dataPlayer.data);
+          messageHandler(dataPlayer.message);
+          setIsPopupOpen(false);
           setPlayerPhone("");
+          setPlayerPoints(1);
+        } else {
+          messageHandler(dataPlayer.message);
         }
       } else {
         messageHandler("Host not found");
@@ -133,9 +123,23 @@ const Hostroom = () => {
 
   //start game button click logic
   const handleStartClick = async () => {
-    socket.emit("start_game", id);
-    setLoading(true);
+    if (hostid) {
+      socket.emit("start_game", id);
+      setLoading(true);
+    }
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <>
@@ -144,12 +148,14 @@ const Hostroom = () => {
       ) : (
         <>
           <div className="p-4 pt-20">
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded transition-all active:scale-90"
-              onClick={handleInviteClick}
-            >
-              Invite Player
-            </button>
+            {hostid && (
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded transition-all active:scale-90"
+                onClick={hostid ? handleInviteClick : null}
+              >
+                Invite Player
+              </button>
+            )}
 
             {isPopupOpen && (
               <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -172,7 +178,12 @@ const Hostroom = () => {
                   Points :{" "}
                   <select
                     className="border p-2 mb-4 w-full"
-                    onChange={(e) => setPlayerPoints(e.target.value)}
+                    value={playerPoints}
+                    onChange={(e) => {
+                      let selectedPoints = parseInt(e.target.value);
+                      // console.log("Selected points:", selectedPoints);
+                      setPlayerPoints(selectedPoints);
+                    }}
                   >
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -193,7 +204,7 @@ const Hostroom = () => {
 
             <div className="mt-4">
               <h2 className="text-xl mb-2">Players</h2>
-              <div className="border p-4 rounded">
+              <div className="border p-4 rounded flex flex-wrap">
                 {players?.map((player, index) => (
                   <span key={index} className="m-2 border-2 p-2 rounded">
                     {player}
@@ -203,7 +214,7 @@ const Hostroom = () => {
             </div>
 
             <button
-              onClick={handleStartClick}
+              onClick={hostid ? handleStartClick : null}
               className="bg-red-500 text-white px-4 py-2 rounded mt-4 transition-all active:scale-90"
             >
               Start Game

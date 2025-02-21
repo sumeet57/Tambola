@@ -27,6 +27,18 @@ const Userroom = () => {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   return (
     <>
       <div className="mt-4 pt-20">

@@ -5,7 +5,11 @@ let roomInDb = [];
 const initializeRooms = async () => {
   try {
     const res = await Room.find();
-    res.forEach((room) => roomInDb.push(room.roomid));
+    res.forEach((room) => {
+      if (room.roomid) {
+        roomInDb.push(room.roomid);
+      }
+    });
   } catch (error) {
     console.error("Error fetching rooms from database:", error);
   }

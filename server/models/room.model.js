@@ -43,9 +43,23 @@ const roomSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
+    createdAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Store in IST
+    },
+    updatedAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Store in IST
+    },
   },
-  { timestamps: true }
+  { timestamps: false } // Disable default timestamps since we are handling them manually
 );
+
+// Middleware to update the `updatedAt` field in IST before saving
+roomSchema.pre("save", function (next) {
+  this.updatedAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000); // Update `updatedAt` in IST
+  next();
+});
 
 const Room = mongoose.model("Room", roomSchema);
 
