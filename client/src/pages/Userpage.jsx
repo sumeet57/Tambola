@@ -51,6 +51,7 @@ const Userpage = () => {
   //for handling join room
   const handleJoin = async () => {
     //for checking if player has enough points
+    setLoading(true);
     if (player) {
       const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
         method: "POST",

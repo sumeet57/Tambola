@@ -41,7 +41,7 @@ const Userroom = () => {
 
   return (
     <>
-      <div className="mt-4 pt-20">
+      <div className="mt-4 pt-16">
         <h2 className="text-xl mb-2">Players</h2>
         <div className="border p-4 rounded flex flex-wrap">
           {players.length > 0 ? (
