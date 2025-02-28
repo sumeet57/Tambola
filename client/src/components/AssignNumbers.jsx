@@ -41,18 +41,19 @@ const AssignNumbers = (props) => {
 
   // for claims and click on number
   const [selectedNumbers, setSelectedNumbers] = useState([]);
+
   const handleNumberClick = (e) => {
     const number = parseInt(e.target.innerText);
-    if (!selectedNumbers.includes(number)) {
-      setSelectedNumbers([...selectedNumbers, number]);
-    }
-    if (selectedNumbers.includes(number)) {
-      const index = selectedNumbers.indexOf(number);
-      if (index > -1) {
-        selectedNumbers.splice(index, 1);
+
+    setSelectedNumbers((prevSelected) => {
+      if (prevSelected.includes(number)) {
+        return prevSelected.filter((num) => num !== number); // Remove number correctly
+      } else {
+        return [...prevSelected, number]; // Add number correctly
       }
-    }
+    });
   };
+
   const [drawNumber, setDrawNumber] = useState([]);
   useEffect(() => {
     const handleDrawNumber = (number) => {
@@ -362,7 +363,7 @@ const AssignNumbers = (props) => {
           <React.Fragment key={ticketIndex}>
             <div
               key={ticketIndex}
-              className="bg-white h-fit p-1 relative overflow-hidden border-2 border-zinc-900"
+              className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 rounded-lg shadow-md"
             >
               <div className="grid grid-cols-9 bg-gray-200 rounded-md">
                 {Array.isArray(finalTickets[ticketIndex]) &&
@@ -375,15 +376,15 @@ const AssignNumbers = (props) => {
                             onClick={(e) =>
                               num !== null && handleNumberClick(e)
                             }
-                            className={`w-9 h-9 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
+                            className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
                               num !== null
                                 ? selectedNumbers.includes(num)
                                   ? "bg-blue-500 text-white"
                                   : "bg-white text-black"
                                 : "bg-gray-300"
                             } ${
-                              window.innerWidth < 400
-                                ? "w-8 h-8 text-[12px]"
+                              window.innerWidth < 370
+                                ? "w-full h-8 text-[12px]"
                                 : ""
                             }`}
                           >
@@ -394,7 +395,7 @@ const AssignNumbers = (props) => {
                   ))}
               </div>
               <button
-                className="mt-1 bg-blue-500 text-center text-white px-3 py-[6px] transition-all active:scale-90 rounded-lg hover:bg-blue-600"
+                className="mt-1 bg-gradient-to-r from-yellow-500 to-yellow-500 text-white text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-700 hover:to-yellow-800 shadow-lg"
                 onClick={() => claimMenuToggle(ticketIndex)}
               >
                 Claim
@@ -410,7 +411,7 @@ const AssignNumbers = (props) => {
         ))}
 
         {claimMenu && (
-          <div className="cont w-80 h-80 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-4 bg-zinc-900 rounded-3xl shadow-lg">
+          <div className="cont w-80 h-80 absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-4 bg-zinc-900 rounded-3xl shadow-lg">
             <div
               onClick={claimMenuToggle}
               className="closeButton absolute grid place-items-center top-2 right-2 text-3xl transition-all active:scale-90 w-10 h-10 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white"
@@ -430,7 +431,7 @@ const AssignNumbers = (props) => {
                   <button
                     onClick={() => claimClick(claim.id)}
                     key={claim.id}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all active:scale-90"
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all active:scale-90 shadow-lg"
                   >
                     {claim.name}
                   </button>

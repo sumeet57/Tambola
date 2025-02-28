@@ -76,10 +76,27 @@ io.on("connection", (socket) => {
     });
 
     // Starting game
-    socket.on("start_game", (roomid) => {
+    socket.on("start_game", (roomid, id) => {
       try {
-        if (!roomid || !room[roomid]) {
+        if (!roomid || !room[roomid] || !id) {
           socket.emit("error", "Room not found");
+          return;
+        }
+
+        if (room[roomid]?.players) {
+          let found = false;
+          for (const player of room[roomid].players) {
+            if (player.playerid === id) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            socket.emit("error", "You are not authorized to start the game");
+            return;
+          }
+        } else {
+          socket.emit("error", "No players in the room");
           return;
         }
 
@@ -131,17 +148,27 @@ io.on("connection", (socket) => {
           io.to(roomid).emit("game_over");
         }
       } catch (err) {
-        console.error("Error in claim:", err);
+        // console.error("Error in claim:", err);
         socket.emit("error", "Server error");
       }
     });
 
     // Pick number
-    socket.on("pick_number", (roomid) => {
+    socket.on("pick_number", (roomid, hostid) => {
       try {
-        if (!roomid || !room[roomid]) {
+        if (!roomid || !room[roomid] || !hostid) {
           socket.emit("error", "Invalid room ID");
           return;
+        }
+        if (room[roomid]?.players) {
+          // let found = false;
+          let found = room[roomid]?.players?.some(
+            (player) => player.playerid === hostid
+          );
+          if (!found) {
+            socket.emit("error", "You are not authorized to pick the number");
+            return;
+          }
         }
 
         if (drawno.length >= 90) {
@@ -158,6 +185,37 @@ io.on("connection", (socket) => {
         io.to(roomid).emit("number_drawn", number);
       } catch (err) {
         console.error("Error in pick_number:", err);
+        socket.emit("error", "Server error");
+      }
+    });
+
+    //end this game
+    socket.on("end_game", async (roomid, hostid) => {
+      try {
+        if (!roomid || !room[roomid] || !hostid) {
+          socket.emit("error", "Invalid room ID");
+          return;
+        }
+        if (room[roomid]?.players) {
+          let found = room[roomid]?.players?.some(
+            (player) => player.playerid === hostid
+          );
+          if (!found) {
+            socket.emit("error", "You are not authorized to end the game");
+            return;
+          }
+        }
+        const endRes = await storeRoom(roomid, room[roomid]);
+        if (typeof endRes === "string") {
+          socket.emit("error", endRes);
+          return;
+        }
+
+        io.to(roomid).emit("room_data_stored", "Game ended by host");
+        drawno = [];
+        io.to(roomid).emit("game_over");
+      } catch (err) {
+        // console.error("Error in end_game:", err);
         socket.emit("error", "Server error");
       }
     });

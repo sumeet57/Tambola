@@ -12,6 +12,7 @@ const Game = () => {
   const assign_no = location.state?.numbers;
   // console.log("Assign No", assign_no);
   const roomid = location.state?.roomid || sessionStorage.getItem("roomid");
+  const timervalue = location.state?.timerValue || 3;
   // const roomid = sessionStorage.getItem("roomid");
   const hostid = localStorage.getItem("hostid");
 
@@ -28,18 +29,33 @@ const Game = () => {
       document.querySelector(".message").innerHTML = "All numbers are drawn!";
       return;
     } else if (drawNumber.length < 90) {
-      socket.emit("pick_number", roomid);
+      socket.emit("pick_number", roomid, hostid);
     }
   };
 
-  const [timer, setTimer] = useState(3);
+  const [endMenu, setEndMenu] = useState(false);
+
+  const endGameClick = () => {
+    if (hostid) {
+      setEndMenu(true);
+    }
+  };
+
+  const endGame = () => {
+    if (hostid) {
+      socket.emit("end_game", roomid, hostid);
+    }
+    setEndMenu(false);
+  };
+
+  const [timer, setTimer] = useState(timervalue);
   const handleTimer = () => {
     const interval = setInterval(() => {
       setTimer((prevTimer) => {
         if (prevTimer <= 1) {
           clearInterval(interval);
           setTimerToggled(false);
-          return 3;
+          return timervalue;
         }
         return prevTimer - 1;
       });
@@ -90,10 +106,10 @@ const Game = () => {
   return (
     <>
       {location.pathname === "/game" ? (
-        <div className="cont flex flex-col items-center p-4 w-full min-h-screen bg-gray-100">
-          <div className="w-full max-w-sm flex flex-col items-center gap-4">
+        <div className="container flex flex-col items-center justify-center p-4 min-w-full min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
+          <div className="relative w-full max-w-md flex flex-col items-center gap-2">
             {hostid && (
-              <div className="w-full flex flex-col items-center">
+              <div className="w-full flex gap-2 items-center bg-white p-2 rounded-lg shadow-lg">
                 <div className="message hidden opacity-0"></div>
                 <button
                   onClick={
@@ -101,10 +117,10 @@ const Game = () => {
                       ? null
                       : handlePickNumberClick
                   }
-                  className={`w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition-all ${
+                  className={`w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg transition-transform transform ${
                     drawNumber.length >= 90 || timerToggled
                       ? "cursor-not-allowed bg-gray-500"
-                      : "cursor-pointer active:bg-blue-400 active:scale-[0.9]"
+                      : "cursor-pointer hover:bg-blue-500 active:scale-95"
                   }`}
                 >
                   {drawNumber.length >= 90
@@ -113,25 +129,53 @@ const Game = () => {
                         timerToggled ? ` (${timer} sec left)` : ""
                       }`}
                 </button>
+                <button
+                  onClick={endGameClick}
+                  className="w-[50%] bg-red-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-red-600 transition-transform transform active:scale-95"
+                >
+                  End Game
+                </button>
               </div>
             )}
 
             {/* Drawn Numbers Section */}
-            <div className="w-full flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
+            <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
               <DrawNumbers />
             </div>
-            {/* message section */}
-            <div className="w-full flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
+            {/* Message Section */}
+            <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
               <Message />
             </div>
 
             {/* Tickets Section */}
-            <div className="w-full bg-white p-2 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 text-center mb-2">
+            <div className="w-full bg-white p-2 rounded-lg shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-700 text-center mb-4">
                 Your Tickets
               </h3>
               <AssignNumbers data={assign_no} />
             </div>
+
+            {endMenu && (
+              <div className="w-[400px] flex flex-col items-center gap-6 absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] bg-zinc-900 p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-semibold text-white text-center">
+                  Are you sure you want to end the game? All your progress will
+                  be stored in the database, but the winner will not be
+                  declared.
+                </h2>
+                <button
+                  onClick={endGame}
+                  className="w-full bg-red-500 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-red-600 transition-transform transform active:scale-95"
+                >
+                  Confirm End Game
+                </button>
+                <button
+                  onClick={() => setEndMenu(false)}
+                  className="w-full bg-gray-500 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-gray-600 transition-transform transform active:scale-95"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (

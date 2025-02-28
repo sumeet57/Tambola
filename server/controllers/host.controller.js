@@ -3,35 +3,35 @@ import User from "../models/user.model.js";
 
 // /api/host/register
 export const createHost = async (req, res) => {
-  let { name, phone, password } = req.body;
-  phone = phone.toString().trim();
-  name = name.toString().trim();
-  password = password.toString().trim();
-
-  //vallidations
-  if (!name || !phone || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  } else if (phone.length !== 10) {
-    return res
-      .status(400)
-      .json({ message: "Phone number should be 10 digits" });
-  } else if (password.length < 6 || password.length > 20) {
-    return res
-      .status(400)
-      .json({ message: "Password should be between 6 to 20 characters" });
-  } else if (name.length < 3 || name.length > 20) {
-    return res
-      .status(400)
-      .json({ message: "Name should be between 3 to 20 characters" });
-  }
-
-  const hostExists =
-    (await Host.findOne({ phone })) || (await User.findOne({ phone }));
-  if (hostExists) {
-    return res.status(400).json({ message: "Phone is already register" });
-  }
-
   try {
+    let { name, phone, password } = req.body;
+    phone = phone.toString().trim();
+    name = name.toString().trim();
+    password = password.toString().trim();
+
+    // validations
+    if (!name || !phone || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    } else if (phone.length !== 10) {
+      return res
+        .status(400)
+        .json({ message: "Phone number should be 10 digits" });
+    } else if (password.length < 6 || password.length > 20) {
+      return res
+        .status(400)
+        .json({ message: "Password should be between 6 to 20 characters" });
+    } else if (name.length < 3 || name.length > 20) {
+      return res
+        .status(400)
+        .json({ message: "Name should be between 3 to 20 characters" });
+    }
+
+    const hostExists =
+      (await Host.findOne({ phone })) || (await User.findOne({ phone }));
+    if (hostExists) {
+      return res.status(400).json({ message: "Phone is already registered" });
+    }
+
     const host = await Host.create({ name, phone, password });
     const hostid = host._id;
     res
@@ -44,27 +44,27 @@ export const createHost = async (req, res) => {
 
 // /api/host/login
 export const loginHost = async (req, res) => {
-  let { phone, password } = req.body;
-  phone = phone.toString().trim();
-  password = password.toString().trim();
-
-  //vallidations
-  if (!phone || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  } else if (phone.length !== 10) {
-    return res
-      .status(400)
-      .json({ message: "Phone number should be 10 digits" });
-  } else if (password.length < 6 || password.length > 20) {
-    return res
-      .status(400)
-      .json({ message: "Password should be between 6 to 20 characters" });
-  }
-
   try {
+    let { phone, password } = req.body;
+    phone = phone.toString().trim();
+    password = password.toString().trim();
+
+    // validations
+    if (!phone || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    } else if (phone.length !== 10) {
+      return res
+        .status(400)
+        .json({ message: "Phone number should be 10 digits" });
+    } else if (password.length < 6 || password.length > 20) {
+      return res
+        .status(400)
+        .json({ message: "Password should be between 6 to 20 characters" });
+    }
+
     const host = await Host.findOne({ phone });
     if (!host) {
-      return res.status(400).json({ message: "Host not register" });
+      return res.status(400).json({ message: "Host not registered" });
     }
     let isMatch = host.password === password;
     if (!isMatch) {
@@ -81,13 +81,13 @@ export const loginHost = async (req, res) => {
 
 // /api/host/invite
 export const inviteUser = async (req, res) => {
-  let { phone, roomid, points, id } = req.body;
-  phone = phone.toString().trim();
-
   try {
+    let { phone, roomid, points, id } = req.body;
+    phone = phone.toString().trim();
+
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(400).json({ message: "player not found" });
+      return res.status(400).json({ message: "Player not found" });
     }
     const playerInvited = user.invites.includes(roomid);
     if (playerInvited) {
@@ -97,7 +97,6 @@ export const inviteUser = async (req, res) => {
     if (!host) {
       return res.status(400).json({ message: "Host not found" });
     }
-    // console.log(host.points, points);
     if (host.points <= points) {
       return res.status(400).json({ message: "Insufficient points" });
     }

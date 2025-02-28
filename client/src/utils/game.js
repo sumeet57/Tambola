@@ -31,7 +31,11 @@ export const generateTambolaTickets = (numbers) => {
 
     numbers.forEach((num) => {
       if (typeof num !== "number" || usedNumbers.has(num)) return;
-      let colIndex = Math.floor((num - 1) / 10);
+
+      // **Updated column index logic for the new range**
+      let colIndex = Math.floor(num / 10);
+      if (num === 90) colIndex = 8; // Ensure 90 is placed in the last column
+
       if (columns[colIndex].length < 3) {
         columns[colIndex].push(num);
         usedNumbers.add(num);

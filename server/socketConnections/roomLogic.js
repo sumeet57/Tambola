@@ -165,9 +165,9 @@ export const storeRoom = async (roomid, roomData) => {
 
     const newRoom = new Room({
       roomid,
-      players: roomData.players,
-      isCompleted: roomData.isCompleted,
-      winner: roomData.winner,
+      players: roomData?.players,
+      isCompleted: roomData?.isCompleted,
+      winner: roomData?.winner,
     });
 
     await newRoom.save();

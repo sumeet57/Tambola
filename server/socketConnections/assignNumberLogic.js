@@ -3,15 +3,15 @@ export const assignNumbersToPlayers = (players) => {
   const numbersPool = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
 
   const ranges = [
-    [1, 10],
-    [11, 20],
-    [21, 30],
-    [31, 40],
-    [41, 50],
-    [51, 60],
-    [61, 70],
-    [71, 80],
-    [81, 90],
+    [1, 9],
+    [10, 19],
+    [20, 29],
+    [30, 39],
+    [40, 49],
+    [50, 59],
+    [60, 69],
+    [70, 79],
+    [80, 90],
   ];
 
   players.forEach((player) => {

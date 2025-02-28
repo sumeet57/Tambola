@@ -41,8 +41,20 @@ const Userpage = () => {
   if (getplayer && getplayer !== "undefined" && getplayer !== "null") {
     player = JSON.parse(getplayer);
   }
-  const playerid =
-    localStorage.getItem("userid") || localStorage.getItem("hostid");
+  const playerid = localStorage.getItem("userid");
+
+  useEffect(() => {
+    if (!player) {
+      navigate("/login");
+    }
+    if (!socketid) {
+      navigate("/login");
+    }
+
+    if (!playerid) {
+      navigate("/login");
+    }
+  }, []);
 
   //for joining room states
   const [roomId, setRoomId] = useState(roomid || ""); //if params is present then set it to roomid else empty string
@@ -50,9 +62,17 @@ const Userpage = () => {
 
   //for handling join room
   const handleJoin = async () => {
+    if (!roomId) {
+      messageHandler("Room ID cannot be empty");
+      return;
+    } else if (tickets < 1) {
+      messageHandler("Tickets should be atleast 1");
+      return;
+    }
     //for checking if player has enough points
-    setLoading(true);
     if (player) {
+      setLoading(true);
+      // console.log("reach");
       const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
         method: "POST",
         headers: {
@@ -95,7 +115,8 @@ const Userpage = () => {
         messageHandler(message);
       }
     } else {
-      messageHandler("Please login to join a room");
+      messageHandler("player not found login again");
+      // navigate("/login");
     }
   };
 

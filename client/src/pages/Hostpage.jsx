@@ -21,6 +21,7 @@ const Hostpage = () => {
   const socketid = localStorage.getItem("socketid");
   const hostid = localStorage.getItem("hostid");
 
+  //protecting the route
   useEffect(() => {
     if (!hostid) {
       navigate("/login");
@@ -60,7 +61,7 @@ const Hostpage = () => {
       }
       handleRoomCreated();
     } else {
-      messageHandler("Host not found");
+      messageHandler("Host not found login again");
     }
   };
   const deductPoints = async () => {
@@ -89,7 +90,7 @@ const Hostpage = () => {
         console.error("Failed to deduct points:", error);
       }
     } else {
-      messageHandler("Host not found");
+      messageHandler("Host not found login again");
     }
   };
   const checkPoints = async () => {
@@ -121,7 +122,7 @@ const Hostpage = () => {
         console.error("Failed to check points:", error);
       }
     } else {
-      messageHandler("Host not found");
+      messageHandler("Host not found login again");
     }
   };
 
@@ -135,7 +136,7 @@ const Hostpage = () => {
       deductPoints();
       navigate(`/host/room/${room}`);
     } else {
-      messageHandler("Host not found");
+      messageHandler("Host not found login again");
     }
   };
   const handleJoinedRoom = (room) => {
@@ -173,7 +174,8 @@ const Hostpage = () => {
         console.error("Failed to join room:", error);
       }
     } else {
-      messageHandler("Host not found");
+      messageHandler("Host not found login again");
+      // navigate("/login");
     }
   };
 
