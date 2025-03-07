@@ -16,10 +16,6 @@ app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 // Define routes
 app.use("/api/user", userRouter);
 app.use("/api/host", hostRouter);

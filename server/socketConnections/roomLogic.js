@@ -29,6 +29,7 @@ export const createRoom = async (roomid, player, socketid, ticket_count) => {
       ],
       playersList: [player.name],
       claimList: [],
+      isOngoing: false,
       isCompleted: false,
       winner: {},
     };
@@ -58,7 +59,7 @@ export const joinRoom = (roomId, player, socketid, ticket_count) => {
       return "Room not found";
     }
 
-    if (room[roomId].isCompleted) {
+    if (room[roomId].isOngoing) {
       return "Room has already started";
     }
 
@@ -120,6 +121,7 @@ export const claimPoint = (roomid, userid, pattern) => {
           phone: player.phone,
           claims: player.claims,
         };
+        room[roomid].isCompleted = true;
       }
       return room;
     }
@@ -144,7 +146,7 @@ export const assignNumbers = (roomid) => {
     }
 
     room[roomid].players = assignNumbersToPlayers(room[roomid].players);
-    room[roomid].isCompleted = true;
+    room[roomid].isOngoing = true;
 
     return room;
   } catch (err) {

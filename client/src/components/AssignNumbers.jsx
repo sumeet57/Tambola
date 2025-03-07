@@ -61,9 +61,10 @@ const AssignNumbers = (props) => {
     };
 
     const handleGameOver = (name) => {
+      handleMessageBox("Game over");
       setTimeout(() => {
         navigate("gameover", { state: { name } });
-      }, 2000);
+      }, 200);
     };
 
     socket.on("number_drawn", handleDrawNumber);
@@ -444,7 +445,7 @@ const AssignNumbers = (props) => {
         )}
 
         {messageBox.length > 0 && (
-          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 p-4 bg-blue-400 text-white rounded-lg shadow-md">
+          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 p-4 bg-red-500 text-white rounded-lg shadow-md">
             {messageBox}
           </div>
         )}

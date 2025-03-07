@@ -42,7 +42,8 @@ const Header = () => {
     setPlayer(null);
     toggleMenu();
     setTimeout(() => {
-      navigate("/");
+      navigate("/"); // Navigate to home
+      window.location.reload(); // Refresh the page
       setLoading(false);
     }, 1000);
   };
@@ -148,12 +149,13 @@ const Header = () => {
                     )}
                   </li>
                 </ul>
-                <p className="text-base mt-10 opacity-60 text-center text-gray-800 py-4">
+                <p className="text-sm mt-10 text-center text-gray-900 py-4 opacity-55">
                   Developed by{" "}
                   <a
                     href="https://github.com/sumeet57"
                     target="_blank"
-                    className="text-gray-500 hover:underline hover:text-blue-600 transition-colors duration-300"
+                    rel="noopener noreferrer"
+                    className="font-medium text-gray-600 hover:underline hover:text-orange-500 transition-all duration-300"
                   >
                     Sumeet
                   </a>

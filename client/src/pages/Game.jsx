@@ -15,6 +15,14 @@ const Game = () => {
   const timervalue = location.state?.timerValue || 3;
   // const roomid = sessionStorage.getItem("roomid");
   const hostid = localStorage.getItem("hostid");
+  const [messageBox, setMessageBox] = useState("");
+
+  const handleMessageBox = (message) => {
+    setMessageBox(message);
+    setTimeout(() => {
+      setMessageBox("");
+    }, 2000);
+  };
 
   const [timerToggled, setTimerToggled] = useState(false);
 
@@ -26,7 +34,7 @@ const Game = () => {
     setTimerToggled(!timerToggled);
     handleTimer();
     if (drawNumber.length >= 90) {
-      document.querySelector(".message").innerHTML = "All numbers are drawn!";
+      handleMessageBox("All numbers are drawn");
       return;
     } else if (drawNumber.length < 90) {
       socket.emit("pick_number", roomid, hostid);
@@ -48,14 +56,23 @@ const Game = () => {
     setEndMenu(false);
   };
 
+  //for development
+  // const [timer, setTimer] = useState(0);
+
+  // for production
   const [timer, setTimer] = useState(timervalue);
+
   const handleTimer = () => {
     const interval = setInterval(() => {
       setTimer((prevTimer) => {
         if (prevTimer <= 1) {
           clearInterval(interval);
           setTimerToggled(false);
+          // for production
           return timervalue;
+
+          // for development
+          // return 0;
         }
         return prevTimer - 1;
       });
@@ -64,7 +81,7 @@ const Game = () => {
 
   useEffect(() => {
     socket.on("error", (message) => {
-      document.querySelector(".message").innerHTML = message;
+      handleMessageBox(message);
     });
     const pickedNumber = (number) => {
       setDrawNumber((prevDrawNumber) => [number, ...prevDrawNumber]);
@@ -174,6 +191,12 @@ const Game = () => {
                 >
                   Cancel
                 </button>
+              </div>
+            )}
+
+            {messageBox.length > 0 && (
+              <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 p-4 bg-red-500 text-white rounded-lg shadow-md">
+                {messageBox}
               </div>
             )}
           </div>

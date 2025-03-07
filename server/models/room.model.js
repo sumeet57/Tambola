@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import moment from "moment-timezone"; // Import moment-timezone for formatting
 
 const roomSchema = new mongoose.Schema(
   {
@@ -43,21 +44,21 @@ const roomSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
-    createdAt: {
-      type: Date,
-      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Store in IST
-    },
-    updatedAt: {
-      type: Date,
-      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Store in IST
+    finishTime: {
+      type: String, // Store as a formatted string
+      default: function () {
+        return moment()
+          .tz("Asia/Kolkata") // Convert to IST
+          .format("DD-MM-YYYY | hh:mm A"); // Readable format
+      },
     },
   },
-  { timestamps: false } // Disable default timestamps since we are handling them manually
+  { timestamps: false } // Disable default timestamps
 );
 
-// Middleware to update the `updatedAt` field in IST before saving
+// Middleware to update the `finishTime` field in IST before saving
 roomSchema.pre("save", function (next) {
-  this.updatedAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000); // Update `updatedAt` in IST
+  this.finishTime = moment().tz("Asia/Kolkata").format("DD-MM-YYYY | hh:mm A"); // Format: Date-Month-Year | Time
   next();
 });
 
