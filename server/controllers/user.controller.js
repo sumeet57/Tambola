@@ -35,8 +35,10 @@ export const createUser = async (req, res) => {
     const id = user._id;
     res
       .cookie("id", id, {
-        // expries after 7 days
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: true, // make sure it's only sent over HTTPS
+        sameSite: "None", // needed for cross-origin cookies
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       })
       .status(200)
       .json({ user, id, message: "User created successfully" });
@@ -76,8 +78,10 @@ export const loginUser = async (req, res) => {
     const id = user._id;
     res
       .cookie("id", id, {
-        // expries after 7 days
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: true, // make sure it's only sent over HTTPS
+        sameSite: "None", // needed for cross-origin cookies
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       })
       .status(200)
       .json({ user, id, message: "User logged in successfully" });
@@ -130,10 +134,10 @@ export const createHost = async (req, res) => {
     // Set cookie and send response
     res
       .cookie("id", id, {
+        httpOnly: true,
+        secure: true, // make sure it's only sent over HTTPS
+        sameSite: "None", // needed for cross-origin cookies
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        // httpOnly: true,
-        // secure: process.env.NODE_ENV === "production", // only over HTTPS in production
-        // sameSite: "strict",
       })
       .status(200)
       .json({ user, message: "Host created successfully" });
@@ -174,8 +178,10 @@ export const loginHost = async (req, res) => {
     const id = user._id;
     res
       .cookie("id", id, {
-        // expries after 7 days
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: true, // make sure it's only sent over HTTPS
+        sameSite: "None", // needed for cross-origin cookies
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       })
       .status(200)
       .json({ user, id, message: "Host logged in successfully" });
