@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import socket from "../utils/websocket";
 import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
@@ -8,12 +8,20 @@ import {
 } from "../utils/storageUtils";
 import Loading from "../components/Loading";
 
+//context import
+import { PlayerContext } from "../context/PlayerContext";
+import { GameContext } from "../context/GameContext";
+// import { }
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Userpage = () => {
   //for extracting roomid from params if present
   const { roomid } = useParams();
+
+  //for context
+  const { Player, updatePlayer } = useContext(PlayerContext);
+  const { gameState, updateGameState } = useContext(GameContext);
 
   //for loading
   const [loading, setLoading] = useState(false);
@@ -32,57 +40,28 @@ const Userpage = () => {
   //geeting path from url for conditional rendering(Oulet is used for nested routing)
   const location = useLocation();
 
-  //for getting socketid from localstorage
-  const socketid = localStorage.getItem("socketid");
-
-  //for getting player from sessionstorage and id from localstorage
-  let player = null;
-  const getplayer = sessionStorage.getItem("player");
-  if (getplayer && getplayer !== "undefined" && getplayer !== "null") {
-    player = JSON.parse(getplayer);
-  }
-  const playerid = localStorage.getItem("userid");
-
-  useEffect(() => {
-    if (!player) {
-      navigate("/login");
-    }
-    if (!socketid) {
-      navigate("/login");
-    }
-
-    if (!playerid) {
-      navigate("/login");
-    }
-  }, []);
-
   //for joining room states
   const [roomId, setRoomId] = useState(roomid || ""); //if params is present then set it to roomid else empty string
-  const [tickets, setTickets] = useState(1);
+  const [requestTickets, setRequestTickets] = useState(1);
+
+  useEffect(() => {
+    updatePlayer({
+      requestedTicketCount: requestTickets,
+    });
+  }, [requestTickets]);
 
   //for handling join room
   const handleJoin = async () => {
     if (!roomId) {
       messageHandler("Room ID cannot be empty");
       return;
-    } else if (tickets < 1) {
+    } else if (requestTickets < 1) {
       messageHandler("Tickets should be atleast 1");
       return;
     }
     //for checking if player has enough points
-    if (player) {
+    if (Player) {
       setLoading(true);
-      // console.log("reach");
-      const pointsRes = await fetch(`${apiBaseUrl}/api/game/available`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: playerid,
-          ticket: tickets,
-        }),
-      });
       // for checking if player is invited or not
       const invitedRes = await fetch(`${apiBaseUrl}/api/game/invited`, {
         method: "POST",
@@ -90,67 +69,30 @@ const Userpage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone: player?.phone,
+          phone: Player?.phone,
           roomid: roomId,
         }),
       });
       const invitedData = await invitedRes.json();
-      const pointsData = await pointsRes.json();
       setLoading(false);
-      if (invitedRes.status === 400) {
-        messageHandler(invitedData.message);
-        return;
-      }
-      if (pointsRes.status === 400) {
-        messageHandler(pointsData.message);
-        return;
-      }
-      if (pointsRes.status === 200 && invitedRes.status === 200) {
-        //connecting to room with roomid, player data, socketid and tickets
-        // console.log("Joining room", roomId, player, socketid, tickets);
-        socket.emit("join_room", roomId, player, tickets);
-        updateSessionStorage("roomid", parseInt(roomId));
+      if (invitedRes.status === 200) {
+        socket.emit("join_room", Player, roomId);
+        setLoading(true);
       } else {
-        const message = pointsData.message || invitedData.message;
+        const message = invitedData?.message;
         messageHandler(message);
       }
     } else {
       messageHandler("player not found login again");
-      // navigate("/login");
     }
   };
 
   //for listening to socket events
   useEffect(() => {
     const handleRoomJoined = (room) => {
-      const deductPoints = async () => {
-        try {
-          setLoading(true);
-          const res = await fetch(`${apiBaseUrl}/api/game/points`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: playerid, // Use the latest player ID
-              points: tickets, // Use the latest ticket count
-            }),
-          });
-
-          const data = await res.json();
-          setLoading(false);
-          if (res.status === 200) {
-            updateSessionStorage("player", data.data); // Update player session data
-            navigate(`/user/room/${room}`); // Navigate to the room
-          } else {
-            messageHandler(data.message);
-          }
-        } catch (error) {
-          messageHandler("Failed to deduct points");
-        }
-      };
-
-      deductPoints();
+      navigate(`/user/room/${room}`);
+      setLoading(false);
+      // deductPoints();
     };
 
     // Set up event listener for room_joined
@@ -159,6 +101,25 @@ const Userpage = () => {
     // Handle errors
     socket.on("error", (message) => {
       messageHandler(message);
+      setLoading(false);
+    });
+
+    socket.on("reconnectToRoom", (data) => {
+      navigate(`/${Player.role}/room/${data}`);
+      setLoading(false);
+    });
+    socket.on("reconnectToGame", (data) => {
+      setLoading(false);
+      updateGameState({
+        patterns: data.patterns || [],
+        schedule: data.schedule || null,
+        claimTrack: data.claimTrack || [],
+        assign_numbers: data.assign_numbers || [],
+        drawnNumbers: data.drawno || [],
+        name: Player.name || "Guest",
+        roomid: data.roomid,
+      });
+      navigate(`/game`);
     });
 
     // Cleanup
@@ -166,7 +127,7 @@ const Userpage = () => {
       socket.off("room_joined", handleRoomJoined);
       socket.off("error");
     };
-  }, [tickets, playerid, navigate]);
+  }, [requestTickets, Player, navigate]);
 
   return (
     <>
@@ -177,7 +138,7 @@ const Userpage = () => {
           <Header />
           {location.pathname === "/user" ||
           location.pathname === `/user/${roomid}` ? (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
               <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">
                 <h2 className="text-2xl font-bold mb-4">Join a Room</h2>
                 <div className="mb-4">
@@ -202,21 +163,24 @@ const Userpage = () => {
                     className="block text-gray-700 text-sm font-bold mb-2"
                     htmlFor="tickets"
                   >
-                    Number of Tickets
+                    Request Tickets
                   </label>
                   <select
                     id="tickets"
-                    value={tickets}
+                    value={requestTickets}
                     onChange={(e) => {
                       let selectedPoints = parseInt(e.target.value);
                       // console.log("Selected points:", selectedPoints);
-                      setTickets(selectedPoints);
+                      setRequestTickets(selectedPoints);
                     }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   >
                     <option value={1}>1</option>
                     <option value={2}>2</option>
                     <option value={3}>3</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                    <option value={6}>6</option>
                   </select>
                 </div>
                 {messageToggle && (

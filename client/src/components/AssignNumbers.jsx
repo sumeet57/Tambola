@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   distributeNumbersEqually,
   generateTambolaTickets,
@@ -6,36 +6,58 @@ import {
 
 import socket from "../utils/websocket";
 import { useNavigate } from "react-router-dom";
+//for context import
+import { PlayerContext } from "../context/PlayerContext.jsx";
+import { GameContext } from "../context/GameContext.jsx";
 
-const AssignNumbers = (props) => {
+// for loading
+import Loading from "./Loading.jsx";
+
+const AssignNumbers = () => {
   const navigate = useNavigate();
-  const [player, setPlayer] = useState("");
+
+  //for tickets
   const [tickets, setTickets] = useState([]);
   const [finalTickets, setFinalTickets] = useState([]); // Store final structured tickets
 
+  // for context
+  const { Player } = useContext(PlayerContext);
+  const { gameState, updateGameState } = useContext(GameContext);
+
+  //loding
+  const [Loading, setLoading] = useState(false);
+
+  // claim guide table
+  const claimGuide = {
+    1: "Early Five",
+    2: "Middle Number",
+    3: "Early Seven",
+    4: "First Line",
+    5: "Second Line",
+    6: "Third Line",
+    7: "Corner",
+    8: "Full House",
+  };
+
   useEffect(() => {
-    const playerData = sessionStorage.getItem("player");
-    if (playerData) {
-      const player = JSON.parse(playerData);
-      setPlayer(player);
+    if (gameState.assign_numbers.length > 14) {
+      const generatedTickets = distributeNumbersEqually(
+        gameState.assign_numbers
+      );
+      setTickets(generatedTickets);
+      setLoading(false);
+    } else {
     }
   }, []);
 
   useEffect(() => {
-    if (props.data && Array.isArray(props.data) && props.data.length > 0) {
-      const generatedTickets = distributeNumbersEqually(props.data);
-      setTickets(generatedTickets);
-    }
-  }, [props.data]);
-
-  useEffect(() => {
     if (tickets.length === 0) return;
-
     let ticketsData = {};
+    setLoading(true);
     tickets.forEach((ticket, index) => {
       ticketsData[index + 1] = generateTambolaTickets(ticket)[0]; // Ensure it returns a single 3x9 grid
     });
-
+    setLoading(false);
     setFinalTickets(ticketsData);
   }, [tickets]);
 
@@ -54,36 +76,49 @@ const AssignNumbers = (props) => {
     });
   };
 
-  const [drawNumber, setDrawNumber] = useState([]);
+  const [drawNumber, setDrawNumber] = useState(gameState.drawnNumbers);
   useEffect(() => {
-    const handleDrawNumber = (number) => {
-      setDrawNumber((prevDrawNumber) => [...prevDrawNumber, number]);
-    };
+    setDrawNumber(gameState.drawnNumbers);
+  }, [gameState.drawnNumbers]);
 
-    const handleGameOver = (name) => {
+  const [claimMessage, setClaimMessage] = useState("");
+  const handleClaimMessage = (data) => {
+    setClaimMessage(data?.message);
+    setTimeout(() => {
+      setClaimMessage("");
+    }, 5000);
+  };
+
+  useEffect(() => {
+    const handleGameOver = () => {
       handleMessageBox("Game over");
       setTimeout(() => {
-        navigate("gameover", { state: { name } });
-      }, 200);
+        navigate("gameover");
+      }, 1000);
+    };
+    const handleClaimList = (claimedList) => {
+      updateGameState({
+        claimTrack: claimedList,
+      });
     };
 
-    socket.on("number_drawn", handleDrawNumber);
-    socket.on("claimed", handleMessageBox);
-    socket.on("error", handleMessageBox);
-    socket.on("claim_update", setClaimHistory);
+    socket.on("pattern_claimed", handleClaimMessage);
+    // socket.on("error", handleMessageBox);
+    socket.on("claimedList", handleClaimList);
+    socket.on("game_over", handleGameOver);
     socket.on("room_data_stored", handleGameOver);
 
     return () => {
-      socket.off("number_drawn", handleDrawNumber);
-      socket.off("claimed", handleMessageBox);
-      socket.off("error", handleMessageBox);
-      socket.off("claim_update", setClaimHistory);
+      socket.off("pattern_claimed", handleMessageBox);
+      // socket.off("error", handleMessageBox);
+      socket.off("claimedList", handleClaimList);
+      socket.off("game_over", handleGameOver);
       socket.off("room_data_stored", handleGameOver);
     };
   }, []);
 
+  const [ClaimHistory, setClaimHistory] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [ClaimHistory, setClaimHistory] = useState([]);
   const [disqualify, setDisqualify] = useState([]);
   const [claimMenu, setClaimMenu] = useState(false);
   const claimMenuToggle = (ticketindex) => {
@@ -94,18 +129,9 @@ const AssignNumbers = (props) => {
   };
   const [messageBox, setMessageBox] = useState("");
   const handleMessageBox = (pattern, name) => {
-    if (pattern === 1) {
-      setMessageBox("First Line Claimed by " + name);
-    } else if (pattern === 2) {
-      setMessageBox("Second Line Claimed by " + name);
-    } else if (pattern === 3) {
-      setMessageBox("Third Line Claimed by " + name);
-    } else if (pattern === 4) {
-      setMessageBox("Early Five Claimed by " + name);
-    } else if (pattern === 5) {
-      setMessageBox("Corner Claimed by " + name);
-    } else if (pattern === 6) {
-      setMessageBox("Full House Claimed by " + name);
+    if (pattern && name) {
+      setMessageBox(pattern + " claimed by " + name);
+      setClaimHistory(...ClaimHistory, parseInt(pattern));
     } else {
       setMessageBox(pattern);
     }
@@ -115,7 +141,7 @@ const AssignNumbers = (props) => {
   };
 
   const claimClick = (id) => {
-    if (id === 1) {
+    if (id === 4) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let firstLine = finalTickets[selectedTicket][0];
@@ -134,13 +160,10 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = sessionStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
-            const pattern = id;
+            const pattern = parseInt(id);
 
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", roomid, userid, pattern, player?.name);
+            socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -149,7 +172,7 @@ const AssignNumbers = (props) => {
           }
         }
       }
-    } else if (id === 2) {
+    } else if (id === 5) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let secondLine = finalTickets[selectedTicket][1];
@@ -168,12 +191,9 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = sessionStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
-            const pattern = id;
+            const pattern = parseInt(id);
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", roomid, userid, pattern, player?.name);
+            socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -182,7 +202,7 @@ const AssignNumbers = (props) => {
           }
         }
       }
-    } else if (id === 3) {
+    } else if (id === 6) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let thirdLine = finalTickets[selectedTicket][2];
@@ -201,11 +221,8 @@ const AssignNumbers = (props) => {
             (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
           );
           if (isClaimed) {
-            let roomid = sessionStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
-            const pattern = id;
-            socket.emit("claim", roomid, userid, pattern, player?.name);
+            const pattern = parseInt(id);
+            socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -214,8 +231,7 @@ const AssignNumbers = (props) => {
           }
         }
       }
-    } else if (id === 4) {
-      // console.log(drawNumber);
+    } else if (id === 1) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let earlyFiveNumbers = [];
@@ -226,7 +242,6 @@ const AssignNumbers = (props) => {
               }
             });
           });
-
           let isvalid =
             selectedNumbers.filter((num) => earlyFiveNumbers.includes(num))
               .length >= 5;
@@ -241,12 +256,8 @@ const AssignNumbers = (props) => {
                 drawNumber.includes(num) && earlyFiveNumbers.includes(num)
             ).length >= 5;
           if (isClaimed) {
-            let roomid = sessionStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
             const pattern = id;
-
-            socket.emit("claim", roomid, userid, pattern, player?.name);
+            socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -255,7 +266,75 @@ const AssignNumbers = (props) => {
           }
         }
       }
-    } else if (id === 5) {
+    } else if (id === 2) {
+      // only middle number claim, not middle line claim
+      if (!disqualify.includes(selectedTicket)) {
+        if (finalTickets && Object.keys(finalTickets).length > 0) {
+          let middleNumbers = finalTickets[selectedTicket][1];
+          let allMiddleNumbers = middleNumbers.filter(
+            (num) => num !== null && num !== undefined
+          );
+          let middleNumber =
+            allMiddleNumbers[Math.floor(allMiddleNumbers.length / 2)];
+          if (
+            middleNumber === null ||
+            middleNumber === undefined ||
+            !selectedNumbers.includes(middleNumber)
+          ) {
+            handleMessageBox("Select Middle Numbers");
+            claimMenuToggle();
+            return;
+          }
+          let isClaimed =
+            selectedNumbers.includes(middleNumber) &&
+            drawNumber.includes(middleNumber);
+          if (isClaimed) {
+            const pattern = id;
+            socket.emit("claim", Player, gameState.roomid, pattern);
+            claimMenuToggle();
+          } else {
+            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            setDisqualify((prev) => [...prev, selectedTicket]);
+            claimMenuToggle();
+          }
+        }
+      }
+    } else if (id === 3) {
+      if (!disqualify.includes(selectedTicket)) {
+        if (finalTickets && Object.keys(finalTickets).length > 0) {
+          let earlySevenNumbers = [];
+          finalTickets[selectedTicket].forEach((row) => {
+            row.forEach((num) => {
+              if (num !== null && num !== undefined) {
+                earlySevenNumbers.push(num);
+              }
+            });
+          });
+          let isvalid =
+            selectedNumbers.filter((num) => earlySevenNumbers.includes(num))
+              .length >= 7;
+          if (!isvalid) {
+            handleMessageBox("Select all Numbers for Early Seven");
+            claimMenuToggle();
+            return;
+          }
+          let isClaimed =
+            selectedNumbers.filter(
+              (num) =>
+                drawNumber.includes(num) && earlySevenNumbers.includes(num)
+            ).length >= 7;
+          if (isClaimed) {
+            const pattern = id;
+            socket.emit("claim", Player, gameState.roomid, pattern);
+            claimMenuToggle();
+          } else {
+            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            setDisqualify((prev) => [...prev, selectedTicket]);
+            claimMenuToggle();
+          }
+        }
+      }
+    } else if (id === 7) {
       if (!disqualify.includes(selectedTicket)) {
         if (finalTickets && Object.keys(finalTickets).length > 0) {
           let cornerNumbersLoop = [
@@ -289,12 +368,9 @@ const AssignNumbers = (props) => {
             return selectedNumbers.includes(num) && drawNumber.includes(num);
           });
           if (isClaimed) {
-            let roomid = sessionStorage.getItem("roomid");
-            let userid =
-              localStorage.getItem("userid") || localStorage.getItem("hostid");
-            const pattern = id;
+            const pattern = parseInt(id);
 
-            socket.emit("claim", roomid, userid, pattern, player?.name);
+            socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
             handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -303,7 +379,7 @@ const AssignNumbers = (props) => {
           }
         }
       }
-    } else if (id === 6) {
+    } else if (id === 8) {
       if (!disqualify.includes(selectedTicket)) {
         if (
           ClaimHistory.includes(1) &&
@@ -333,13 +409,9 @@ const AssignNumbers = (props) => {
               (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
             );
             if (isClaimed) {
-              let roomid = sessionStorage.getItem("roomid");
-              let userid =
-                localStorage.getItem("userid") ||
-                localStorage.getItem("hostid");
-              const pattern = id;
+              const pattern = parseInt(id);
 
-              socket.emit("claim", roomid, userid, pattern, player?.name);
+              socket.emit("claim", Player, gameState.roomid, pattern);
               claimMenuToggle();
             } else {
               handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
@@ -357,7 +429,9 @@ const AssignNumbers = (props) => {
     }
   };
 
-  return (
+  return Loading ? (
+    <Loading />
+  ) : (
     <React.Fragment>
       <div className="flex flex-col gap-1 items-center relative">
         {Object.keys(finalTickets).map((ticketIndex) => (
@@ -366,7 +440,7 @@ const AssignNumbers = (props) => {
               key={ticketIndex}
               className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 rounded-lg shadow-md"
             >
-              <div className="grid grid-cols-9 bg-gray-200 rounded-md">
+              <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
                 {Array.isArray(finalTickets[ticketIndex]) &&
                   finalTickets[ticketIndex].map((row, rowIndex) => (
                     <React.Fragment key={rowIndex}>
@@ -380,8 +454,8 @@ const AssignNumbers = (props) => {
                             className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
                               num !== null
                                 ? selectedNumbers.includes(num)
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-black"
+                                  ? "bg-gradient-to-b from-green-400 to-green-500 text-white"
+                                  : "bg-gradient-to-r from-white to-gray-100 text-black"
                                 : "bg-gray-300"
                             } ${
                               window.innerWidth < 370
@@ -396,7 +470,7 @@ const AssignNumbers = (props) => {
                   ))}
               </div>
               <button
-                className="mt-1 bg-gradient-to-r from-yellow-500 to-yellow-500 text-white text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-700 hover:to-yellow-800 shadow-lg"
+                className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
                 onClick={() => claimMenuToggle(ticketIndex)}
               >
                 Claim
@@ -412,41 +486,61 @@ const AssignNumbers = (props) => {
         ))}
 
         {claimMenu && (
-          <div className="cont w-80 h-80 absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-4 bg-zinc-900 rounded-3xl shadow-lg">
+          <div className="cont w-80 h-80 fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-4 bg-gradient-to-t from-pink-100 via-yellow-100 to-blue-100 rounded-3xl border-2 border-zinc-900 shadow-lg">
             <div
               onClick={claimMenuToggle}
-              className="closeButton absolute grid place-items-center top-2 right-2 text-3xl transition-all active:scale-90 w-10 h-10 text-white cursor-pointer rounded-full hover:bg-red-500 hover:text-white"
+              className="closeButton absolute grid place-items-center top-2 right-2 text-3xl transition-all active:scale-90 w-10 h-10 text-black cursor-pointer rounded-full hover:bg-red-500 hover:text-white"
             >
               &times;
             </div>
             <div className="claimsButton pt-14 grid grid-cols-2 gap-4">
-              {[
-                { name: "First Line", id: 1 },
-                { name: "Second Line", id: 2 },
-                { name: "Third Line", id: 3 },
-                { name: "Early Five", id: 4 },
-                { name: "Corner", id: 5 },
-                { name: "Full House", id: 6 },
-              ].map((claim) =>
-                !ClaimHistory.includes(claim.id) ? (
-                  <button
-                    onClick={() => claimClick(claim.id)}
-                    key={claim.id}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all active:scale-90 shadow-lg"
-                  >
-                    {claim.name}
-                  </button>
-                ) : (
-                  ""
-                )
-              )}
+              {gameState?.patterns.map((claim) => {
+                if (!ClaimHistory?.includes(claim.id)) {
+                  const foundClaim = gameState?.claimTrack.find(
+                    (item) => item.id === claim.id
+                  );
+                  const winners = foundClaim?.winners;
+
+                  return (
+                    <button
+                      onClick={() => {
+                        if (winners !== 0 && foundClaim) {
+                          claimClick(parseInt(claim.id));
+                        }
+                      }}
+                      key={claim.id}
+                      className={`x-6 py-2
+            ${
+              winners === 0
+                ? "cursor-not-allowed bg-gray-300"
+                : "cursor-pointer bg-gradient-to-r from-blue-200 via-teal-200 to-green-200 hover:from-blue-300 hover:via-teal-300 hover:to-green-300 transition-all active:scale-90"
+            }
+            text-black rounded-3xl shadow-lg font-bold`}
+                      disabled={winners === 0} // Consider using the disabled attribute for better accessibility
+                    >
+                      {`${claimGuide[claim.id] || "Unknown"} (${
+                        winners !== undefined ? winners : "claimed"
+                      })`}
+                    </button>
+                  );
+                }
+                return null;
+              })}
             </div>
           </div>
         )}
 
         {messageBox.length > 0 && (
-          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 p-4 bg-red-500 text-white rounded-lg shadow-md">
-            {messageBox}
+          <div className="messageBox fixed bottom-10 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-gradient-to-r from-pink-200 via-yellow-200 to-blue-200 text-black font-medium rounded-3xl shadow-md">
+            {/* {messageBox} */}
+            😔 {messageBox}
+          </div>
+        )}
+
+        {claimMessage && (
+          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 text-black font-bold text-lg rounded-3xl shadow-md">
+            <span className="text-xl">🎊</span>
+            {claimMessage}
           </div>
         )}
       </div>

@@ -17,12 +17,21 @@ import Hostroom from "./pages/Hostroom.jsx";
 import Userroom from "./pages/Userroom.jsx";
 import Userpage from "./pages/Userpage.jsx";
 import Hostpage from "./pages/Hostpage.jsx";
+import ReconnectPage from "./pages/ReconnectPage.jsx";
 import Game from "./pages/Game.jsx";
 import GameOver from "./pages/GameOver.jsx";
+
+//context
+import { PlayerProvider } from "./context/PlayerContext.jsx";
+import { GameContextProvider } from "./context/GameContext.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import ErrorPage from "./pages/ErrorPage.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "/login",
@@ -31,6 +40,20 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard />,
+    children: [
+      {
+        path: ":id",
+        element: <Dashboard />,
+      },
+    ],
+  },
+  {
+    path: "/reconnect/:roomid",
+    element: <ReconnectPage />,
   },
   {
     path: "/user",
@@ -75,6 +98,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router}></RouterProvider>
+    <PlayerProvider>
+      <GameContextProvider>
+        <RouterProvider router={router}></RouterProvider>
+      </GameContextProvider>
+    </PlayerProvider>
   </StrictMode>
 );

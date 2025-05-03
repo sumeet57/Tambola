@@ -1,0 +1,96 @@
+{roomid} : {
+  roomid: String,
+  hostid: String,
+  players: [
+    {
+      id: String,
+      socketid: String,
+      name: String,
+      phone: String,
+      claims: Array,
+      assign_numbers: Array,
+      requestedTicketCount: Int,
+      ticketCount: Int
+    }
+  ],
+  patterns: [
+    {
+      id: Int,
+      winner: Int
+    }
+  ],
+  schedule: String,
+  claimData: [
+    {
+      id: Int,
+      name: String,
+      playerName: String,
+      playerId: Array
+    }
+  ],
+  playersList: Array,
+  isOngoing: Boolean,
+  isCompleted: Boolean
+}
+
+
+
+
+database => 
+room model collection :
+{
+  roomid: String,
+  hostid: String,
+  players: [
+    {
+      id: String,
+      socketid: String,
+      name: String,
+      phone: String,
+      claims: Array,
+      assign_numbers: Array,
+      requestedTicketCount: Int,
+      ticketCount: Int
+    }
+  ],
+  patterns: [
+    {
+      id: Int,
+      winner: Int
+    }
+  ],
+  schedule: String,
+  claimData: [
+    {
+      id: Int,
+      name: String,
+      playerName: String,
+      playerId: Array
+    }
+  ],
+  isCompleted: Boolean
+}
+
+
+const newRoom = {
+      host: player?.id,
+      players: [],
+      patterns: setting.pattern || [],
+      schedule: setting.schedule || null,
+      claimData: [],
+      claimTrack: setting.pattern || [],
+      playersList: [],
+      isOngoing: false,
+      isCompleted: false,
+    };
+
+    newRoom.players.push({
+      id: player?.id,
+      socketid: player?.socketId,
+      name: player?.name,
+      phone: player?.phone,
+      claims: [],
+      assign_numbers: [],
+      requestedTicketCount: player?.requestedTicketCount || 1,
+      ticketCount: player.ticketCount || 1,
+    });

@@ -1,5 +1,13 @@
-import Room from "../models/room.model.js";
+// import Room from "../models/room.model.js";
 
-let room = {};
+// In-memory room storage using Map
+const activeRooms = new Map();
 
-export default room;
+// In-memory lock map
+const roomLocks = new Map();
+
+// pendingDeletingRooms
+const pendingRoomDeletions = new Map(); // roomId -> timeout ID
+
+export { activeRooms, roomLocks, pendingRoomDeletions };
+export default { activeRooms, roomLocks, pendingRoomDeletions };

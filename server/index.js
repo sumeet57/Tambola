@@ -19,33 +19,45 @@ const io = new Server(server, {
 });
 
 //importing socket connection logic
-import room from "./socketConnections/room.js";
+import { activeRooms, pendingRoomDeletions } from "./socketConnections/room.js";
 import {
   createRoom,
   joinRoom,
   assignNumbers,
   claimPoint,
   storeRoom,
+  reconnectPlayer,
 } from "./socketConnections/roomLogic.js";
-
+import Room from "./models/room.model.js";
+import { SaveExistingGameInDb } from "./utils/game.utils.js";
 io.on("connection", (socket) => {
   try {
     // Creating room
-    socket.on("create_room", async (roomid, ticket_count, player) => {
+    socket.on("create_room", async (player, setting) => {
       try {
-        if (!roomid || !ticket_count || !player) {
-          socket.emit("error", "Invalid input");
+        if (typeof player !== "object" || typeof setting !== "object") {
+          socket.emit(
+            "error",
+            "Invalid input: player and setting must be objects"
+          );
           return;
         }
 
-        const res = await createRoom(roomid, player, socket.id, ticket_count);
-        if (res === "Room already exists") {
-          socket.emit("error", "Room already exists");
+        const res = await createRoom(player, setting);
+        if (typeof res === "string") {
+          socket.emit("error", res);
           return;
         }
-        socket.join(roomid);
-        socket.emit("room_created", roomid);
-        io.to(roomid).emit("player_update", room[roomid]?.playersList || []);
+        socket.join(setting.roomId);
+        socket.emit("room_created", setting.roomId);
+        let room = activeRooms.get(setting.roomId);
+        if (!room) {
+          socket.emit("error", "Room not found in memory");
+          return;
+        }
+        setTimeout(() => {
+          io.to(setting.roomid).emit("player_update", room?.playersList || []);
+        }, 1000);
       } catch (err) {
         console.error("Error in create_room:", err);
         socket.emit("error", "Server error");
@@ -53,22 +65,49 @@ io.on("connection", (socket) => {
     });
 
     // Joining room
-    socket.on("join_room", (roomid, user, ticket_count) => {
+    socket.on("join_room", async (player, roomid) => {
       try {
-        if (!roomid || !user || !ticket_count) {
+        if (!player || !roomid) {
           socket.emit("error", "Invalid input");
           return;
         }
 
-        const res = joinRoom(roomid, user, socket.id, ticket_count);
+        const res = await joinRoom(player, roomid);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;
         }
+        let room = activeRooms.get(roomid);
 
         socket.join(roomid);
-        socket.emit("room_joined", roomid);
-        io.to(roomid).emit("player_update", room[roomid]?.playersList || []);
+        if (res === false) {
+          socket.emit("room_joined", roomid);
+          socket.emit("reconnectToRoom", roomid);
+          setTimeout(() => {
+            io.to(roomid).emit("player_update", room.playersList || []);
+            io.to(roomid).emit(
+              "requestedTicket",
+              room?.requestedTicketCount || []
+            );
+          }, 1000);
+        } else if (res === true) {
+          const assignNumber =
+            room.players?.find((p) => p.id === player.id)?.assign_numbers || [];
+          socket.emit("reconnectToGame", {
+            drawno: room.drawno || 0,
+            patterns: room.patterns || [],
+            schedule: room.schedule || null,
+            claimTrack: room.claimTrack || [],
+            assign_numbers: assignNumber || [],
+            roomid: roomid,
+          });
+          setTimeout(() => {
+            socket.emit("number_drawn", room.drawno);
+          }, 500);
+        }
+        setTimeout(() => {
+          io.to(roomid).emit("player_update", room?.playersList || []);
+        }, 1000);
       } catch (err) {
         console.error("Error in join_room:", err);
         socket.emit("error", "Server error");
@@ -76,17 +115,22 @@ io.on("connection", (socket) => {
     });
 
     // Starting game
-    socket.on("start_game", (roomid, id) => {
+    socket.on("start_game", async (roomid, id) => {
       try {
-        if (!roomid || !room[roomid] || !id) {
+        if (!roomid || !id) {
           socket.emit("error", "Room not found");
           return;
         }
+        const room = activeRooms.get(roomid);
+        if (!room) {
+          socket.emit("error", "Room not found in memory");
+          return;
+        }
 
-        if (room[roomid]?.players) {
+        if (room?.players) {
           let found = false;
-          for (const player of room[roomid].players) {
-            if (player.playerid === id) {
+          for (const player of room.players) {
+            if (player.id == id) {
               found = true;
               break;
             }
@@ -105,73 +149,80 @@ io.on("connection", (socket) => {
           socket.emit("error", players);
           return;
         }
-
+        const roomInDb = await Room.findOne({ roomid: roomid });
+        if (roomInDb) {
+          roomInDb.isOngoing = true;
+          await roomInDb.save();
+        }
+        room.isOngoing = true;
         setTimeout(() => {
-          room[roomid].players?.forEach((player) => {
-            io.to(player.socketid).emit("started_game", player.assign_numbers);
+          room.players?.forEach((player) => {
+            io.to(player.socketid).emit("started_game", {
+              player,
+              setting: {
+                roomid: roomid,
+                patterns: room?.patterns || [],
+                schedule: room?.schedule || null,
+                claimTrack: room?.claimTrack || [],
+              },
+            });
           });
-        }, 1000);
+        }, 2000);
       } catch (err) {
         console.error("Error in start_game:", err);
         socket.emit("error", "Server error");
       }
     });
 
-    let drawno = [];
     // Claiming points
-    socket.on("claim", async (roomid, userid, pattern, name) => {
+    socket.on("claim", async (player, roomid, pattern) => {
       try {
-        if (!roomid || !userid || !pattern || !name || !room[roomid]) {
-          socket.emit("error", "Invalid claim request");
+        if (!player || !roomid || !pattern) {
+          socket.emit("error", "Invalid input");
+          return;
+        }
+        let room = activeRooms.get(roomid);
+        if (!room) {
+          socket.emit("error", "Room not found in memory");
           return;
         }
 
-        const res = claimPoint(roomid, userid, pattern);
+        const res = claimPoint(player, roomid, pattern, io);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;
         }
 
-        io.to(roomid).emit("claim_update", room[roomid]?.claimList || []);
-        io.to(roomid).emit("claimed", pattern, name);
-
-        if (room[roomid]?.claimList.includes(6)) {
-          const winner = room[roomid]?.winner?.name;
-          const saveRes = await storeRoom(roomid, room[roomid]);
-          if (typeof saveRes === "string") {
-            socket.emit("error", saveRes);
-            return;
-          }
-
-          io.to(roomid).emit("room_data_stored", winner);
-          drawno = [];
-          io.to(roomid).emit("game_over");
-        }
+        io.to(roomid).emit("claimListUpdate", room?.claimList || []);
+        io.to(roomid).emit("claimed", pattern, player?.name);
       } catch (err) {
-        // console.error("Error in claim:", err);
+        console.error("Error in claim:", err);
         socket.emit("error", "Server error");
       }
     });
 
-    // Pick number
-    socket.on("pick_number", (roomid, hostid) => {
+    // Pick number (working fine)
+    socket.on("pick_number", (roomid, id) => {
       try {
-        if (!roomid || !room[roomid] || !hostid) {
+        if (!roomid || !id) {
           socket.emit("error", "Invalid room ID");
           return;
         }
-        if (room[roomid]?.players) {
+        let room = activeRooms.get(roomid);
+        if (!room) {
+          socket.emit("error", "Room not found");
+          return;
+        }
+        if (room?.players) {
           // let found = false;
-          let found = room[roomid]?.players?.some(
-            (player) => player.playerid === hostid
-          );
+          let found = room?.players?.some((player) => player.id === id);
           if (!found) {
             socket.emit("error", "You are not authorized to pick the number");
             return;
           }
         }
 
-        if (drawno.length >= 90) {
+        if (room.drawno.length >= 90) {
           socket.emit("error", "All numbers are drawn");
           return;
         }
@@ -179,66 +230,125 @@ io.on("connection", (socket) => {
         let number;
         do {
           number = Math.floor(Math.random() * 90) + 1;
-        } while (drawno.includes(number));
+        } while (room.drawno.includes(number));
 
-        drawno.push(number);
-        io.to(roomid).emit("number_drawn", number);
+        room.drawno.push(number);
+        io.to(roomid).emit("number_drawn", room.drawno);
       } catch (err) {
         console.error("Error in pick_number:", err);
         socket.emit("error", "Server error");
       }
     });
 
-    //end this game
-    socket.on("end_game", async (roomid, hostid) => {
+    socket.on("requestTicket", (id, roomid, count) => {
       try {
-        if (!roomid || !room[roomid] || !hostid) {
-          socket.emit("error", "Invalid room ID");
+        let roomData = activeRooms.get(roomid);
+        if (!roomData) {
+          socket.emit("error", "Room not found in memory");
           return;
         }
-        if (room[roomid]?.players) {
-          let found = room[roomid]?.players?.some(
-            (player) => player.playerid === hostid
+        if (roomData?.players) {
+          let foundIndex = roomData?.players?.findIndex(
+            (player) => player.id == id
           );
+          if (foundIndex) {
+            roomData.players[foundIndex].ticketCount = count;
+            roomData.requestedTicketCount =
+              roomData.requestedTicketCount.filter(
+                (player) => player.id !== id
+              );
+            socket.emit("requestedTicket", roomData.requestedTicketCount);
+          }
+        }
+      } catch (err) {
+        console.error("Error in requestedTicket:", err);
+        socket.emit("error", "Server error while requesting ticket");
+      }
+    });
+
+    //end this game (not yet suggested)
+    socket.on("end_game", async (roomid, id) => {
+      try {
+        if (!roomid || !activeRooms.has(roomid) || !id) {
+          socket.emit("error", "Invalid credentials");
+          return;
+        }
+        let room = activeRooms.get(roomid);
+        if (room?.players) {
+          let found = room?.host == id;
           if (!found) {
             socket.emit("error", "You are not authorized to end the game");
             return;
           }
         }
-        const endRes = await storeRoom(roomid, room[roomid]);
+        const endRes = await storeRoom(roomid);
         if (typeof endRes === "string") {
           socket.emit("error", endRes);
           return;
         }
 
         io.to(roomid).emit("room_data_stored", "Game ended by host");
-        drawno = [];
-        io.to(roomid).emit("game_over");
       } catch (err) {
-        // console.error("Error in end_game:", err);
+        console.error("Error in end_game:", err);
         socket.emit("error", "Server error");
       }
     });
 
-    // Handle player disconnect
+    // Handle player disconnection
+
     socket.on("disconnect", () => {
       try {
-        for (let roomId in room) {
-          const playerIndex = room[roomId]?.players?.findIndex(
+        for (const [roomId, room] of activeRooms.entries()) {
+          const players = room?.players || [];
+          const playerIndex = players.findIndex(
             (player) => player.socketid === socket.id
           );
 
           if (playerIndex !== -1) {
-            room[roomId].players.splice(playerIndex, 1);
-            room[roomId].playersList =
-              room[roomId]?.players?.map((p) => p.name) || [];
+            const disconnectedPlayer = players[playerIndex];
 
-            io.to(roomId).emit("player_update", room[roomId]?.playersList);
-            io.to(roomId).emit("updatePlayers", room[roomId]?.players || []);
-
-            if (room[roomId]?.players?.length === 0) {
-              delete room[roomId];
+            // Remove player from the room if the room is not ongoing
+            if (!room.isOngoing) {
+              players.splice(playerIndex, 1);
+              room.playersList = players.map((player) => player.name);
+              room.players = players;
+              io.to(roomId).emit("player_update", room.playersList);
+              io.to(roomId).emit("updatePlayers", players);
+            } else {
+              players[playerIndex].socketid = null; // Set socket ID to null for ongoing games
+              room.playersList = players
+                .filter((p) => p.socketid !== null)
+                .map((player) => player.name);
+              io.to(roomId).emit("player_update", room.playersList);
             }
+
+            // If room is empty, schedule deletion
+            const actualPlayers = room.players.filter(
+              (player) => player.socketid !== null
+            ).length;
+            if (actualPlayers === 0) {
+              const timeout = setTimeout(async () => {
+                if (
+                  activeRooms
+                    .get(roomId)
+                    ?.players.filter((player) => player.socketid !== null)
+                    .length === 0
+                ) {
+                  // if room is in db, then save it and then delete it from memory
+                  const roomData = activeRooms.get(roomId);
+                  const roomInDb = await Room.findOne({ roomid: roomId });
+                  if (roomInDb) {
+                    SaveExistingGameInDb(roomId, roomData);
+                  }
+
+                  activeRooms.delete(roomId);
+                  pendingRoomDeletions.delete(roomId);
+                }
+              }, 5 * 60 * 1000); // 5 minutes
+
+              pendingRoomDeletions.set(roomId, timeout);
+            }
+
             break;
           }
         }
@@ -251,7 +361,7 @@ io.on("connection", (socket) => {
     socket.on("message", (message, roomid, playerName) => {
       try {
         if (!roomid || !message || !playerName) {
-          socket.emit("error", "Invalid message");
+          socket.emit("error", "Invalid credentials");
           return;
         }
         io.to(roomid).emit("messageReceived", message, playerName);
@@ -265,8 +375,8 @@ io.on("connection", (socket) => {
   }
 });
 
-// Start the server safely
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

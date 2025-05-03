@@ -1,115 +1,101 @@
 export const assignNumbersToPlayers = (players) => {
-  const MAX_NUMBER = 90;
-  const numbersPool = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
-
-  const ranges = [
-    [1, 9],
-    [10, 19],
-    [20, 29],
-    [30, 39],
-    [40, 49],
-    [50, 59],
-    [60, 69],
-    [70, 79],
-    [80, 90],
-  ];
-
   players.forEach((player) => {
     player.assign_numbers = [];
-    const totalNumbersNeeded = 15 * player.ticket_count;
-    const rangeCount = {};
+    if (player.ticketCount > 6) {
+      player.ticketCount = 6; // Limit to 6 tickets
+    }
+    const ticketCount = player.ticketCount || 1; // Default to 1 if not provided
 
-    const maxPerRange =
-      {
-        1: 2, // Max 2 numbers per range for ticket count = 1
-        2: 5, // Max 5 numbers per range for ticket count = 2
-        3: 8, // Max 8 numbers per range for ticket count = 3
-      }[player.ticket_count] || 8;
+    const numbers = assignNumbersToPlayer(ticketCount);
 
-    while (player.assign_numbers.length < totalNumbersNeeded) {
-      const randomRange = ranges[Math.floor(Math.random() * ranges.length)];
-      const start = randomRange[0];
-      const end = randomRange[1];
-
-      if (!rangeCount[start]) {
-        rangeCount[start] = 0;
-      }
-
-      if (rangeCount[start] < maxPerRange) {
-        const rangeNumbers = Array.from(
-          { length: end - start + 1 },
-          (_, i) => start + i
-        );
-
-        const availableNumbers = rangeNumbers.filter(
-          (num) => !player.assign_numbers.includes(num)
-        );
-
-        if (availableNumbers.length > 0) {
-          const numberToAdd =
-            availableNumbers[
-              Math.floor(Math.random() * availableNumbers.length)
-            ];
-
-          player.assign_numbers.push(numberToAdd);
-          rangeCount[start] += 1;
-        }
-      }
+    if (numbers.length > 0) {
+      player.assign_numbers = numbers;
     }
   });
 
-  const numberFrequency = {};
-  players.forEach((player) => {
-    player.assign_numbers.forEach((number) => {
-      numberFrequency[number] = (numberFrequency[number] || 0) + 1;
-    });
-  });
-
-  const repeatedNumbers = Object.entries(numberFrequency)
-    .filter(([_, count]) => count > 1)
-    .map(([number]) => parseInt(number));
-
-  for (let i = repeatedNumbers.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [repeatedNumbers[i], repeatedNumbers[j]] = [
-      repeatedNumbers[j],
-      repeatedNumbers[i],
+  function assignNumbersToPlayer(ticketCount) {
+    const ranges = [
+      [1, 9],
+      [10, 19],
+      [20, 29],
+      [30, 39],
+      [40, 49],
+      [50, 59],
+      [60, 69],
+      [70, 79],
+      [80, 90],
     ];
-  }
 
-  const usedNumbers = new Set();
-  let poolQueue = [...repeatedNumbers];
+    const totalNeeded = 15 * ticketCount;
 
-  players.forEach((player) => {
-    player.assign_numbers = player.assign_numbers.map((number) => {
-      if (poolQueue.length > 0 && usedNumbers.has(number)) {
-        let newNumber;
+    const maxDuplicateMap = {
+      1: 0,
+      2: 0,
+      3: 2,
+      4: 3,
+      5: 4,
+      6: 5,
+    };
 
-        do {
-          if (poolQueue.length > 0) {
-            newNumber = poolQueue.shift();
-          } else {
-            const availableNumbers = numbersPool.filter(
-              (num) =>
-                !usedNumbers.has(num) && !player.assign_numbers.includes(num)
-            );
-            newNumber =
-              availableNumbers.length > 0 ? availableNumbers[0] : number;
-          }
-        } while (player.assign_numbers.includes(newNumber));
+    const maxDuplicates = maxDuplicateMap[ticketCount] ?? 0;
 
-        usedNumbers.add(newNumber);
-        return newNumber;
-      }
+    const playerNumbers = [];
+    const numberFreq = {};
+    const rangeUsage = new Map();
 
-      usedNumbers.add(number);
-      return number;
+    const basePerRange = Math.floor(totalNeeded / ranges.length);
+    let extra = totalNeeded % ranges.length;
+
+    const perRangeCount = ranges.map(() => {
+      const count = basePerRange + (extra > 0 ? 1 : 0);
+      extra--;
+      return count;
     });
-  });
 
-  players.forEach((player) => {
-    player.assign_numbers.sort((a, b) => a - b);
-  });
+    for (let i = 0; i < ranges.length; i++) {
+      const [start, end] = ranges[i];
+      const count = perRangeCount[i];
+
+      const rangeNumbers = Array.from(
+        { length: end - start + 1 },
+        (_, j) => start + j
+      );
+      let attempts = 0;
+
+      while ((rangeUsage.get(start) || 0) < count && attempts < 200) {
+        const num =
+          rangeNumbers[Math.floor(Math.random() * rangeNumbers.length)];
+        const freq = numberFreq[num] || 0;
+
+        if (maxDuplicates === 0) {
+          if (freq > 0) {
+            attempts++;
+            continue;
+          }
+        } else {
+          const duplicateCount = Object.values(numberFreq).filter(
+            (f) => f === 2
+          ).length;
+
+          if (freq >= 2) {
+            attempts++;
+            continue;
+          }
+
+          if (freq === 1 && duplicateCount >= maxDuplicates) {
+            attempts++;
+            continue;
+          }
+        }
+
+        playerNumbers.push(num);
+        numberFreq[num] = freq + 1;
+        rangeUsage.set(start, (rangeUsage.get(start) || 0) + 1);
+      }
+    }
+
+    return playerNumbers.sort((a, b) => a - b);
+  }
 
   return players;
 };

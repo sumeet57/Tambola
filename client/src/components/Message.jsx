@@ -1,15 +1,19 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import socket from "../utils/websocket";
+import { PlayerContext } from "../context/PlayerContext";
+import { GameContext } from "../context/GameContext";
 
 const Message = () => {
+  //for context
+  const { Player } = useContext(PlayerContext);
+  const { gameState } = useContext(GameContext);
+
   const [roomid, setRoomid] = useState("");
   const [playerName, setPlayerName] = useState("");
   useEffect(() => {
-    const id = sessionStorage.getItem("roomid");
-    const player = JSON.parse(sessionStorage.getItem("player"));
-    setRoomid(id);
-    setPlayerName(player?.name);
+    setRoomid(gameState.roomid);
+    setPlayerName(Player.name);
   }, []);
   const [messages, setMessages] = useState("");
   const [boxToggle, setBoxToggle] = useState(false);

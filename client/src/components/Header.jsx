@@ -1,51 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
+import { PlayerContext } from "../context/PlayerContext";
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Header = () => {
+  //for context
+  const { Player, updatePlayer } = useContext(PlayerContext);
   const navigate = useNavigate();
-  const [player, setPlayer] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   //loading
   const [loading, setLoading] = useState(false);
 
-  const host = localStorage.getItem("hostid");
-
-  useEffect(() => {
-    const handleStorageUpdate = () => {
-      const playerData = sessionStorage.getItem("player");
-      if (playerData && playerData !== "undefined" && playerData !== "null") {
-        setPlayer(JSON.parse(playerData));
-      }
-      // setPlayer(playerData);
-    };
-    // Listen for custom event
-    window.addEventListener("sessionStorageUpdated", handleStorageUpdate);
-
-    // Initial fetch from sessionStorage
-    handleStorageUpdate();
-    return () => {
-      window.removeEventListener("sessionStorageUpdated", handleStorageUpdate);
-    };
-  }, []);
+  // const host = localStorage.getItem("hostid");
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const logoutClick = () => {
-    setLoading(true);
-    sessionStorage.removeItem("player");
-    localStorage.removeItem("hostid");
-    localStorage.removeItem("userid");
-    setPlayer(null);
-    toggleMenu();
-    setTimeout(() => {
-      navigate("/"); // Navigate to home
-      window.location.reload(); // Refresh the page
+  const logoutClick = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${apiBaseUrl}/api/user/logout`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       setLoading(false);
-    }, 1000);
+      const data = await res.json();
+      if (res.status === 200) {
+        // Clear local storage and session storage
+        localStorage.clear();
+        sessionStorage.clear();
+        toggleMenu();
+        setLoading(false);
+        navigate("/"); // Navigate to home
+        window.location.reload(); // Refresh the page
+      } else {
+        console.log("Error logging out:", data.message);
+        navigate("/login");
+        window.location.reload(); // Refresh the page
+      }
+    } catch (err) {
+      setLoading(false);
+      console.log(err);
+    }
   };
 
   return (
@@ -54,21 +57,20 @@ const Header = () => {
         <Loading />
       ) : (
         <>
-          <nav className="w-full py-3 flex justify-between items-center p-4 bg-gray-100 fixed shadow-md">
-            <div className="text-2xl font-bold text-blue-600">Tambola</div>
+          <nav className="w-full py-3 flex justify-between items-center p-4 bg-zinc-700 fixed shadow-md">
+            <div className="text-2xl sm:text-3xl font-bold font-sans text-white">
+              Tambola
+            </div>
             <div className="flex items-center gap-2">
-              {player ? (
-                <div className="bg-blue-600 text-white px-4 py-2 rounded-full shadow">
-                  Points: {player?.points || 0}
-                </div>
-              ) : (
-                <button
-                  onClick={() => navigate("/login")}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-full shadow hover:bg-blue-700 transition duration-300"
-                >
-                  Login
-                </button>
-              )}
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-full shadow hover:bg-blue-700 transition duration-300"
+                onClick={() => {
+                  navigate("/");
+                  window.location.reload(); // Refresh the page
+                }}
+              >
+                Home
+              </button>
               <button
                 onClick={toggleMenu}
                 className="bg-blue-600 text-white px-4 py-2 rounded-full shadow hover:bg-blue-700 transition duration-300"
@@ -106,17 +108,19 @@ const Header = () => {
                 <ul className="space-y-6">
                   <li>
                     <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
-                      {host && <p className="text-red-500">Host</p>}
+                      {Player?.role == "host" && (
+                        <p className="text-red-500">Host</p>
+                      )}
                       <div className="flex flex-col">
-                        {player?.name && (
+                        {Player?.name && (
                           <h2 className="text-2xl font-semibold mb-2">
-                            {player.name}
+                            {Player.name}
                           </h2>
                         )}
-                        {player?.phone && (
+                        {Player?.phone && (
                           <div className="flex items-center">
                             <p className="text-gray-800 text-lg">
-                              {player.phone}
+                              {Player.phone}
                             </p>
                           </div>
                         )}
@@ -135,7 +139,7 @@ const Header = () => {
                     </button>
                   </li>
                   <li>
-                    {player ? (
+                    {Player ? (
                       <>
                         <button
                           onClick={logoutClick}

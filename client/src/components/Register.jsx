@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   updateLocalStorage,
   updateSessionStorage,
 } from "../utils/storageUtils.js";
 import Loading from "./Loading.jsx";
+import { PlayerContext } from "../context/PlayerContext.jsx";
 
 // import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Register = () => {
+  const { Player, updatePlayer } = useContext(PlayerContext);
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -61,15 +63,17 @@ const Register = () => {
     setLoading(false);
     if (res.status === 200) {
       // remove host id and host from storage
-      localStorage.removeItem("hostid");
-      localStorage.removeItem("userid");
+      localStorage.clear();
       sessionStorage.clear();
-      updateLocalStorage("userid", data.userid);
-      updateSessionStorage("player", data.user);
+      updateLocalStorage("id", data?.id);
+
+      updatePlayer({
+        name: data?.user?.name,
+        phone: data?.user?.phone,
+        id: data?.id,
+        role: data?.user?.role,
+      });
       navigate("/");
-      setMessageToggle(false);
-      setMessageStore(data.message);
-      setMessageToggle(true);
     } else {
       setMessageToggle(false);
       setMessageStore(data.message || "Failed to register as user");
@@ -117,15 +121,16 @@ const Register = () => {
     setLoading(false);
     if (res.status === 200) {
       // remove user id and user from storage (utils/storageUtils.js)
-      localStorage.removeItem("hostid");
-      localStorage.removeItem("userid");
+      localStorage.clear();
       sessionStorage.clear();
-      updateLocalStorage("hostid", data.hostid);
-      updateSessionStorage("player", data.host);
+      updateLocalStorage("id", data.hostid);
+      updatePlayer({
+        name: data?.user?.name,
+        phone: data?.user?.phone,
+        id: data?.id,
+        role: data?.user?.role,
+      });
       navigate("/");
-      setMessageToggle(false);
-      setMessageStore(data.message);
-      setMessageToggle(true);
     } else {
       setMessageToggle(false);
       setMessageStore(data.message || "Failed to register as host");
@@ -212,6 +217,19 @@ const Register = () => {
                 >
                   Register as Host
                 </button>
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <button
+                    onClick={() => {
+                      navigate("/login");
+                    }}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Login
+                  </button>
+                </p>
               </div>
             </form>
           </div>

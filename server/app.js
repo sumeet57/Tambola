@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRouter from "./routes/user.route.js";
 import hostRouter from "./routes/host.route.js";
-import gameRouter from "./routes/game.router.js";
+import gameRouter from "./routes/game.route.js";
 
 dotenv.config();
 

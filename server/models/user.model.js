@@ -22,13 +22,15 @@ const userSchema = new mongoose.Schema({
   },
   invites: [
     {
-      type: String,
-      default: [],
+      type: Object,
+      default: {},
     },
   ],
-  points: {
-    type: Number,
-    default: 0,
+  role: {
+    type: String,
+    enum: ["user", "host"],
+    required: true,
+    default: "user",
   },
 });
 

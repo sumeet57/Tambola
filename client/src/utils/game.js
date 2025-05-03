@@ -1,20 +1,92 @@
 export const distributeNumbersEqually = (data) => {
-  let arr = [...data];
+  const ticketSize = 15;
+  const ticketCount = Math.floor(data.length / ticketSize);
+  const totalNeeded = ticketCount * ticketSize;
+  const arr = [...data].slice(0, totalNeeded);
 
-  let ticketSize = 15;
-  let maxNumbersAllowed = Math.floor(arr.length / ticketSize) * ticketSize; // Max valid numbers
-  arr = arr.slice(0, maxNumbersAllowed); // Remove extra numbers
+  const ranges = [
+    [1, 9],
+    [10, 19],
+    [20, 29],
+    [30, 39],
+    [40, 49],
+    [50, 59],
+    [60, 69],
+    [70, 79],
+    [80, 90],
+  ];
 
-  let ticketCount = Math.ceil(arr.length / ticketSize);
-  let tickets = Array.from({ length: ticketCount }, () => []);
+  const rangeLimitPerTicket = {
+    1: 2,
+    2: 4,
+    3: 6,
+    4: 8,
+    5: 10,
+    6: 12,
+  };
+  const maxPerRange = rangeLimitPerTicket[ticketCount] || 12;
 
-  let ticketIndex = 0;
-  for (let i = 0; i < arr.length; i++) {
-    tickets[ticketIndex].push(arr[i]);
-    ticketIndex = (ticketIndex + 1) % ticketCount;
+  const getRangeIndex = (num) => (num === 90 ? 8 : Math.floor(num / 10));
+
+  // Shuffle the array to randomize distribution
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+
+  const tickets = Array.from({ length: ticketCount }, () => []);
+  const ticketSets = Array.from({ length: ticketCount }, () => new Set());
+  const rangeCountPerTicket = Array.from({ length: ticketCount }, () =>
+    Array(9).fill(0)
+  );
+
+  const used = new Set();
+
+  // Phase 1: Try to obey range limits
+  for (let number of arr) {
+    const rangeIndex = getRangeIndex(number);
+
+    const ticketOrder = Array.from({ length: ticketCount }, (_, i) => i).sort(
+      () => Math.random() - 0.5
+    );
+
+    for (let t of ticketOrder) {
+      if (
+        !ticketSets[t].has(number) &&
+        tickets[t].length < ticketSize &&
+        rangeCountPerTicket[t][rangeIndex] < Math.min(maxPerRange, 3)
+      ) {
+        tickets[t].push(number);
+        ticketSets[t].add(number);
+        rangeCountPerTicket[t][rangeIndex]++;
+        used.add(number);
+        break;
+      }
+    }
+  }
+
+  // Phase 2: Fill underfilled tickets with remaining numbers (ignore range limits now)
+  const remaining = arr.filter((n) => !used.has(n));
+
+  for (let t = 0; t < ticketCount; t++) {
+    let i = 0;
+    while (tickets[t].length < ticketSize && i < remaining.length) {
+      const num = remaining[i];
+      if (!ticketSets[t].has(num)) {
+        tickets[t].push(num);
+        ticketSets[t].add(num);
+        used.add(num);
+      }
+      i++;
+    }
+  }
+
+  // Sort each ticket
+  tickets.forEach((ticket) => ticket.sort((a, b) => a - b));
+
   return tickets;
 };
+
 export const generateTambolaTickets = (numbers) => {
   if (!Array.isArray(numbers)) {
     throw new Error("Input to generateTambolaTickets must be an array");

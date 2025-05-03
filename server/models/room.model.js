@@ -8,59 +8,50 @@ const roomSchema = new mongoose.Schema(
       required: [true, "Room ID is required"],
       unique: true,
     },
+    host: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     players: [
       {
-        playerid: {
-          type: String,
-          default: "",
+        id: String,
+        name: String,
+        phone: String,
+        socketid: String,
+        assign_numbers: [Number],
+        requestedTicketCount: Number,
+        ticketCount: Number,
+        claims: [String],
+      },
+    ],
+    settings: {
+      type: Object,
+      default: {},
+    },
+    claimData: [
+      {
+        player: {
+          name: String,
+          phone: String,
         },
-        socketid: {
-          type: String,
-          default: "",
-        },
-        name: {
-          type: String,
-          default: "",
-        },
-        claims: {
-          type: [String], // Array of strings
-          default: [],
-        },
-        assign_numbers: {
-          type: [Number], // Array of numbers
-          default: [],
-        },
-        ticket_count: {
-          type: Number,
-          default: 1,
-        },
+        pattern: String,
       },
     ],
     isCompleted: {
       type: Boolean,
       default: false,
     },
-    winner: {
-      type: Object,
-      default: {},
+    isOngoing: {
+      type: Boolean,
+      default: false,
     },
     finishTime: {
-      type: String, // Store as a formatted string
-      default: function () {
-        return moment()
-          .tz("Asia/Kolkata") // Convert to IST
-          .format("DD-MM-YYYY | hh:mm A"); // Readable format
-      },
+      type: String,
+      default: "",
     },
   },
-  { timestamps: false } // Disable default timestamps
+  { timestamps: false }
 );
-
-// Middleware to update the `finishTime` field in IST before saving
-roomSchema.pre("save", function (next) {
-  this.finishTime = moment().tz("Asia/Kolkata").format("DD-MM-YYYY | hh:mm A"); // Format: Date-Month-Year | Time
-  next();
-});
 
 const Room = mongoose.model("Room", roomSchema);
 

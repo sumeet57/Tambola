@@ -1,40 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import socket from "../utils/websocket";
 import {
   updateLocalStorage,
   updateSessionStorage,
 } from "../utils/storageUtils";
+import { PlayerContext } from "../context/PlayerContext";
+import { GameContext } from "../context/GameContext";
 
 const DrawNumbers = () => {
-  // const drawnum = JSON.parse(localStorage.getItem("drawNumber"));
-  const [drawNumber, setDrawNumber] = useState([]);
-  useEffect(() => {
-    const handleDrawNumber = (number) => {
-      if (drawNumber.length > 90) {
-        return;
-      } else {
-        setDrawNumber((prevDrawNumber) => [number, ...prevDrawNumber]);
-      }
-    };
+  //for context
+  const { Player } = useContext(PlayerContext);
+  const { gameState, updateGameState } = useContext(GameContext);
 
-    socket.on("number_drawn", handleDrawNumber);
-
-    return () => {
-      socket.off("number_drawn", handleDrawNumber);
-    };
-  }, []);
+  // const [drawNumber, setDrawNumber] = useState(gameState.drawNumber || []);
 
   return (
     <>
-      <div className="overflow-x-scroll flex flex-nowrap gap-2 bg-gradient-to-r from-purple-500/40 via-pink-600/40 to-red-600/40 p-4 rounded-2xl w-full shadow-lg">
-        {drawNumber.map((num, index) => (
+      <div className="overflow-x-scroll flex flex-nowrap gap-2 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 p-4 rounded-2xl w-full shadow-lg">
+        {[...gameState.drawnNumbers].reverse().map((num, index) => (
           <span
             key={num}
             className={`px-3 py-2 inline-block text-lg font-medium rounded-full border ${
               index === 0
-                ? "bg-red-500/80 border-yellow-700 font-bold"
-                : "bg-gray-500 border-gray-700"
-            } text-white shadow-md`}
+                ? "bg-pink-300 border-purple-500 font-bold"
+                : "bg-gray-200 border-gray-400"
+            } text-gray-800 shadow-md`}
           >
             {num}
           </span>

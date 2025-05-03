@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { PlayerContext } from "./context/PlayerContext.jsx";
+import { GameContext } from "./context/GameContext.jsx";
 import socket from "./utils/websocket.js";
 import { useNavigate } from "react-router-dom";
 import Header from "./components/Header.jsx";
@@ -12,67 +14,15 @@ import Loading from "./components/Loading.jsx";
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const App = () => {
+  // for user context
+  const { Player, updatePlayer } = useContext(PlayerContext);
+  const { gameState, updateGameState } = useContext(GameContext);
+
   // for navigation
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(!socket.connected); // Check initial connection
-  const [player, setPlayer] = useState(null);
+  const [loading, setLoading] = useState(false); // Check initial connection
 
-  useEffect(() => {
-    const handleConnect = () => {
-      console.log(`Connected with ID: ${socket.id}`);
-      setLoading(false);
-      localStorage.removeItem("socketid");
-      updateLocalStorage("socketid", socket.id);
-    };
-
-    if (socket.connected) {
-      handleConnect(); // If already connected, call it immediately
-    } else {
-      setLoading(true); // If not connected, wait for the "connect" event
-    }
-
-    socket.on("connect", handleConnect);
-
-    return () => {
-      socket.off("connect", handleConnect);
-    };
-  }, []);
-
-  // for getting player from database and storing in sessionstorage
-  useEffect(() => {
-    const fetchPlayerData = async () => {
-      const userid = localStorage.getItem("userid");
-      const hostid = localStorage.getItem("hostid");
-      const playerid = userid || hostid;
-
-      if (playerid) {
-        try {
-          const res = await fetch(`${apiBaseUrl}/api/game/player`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: playerid }),
-          });
-
-          if (res.status === 200) {
-            const data = await res.json();
-
-            if (data.data) {
-              updateSessionStorage("player", data.data);
-              setPlayer(data.data);
-            }
-          } else {
-            console.error("Failed to fetch player data");
-          }
-        } catch (error) {
-          console.error("Error fetching player data:", error);
-        }
-      }
-    };
-
-    fetchPlayerData();
-  }, []);
-  // for conditional rendering i use sessionstorage/localstorage
-  // u can use context api or redux for state management
+  const [invites, setInvites] = useState([]);
 
   // handle click events
   const handleHostClick = () => {
@@ -83,58 +33,51 @@ const App = () => {
     navigate("/user");
   };
 
-  //to update invitation ,finding user by its id
-  const userid = localStorage.getItem("userid");
-  const hostid = localStorage.getItem("hostid");
+  // socket event handling
+  useEffect(() => {
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
+      setLoading(false);
+    });
+
+    return () => {
+      socket.off("error");
+    };
+  }, []);
+
   const [showNotifications, setShowNotifications] = useState(false);
   const handleNotificationCloseClick = () => {
     setShowNotifications(false);
   };
   const handleNotificationClick = async () => {
-    if (player) {
-      setLoading(true);
-      const res = await fetch(`${apiBaseUrl}/api/game/player`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: userid || hostid,
-        }),
-      });
-      const data = await res.json();
-      setLoading(false);
-      if (res.status === 200) {
-        updateSessionStorage("player", data.data);
-      }
-      setShowNotifications(true);
-    } else {
-      navigate("/login");
+    setLoading(true);
+    const res = await fetch(`${apiBaseUrl}/api/game/invites`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (res.status === 200) {
+      setInvites(data?.invites);
     }
+    // setShowNotifications(true);
   };
 
-  //get player from sessionstorage
-  useEffect(() => {
-    const storedPlayer = sessionStorage.getItem("player");
-    if (
-      storedPlayer &&
-      storedPlayer !== "undefined" &&
-      storedPlayer !== "null"
-    ) {
-      setPlayer(JSON.parse(storedPlayer));
-    }
-  }, [showNotifications]);
+  // for reconnection
+  const [showReconnect, setShowReconnect] = useState(false);
+  const handleReconnectionCloseClick = () => {
+    setShowReconnect(false);
+  };
+  const handleReconnectClick = async () => {
+    handleNotificationClick();
+  };
 
   //handle room join click
   const handleRoomJoinClick = (room) => {
-    if (userid) {
-      navigate(`/user/${room}`);
-      // navigate(`/user/${room}`);
-    } else if (hostid) {
-      navigate(`/host/${room}`);
-    } else {
-      navigate("/login");
-    }
+    navigate(`/${Player?.role}/${room}`);
   };
 
   //button click events
@@ -152,11 +95,11 @@ const App = () => {
       ) : (
         <>
           <Header />
-          <div className="w-full pt-10 h-screen flex flex-col gap-4 items-start justify-center bg-slate-300 p-6">
-            <h1 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-6">
+          <div className="w-full pt-10 h-screen flex flex-col gap-4 items-start justify-center bg-gradient-to-tr from-rose-300 via-blue-200 to-purple-300 p-6">
+            <h1 className="text-3xl md:text-4xl font-semibold text-black mb-6">
               Welcome,{" "}
-              {player?.phone ? (
-                <span className="font-bold">{player?.name}</span>
+              {Player?.phone ? (
+                <span className="font-bold">{Player?.name}</span>
               ) : (
                 <span className="font-bold">Guest</span>
               )}{" "}
@@ -165,9 +108,9 @@ const App = () => {
 
             {/* Buttons Container */}
             <div className="flex flex-wrap gap-6">
-              {hostid || userid ? (
+              {Player?.role == "user" || Player?.role == "host" ? (
                 <>
-                  {hostid && (
+                  {Player?.role == "host" && (
                     <button
                       className="bg-green-500 text-white w-44 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
                       onClick={handleHostClick}
@@ -175,7 +118,7 @@ const App = () => {
                       🎮 Host a Game
                     </button>
                   )}
-                  {userid && (
+                  {Player?.role == "user" && (
                     <button
                       className="bg-yellow-500 text-white w-44 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
                       onClick={handleJoinClick}
@@ -183,12 +126,39 @@ const App = () => {
                       🔗 Join a Game
                     </button>
                   )}
-                  <button
-                    className="bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
-                    onClick={handleNotificationClick}
-                  >
-                    📩 Invitations
-                  </button>
+                  {Player?.role === "user" && (
+                    <button
+                      className="bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                      onClick={() => {
+                        setShowNotifications(true);
+                        handleNotificationClick();
+                      }}
+                    >
+                      📩 Invitations
+                    </button>
+                  )}
+
+                  {
+                    <button
+                      className="bg-blue-500 text-white w-44 py-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300"
+                      onClick={() => {
+                        setShowReconnect(true);
+                        handleReconnectClick();
+                      }}
+                    >
+                      🔄 Reconnect
+                    </button>
+                  }
+                  {Player?.role === "host" && (
+                    <button
+                      className="bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                      onClick={() => {
+                        navigate("/dashboard");
+                      }}
+                    >
+                      🏢 Dashboard
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
@@ -212,35 +182,175 @@ const App = () => {
           {/* Notifications Modal */}
           {showNotifications && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg relative w-[280px] max-h-[450px] overflow-y-auto">
-                <div className="flex justify-between items-center border-b-2 border-black pb-2">
-                  <h2 className="text-2xl font-bold">📨 Invites</h2>
+              <div className="bg-white px-2  rounded-lg shadow-lg relative w-[320px] max-h-[450px] overflow-y-auto">
+                <div className="flex justify-between items-center border-b-2 border-black fixed w-[290px] py-4 bg-white">
+                  <h2 className="text-2xl font-bold">📩 Invitations</h2>
                   <button
-                    className="text-gray-700 text-3xl"
+                    className="text-white text-2xl bg-red-500 rounded-full flex justify-center items-start px-2 hover:bg-red-700 transition"
                     onClick={handleNotificationCloseClick}
                   >
-                    &times;
+                    <span className="flex justify-start items-start">
+                      &times;
+                    </span>
                   </button>
                 </div>
-                <div className="mt-4">
-                  {player?.invites?.length > 0 ? (
-                    player.invites.map((invite) => (
-                      <div
-                        key={invite}
-                        className="flex items-center justify-between p-3 border-b"
-                      >
-                        <div className="text-lg">{invite}</div>
-                        <button
-                          onClick={() => handleRoomJoinClick(invite)}
-                          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
+                <div className="pt-16">
+                  {invites?.length > 0 ? (
+                    <div className="space-y-3">
+                      {invites.map((invite) => (
+                        <div
+                          key={invite.id}
+                          className="p-3 rounded-lg border border-gray-200 bg-white shadow-sm"
                         >
-                          ✅ Join
-                        </button>
-                      </div>
-                    ))
+                          <div className="mb-2">
+                            <p className="text-base font-medium text-gray-800 break-words">
+                              Room ID: {invite.id}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {invite?.schedule
+                                ? `Scheduled: ${invite.schedule}`
+                                : "Not scheduled"}
+                            </p>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            <button
+                              onClick={() => handleRoomJoinClick(invite.id)}
+                              className="flex-1 bg-green-500 text-white text-sm py-1.5 rounded-md hover:bg-green-600 transition"
+                            >
+                              ✅ Join
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  setLoading(true);
+                                  const res = await fetch(
+                                    `${apiBaseUrl}/api/game/invite/${invite.id}`, // fixed route
+                                    {
+                                      method: "DELETE",
+                                      credentials: "include",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                    }
+                                  );
+                                  setTimeout(() => {
+                                    setLoading(false);
+                                  }, 2000);
+                                  const data = await res.json();
+                                  if (res.status === 200) {
+                                    setInvites(data?.invites);
+                                  } else {
+                                    console.error(
+                                      "Error deleting invite:",
+                                      data
+                                    );
+                                  }
+                                } catch (error) {
+                                  setLoading(false);
+                                  console.error("Error:", error);
+                                }
+                              }}
+                              className="flex-1 bg-gray-100 text-gray-600 text-sm py-1.5 rounded-md hover:bg-gray-200 transition"
+                            >
+                              ❌ Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <div className="text-gray-500 text-center mt-3">
+                    <div className="text-gray-500 text-center py-4 text-lg">
                       No invitations available 😕
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Reconnection Modal */}
+          {showReconnect && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white px-2  rounded-lg shadow-lg relative w-[320px] max-h-[450px] overflow-y-auto">
+                <div className="flex justify-between items-center border-b-2 border-black fixed w-[290px] py-4 bg-white">
+                  <h2 className="text-2xl font-bold">🔄 Reconnect</h2>
+                  <button
+                    className="text-white text-2xl bg-red-500 rounded-full flex justify-center items-start px-2 hover:bg-red-700 transition"
+                    onClick={handleReconnectionCloseClick}
+                  >
+                    <span className="flex justify-start items-start">
+                      &times;
+                    </span>
+                  </button>
+                </div>
+                <div className="pt-16">
+                  {invites?.length > 0 ? (
+                    <div className="space-y-3">
+                      {invites.map((invite) => (
+                        <div
+                          key={invite.id}
+                          className="p-3 rounded-lg border border-gray-200 bg-white shadow-sm"
+                        >
+                          <div className="mb-2">
+                            <p className="text-base font-medium text-gray-800 break-words">
+                              Room ID: {invite.id}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {invite?.schedule
+                                ? `Scheduled: ${invite.schedule}`
+                                : "Not scheduled"}
+                            </p>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            <button
+                              onClick={() => {
+                                navigate(`/reconnect/${invite.id}`);
+                              }}
+                              className="flex-1 bg-green-500 text-white text-sm py-1.5 rounded-md hover:bg-green-600 transition"
+                            >
+                              ✅ Join
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  setLoading(true);
+                                  const res = await fetch(
+                                    `${apiBaseUrl}/api/game/invite/${invite.id}`, // fixed route
+                                    {
+                                      method: "DELETE",
+                                      credentials: "include",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                    }
+                                  );
+                                  setTimeout(() => {
+                                    setLoading(false);
+                                  }, 2000);
+                                  const data = await res.json();
+                                  if (res.status === 200) {
+                                    setInvites(data?.invites);
+                                  } else {
+                                    console.error(
+                                      "Error deleting invite:",
+                                      data
+                                    );
+                                  }
+                                } catch (error) {
+                                  setLoading(false);
+                                  console.error("Error:", error);
+                                }
+                              }}
+                              className="flex-1 bg-gray-100 text-gray-600 text-sm py-1.5 rounded-md hover:bg-gray-200 transition"
+                            >
+                              ❌ Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-center py-4 text-lg">
+                      No Rooms available 😕
                     </div>
                   )}
                 </div>
