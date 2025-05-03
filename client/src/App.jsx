@@ -15,14 +15,16 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const App = () => {
   // for user context
-  const { Player, updatePlayer } = useContext(PlayerContext);
+  const { Player, updatePlayer, loading, setLoading } =
+    useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
 
   // for navigation
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false); // Check initial connection
 
   const [invites, setInvites] = useState([]);
+  // const [loading, setLoading] = useState(false);
+  // console.log(loading);
 
   // handle click events
   const handleHostClick = () => {

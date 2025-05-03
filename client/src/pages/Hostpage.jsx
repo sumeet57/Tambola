@@ -203,6 +203,7 @@ const Hostpage = () => {
                     <input
                       onChange={(e) => {
                         const date = new Date(e.target.value);
+                        console.log("date", date);
                         const formattedDate = date.toLocaleString("en-US", {
                           year: "numeric",
                           month: "2-digit",
@@ -211,6 +212,7 @@ const Hostpage = () => {
                           minute: "2-digit",
                           hour12: true,
                         });
+
                         updateGameSettings({
                           schedule: formattedDate,
                         });
@@ -220,6 +222,7 @@ const Hostpage = () => {
                         gameSettings.isScheduled ? "block" : "hidden"
                       } shadow appearance-none rounded w-full outline-none py-2 px-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400`}
                       required
+                      placeholder="Tap to select date and time"
                     />
                   </div>
                 </div>

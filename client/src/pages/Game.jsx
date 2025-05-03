@@ -70,12 +70,6 @@ const Game = () => {
     setEndMenu(false);
   };
 
-  const saveGame = () => {
-    if (Player.role === "host") {
-      socket.emit("save_game", roomid, Player.id);
-    }
-  };
-
   //for development
   // const [timer, setTimer] = useState(0);
 
@@ -187,9 +181,7 @@ const Game = () => {
                         timerToggled ? ` (${timer} sec left)` : ""
                       }`}
                 </button>
-                <button className="w-[50%] bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-green-600 transition-transform transform active:scale-95">
-                  Save Game
-                </button>
+
                 <button
                   onClick={endGameClick}
                   className="w-[50%] bg-red-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-red-600 transition-transform transform active:scale-95"

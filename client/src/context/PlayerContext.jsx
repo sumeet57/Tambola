@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import socket from "../utils/websocket";
 import { updateSessionStorage } from "../utils/storageUtils";
 
@@ -42,35 +42,59 @@ export const PlayerProvider = ({ children }) => {
   // Socket connection handler
   React.useEffect(() => {
     const handleConnect = () => {
-      console.log(`Connected with ID: ${socket.id}`);
+      console.log(`✅ Connected with ID: ${socket.id}`);
       setSocketId(socket.id);
       localStorage.setItem("socketid", socket.id);
       updatePlayer({ socketId: socket.id });
-      setLoading(false);
+      setLoading(false); // Socket is connected, hide loading
     };
 
-    if (socket.connected) {
-      handleConnect();
-    } else {
-      setLoading(true);
+    const handleDisconnect = () => {
+      console.log("❌ Disconnected");
+      setLoading(true); // Set loading to true on disconnect
+    };
+
+    if (!socket.connected) {
+      setLoading(true); // Only show loading if socket is not connected
     }
 
     socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
 
+    // Clean up the event listeners
     return () => {
       socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleConnectError = (err) => {
+      setLoading(true); // Still show loading if connection fails
+    };
+
+    const handleTimeout = () => {
+      setLoading(true); // Timeout indicates that socket is not connected
+    };
+
+    socket.on("connect_error", handleConnectError);
+    socket.on("connect_timeout", handleTimeout);
+
+    return () => {
+      socket.off("connect_error", handleConnectError);
+      socket.off("connect_timeout", handleTimeout);
     };
   }, []);
 
   // Load user from sessionStorage or server
   React.useEffect(() => {
     const userData = JSON.parse(sessionStorage.getItem("player"));
-    // console.log("User data from sessionStorage:", userData);
     if (userData && userData.name && userData.phone && userData.id) {
       updatePlayer(userData);
       setLoading(false);
     } else {
       const fetchUser = async () => {
+        // setLoading(true);
         try {
           const res = await fetch(`${apiBaseUrl}/api/game/player`, {
             method: "GET",
@@ -79,7 +103,7 @@ export const PlayerProvider = ({ children }) => {
               "Content-Type": "application/json",
             },
           });
-
+          // setLoading(false);
           const data = await res.json();
 
           if (res.status === 200 && data.data) {
@@ -98,7 +122,7 @@ export const PlayerProvider = ({ children }) => {
         } catch (error) {
           console.error("Error fetching user:", error.message);
         } finally {
-          setLoading(false);
+          // setLoading(false);
         }
       };
 
@@ -108,7 +132,13 @@ export const PlayerProvider = ({ children }) => {
 
   return (
     <PlayerContext.Provider
-      value={{ Player, updatePlayer, deletePlayerProperty, loading }}
+      value={{
+        Player,
+        updatePlayer,
+        deletePlayerProperty,
+        loading,
+        setLoading,
+      }}
     >
       {children}
     </PlayerContext.Provider>

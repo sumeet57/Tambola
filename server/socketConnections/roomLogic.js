@@ -282,6 +282,12 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
       roomData.claimTrack[patternIndex].winners--;
     }
 
+    // 📢 Broadcast claim updates
+    io.to(roomId).emit("pattern_claimed", {
+      message: `${player?.name} claimed ${patternName}`,
+    });
+    io.to(roomId).emit("claimedList", roomData.claimTrack);
+
     // 🎯 Check if all patterns are claimed
     const allClaimed = roomData.claimTrack.every((p) => p.winners === 0);
     if (allClaimed) {
@@ -303,13 +309,31 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
       }
 
       io.to(roomId).emit("game_over", { roomid: roomId });
-    }
 
-    // 📢 Broadcast claim updates
-    io.to(roomId).emit("pattern_claimed", {
-      message: `${player?.name} claimed ${patternName}`,
-    });
-    io.to(roomId).emit("claimedList", roomData.claimTrack);
+      for (const player of roomData.players) {
+        try {
+          const user = await User.findById(player?.id);
+
+          if (user) {
+            user.invites = user.invites.filter(
+              (invite) => invite.id !== roomId
+            );
+            await user.save();
+          }
+        } catch (err) {
+          console.error(`Error updating player ${player?.id}:`, err);
+        }
+      }
+
+      if (pendingRoomDeletions.has(roomId)) {
+        clearTimeout(pendingRoomDeletions.get(roomId));
+        pendingRoomDeletions.delete(roomId);
+      }
+      if (isLocked(roomId)) {
+        releaseLock(roomId);
+      }
+      activeRooms.delete(roomId);
+    }
 
     return true;
   } catch (err) {
@@ -422,7 +446,12 @@ export const storeRoom = async (roomid) => {
 
     roomData.finishTime = finalDate;
 
-    SaveGameInDb(roomid, roomData);
+    const exist = await Room.findOne({ roomid: roomid });
+    if (exist) {
+      await SaveExistingGameInDb(roomid, roomData);
+    } else {
+      await SaveGameInDb(roomid, roomData);
+    }
 
     for (const player of roomData.players) {
       try {

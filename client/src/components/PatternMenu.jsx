@@ -27,7 +27,6 @@ const PatternMenu = () => {
         pattern: gameSettings.pattern.filter((p) => p.id !== id),
       });
     }
-    console.log(gameSettings.pattern);
   };
 
   const handleWinnersChange = (id, winners) => {

@@ -123,7 +123,6 @@ export const createHost = async (req, res) => {
     // Check if host already exists
     const existingHost = await User.findOne({ phone });
     if (existingHost) {
-      console.log("Host already exists", existingHost);
       return res.status(400).json({ message: "Phone is already registered" });
     }
 
