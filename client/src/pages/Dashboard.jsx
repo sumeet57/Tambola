@@ -26,13 +26,15 @@ const Dashboard = () => {
           },
           credentials: "include",
         });
-        if (!response.ok) {
-          throw new Error("Failed to fetch rooms");
-        }
         setLoading(false);
         const data = await response.json();
-        setRooms(data.rooms || []);
+        if (response.status === 200) {
+          setRooms(data.rooms || []);
+        } else {
+          console.error("Error fetching rooms:", data.message);
+        }
       } catch (error) {
+        setLoading(false);
         console.error("Error fetching rooms:", error);
       }
     };
