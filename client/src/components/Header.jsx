@@ -38,8 +38,10 @@ const Header = () => {
         sessionStorage.clear();
         toggleMenu();
         setLoading(false);
-        navigate("/"); // Navigate to home
-        window.location.reload(); // Refresh the page
+        setTimeout(() => {
+          navigate("/"); // Navigate to home
+          window.location.reload(); // Refresh the page
+        }, 1000);
       } else {
         console.log("Error logging out:", data.message);
         navigate("/login");
