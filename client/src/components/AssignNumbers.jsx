@@ -13,7 +13,6 @@ import { GameContext } from "../context/GameContext.jsx";
 // for loading
 import Loading from "./Loading.jsx";
 import { updateLocalStorage } from "../utils/storageUtils.js";
-import { set } from "mongoose";
 
 const AssignNumbers = () => {
   const navigate = useNavigate();
