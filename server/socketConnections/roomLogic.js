@@ -455,14 +455,14 @@ export const storeRoom = async (roomid) => {
 
     for (const player of roomData.players) {
       try {
-        const user = await User.findById(player.playerid);
+        const user = await User.findById(player.id);
 
         if (user) {
           user.invites = user.invites.filter((invite) => invite.id !== roomid);
           await user.save();
         }
       } catch (err) {
-        console.error(`Error updating player ${player.playerid}:`, err);
+        console.error(`Error updating player ${player.id}:`, err);
       }
     }
 

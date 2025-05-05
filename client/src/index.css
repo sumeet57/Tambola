@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 3s infinite;
+  }
+}

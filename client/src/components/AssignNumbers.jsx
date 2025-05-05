@@ -12,6 +12,8 @@ import { GameContext } from "../context/GameContext.jsx";
 
 // for loading
 import Loading from "./Loading.jsx";
+import { updateLocalStorage } from "../utils/storageUtils.js";
+import { set } from "mongoose";
 
 const AssignNumbers = () => {
   const navigate = useNavigate();
@@ -25,7 +27,18 @@ const AssignNumbers = () => {
   const { gameState, updateGameState } = useContext(GameContext);
 
   //loding
-  const [Loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // warning message
+  const [warningMessage, setWarningMessage] = useState("");
+  const [warningToggle, setWarningToggle] = useState(false);
+  const handleWarningMessage = (message) => {
+    setWarningMessage(message);
+    setWarningToggle(true);
+    setTimeout(() => {
+      setWarningToggle(false);
+    }, 10000);
+  };
 
   // claim guide table
   const claimGuide = {
@@ -52,13 +65,71 @@ const AssignNumbers = () => {
 
   useEffect(() => {
     if (tickets.length === 0) return;
+
     let ticketsData = {};
     setLoading(true);
+
+    // Initial generation
     tickets.forEach((ticket, index) => {
-      ticketsData[index + 1] = generateTambolaTickets(ticket)[0]; // Ensure it returns a single 3x9 grid
+      ticketsData[index + 1] = generateTambolaTickets(ticket)[0];
     });
-    setLoading(false);
+
+    const isValidTicket = (ticket) => {
+      if (!Array.isArray(ticket) || ticket.length !== 3) return false;
+      const flat = ticket.flat();
+      const nonNullValues = flat.filter((val) => typeof val === "number");
+      return nonNullValues.length === 15;
+    };
+
+    // Validate initially
+    let validTicketsCount =
+      Object.values(ticketsData).filter(isValidTicket).length;
+
+    let success = validTicketsCount == gameState?.ticketCount;
+
+    // Retry generation if invalid
+    if (!success) {
+      for (let i = 0; i < 5; i++) {
+        Object.keys(ticketsData).forEach((key) => {
+          const newTicket = generateTambolaTickets(tickets[key - 1])[0];
+          if (!isValidTicket(ticketsData[key])) {
+            ticketsData[key] = newTicket;
+          }
+        });
+
+        validTicketsCount =
+          Object.values(ticketsData).filter(isValidTicket).length;
+
+        if (validTicketsCount == gameState?.ticketCount) {
+          success = true;
+          break;
+        }
+      }
+    }
+
+    if (!success) {
+      handleWarningMessage(
+        "Unable to generate valid tickets. Please try again."
+      );
+      setLoading(false);
+      return;
+    }
+
+    // Check for localStorage
+    const existingTickets = localStorage.getItem(`${gameState?.roomid}`);
+    if (existingTickets) {
+      const parsed = JSON.parse(existingTickets);
+      if (Object.keys(parsed).length === gameState?.ticketCount) {
+        setFinalTickets(parsed);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // No valid stored ticket, save and set new one
+    localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(ticketsData));
     setFinalTickets(ticketsData);
+    setLoading(false);
   }, [tickets]);
 
   // for claims and click on number
@@ -92,6 +163,7 @@ const AssignNumbers = () => {
   useEffect(() => {
     const handleGameOver = () => {
       handleMessageBox("Game over");
+      localStorage.removeItem(`${gameState?.roomid}`);
       setTimeout(() => {
         navigate("gameover");
       }, 1000);
@@ -101,6 +173,21 @@ const AssignNumbers = () => {
         claimTrack: claimedList,
       });
     };
+
+    const handleTickNumbers = (data) => {
+      if (data.length > 0) {
+        if (gameState.assign_numbers) {
+          let commonNumbers = gameState.assign_numbers.filter((num) =>
+            data.includes(num)
+          );
+          if (commonNumbers.length > 0) {
+            setSelectedNumbers((prev) => [...prev, ...commonNumbers]);
+          }
+        }
+      }
+    };
+
+    socket.on("reconnectedPlayer", handleTickNumbers);
 
     socket.on("pattern_claimed", handleClaimMessage);
     // socket.on("error", handleMessageBox);
@@ -114,6 +201,7 @@ const AssignNumbers = () => {
       socket.off("claimedList", handleClaimList);
       socket.off("game_over", handleGameOver);
       socket.off("room_data_stored", handleGameOver);
+      socket.off("reconnectedPlayer", handleTickNumbers);
     };
   }, []);
 
@@ -429,7 +517,7 @@ const AssignNumbers = () => {
     }
   };
 
-  return Loading ? (
+  return loading ? (
     <Loading />
   ) : (
     <React.Fragment>
@@ -541,6 +629,33 @@ const AssignNumbers = () => {
           <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 text-black font-bold text-lg rounded-3xl shadow-md">
             <span className="text-xl">🎊</span>
             {claimMessage}
+          </div>
+        )}
+
+        {warningToggle && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 px-6 py-4 max-w-md w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black text-white rounded-3xl shadow-2xl border border-red-500 animate-pulse-slow z-50">
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-red-400 text-4xl">⚠️</div>
+              <p className="text-center text-xl font-semibold text-red-300">
+                {warningMessage}
+              </p>
+              <p className="text-center text-sm text-gray-400">
+                Please reconnect or join a new game.
+                <br />
+                <span className="text-xs">
+                  This message will disappear in 10 seconds.
+                </span>
+              </p>
+              <button
+                className="bg-gradient-to-r from-red-400 via-yellow-300 to-orange-400 text-black font-semibold tracking-wide px-5 py-2 rounded-lg hover:from-red-500 hover:to-orange-500 transition-all duration-200 shadow-md active:scale-95"
+                onClick={() => {
+                  setWarningToggle(false);
+                  navigate(`/`);
+                }}
+              >
+                Reconnect
+              </button>
+            </div>
           </div>
         )}
       </div>

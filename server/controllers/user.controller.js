@@ -255,7 +255,6 @@ export const inviteUser = async (req, res) => {
     if (isInvited) {
       return res.status(400).json({ message: "User already invited" });
     }
-
     user.invites.push({
       roomid: invite?.roomid,
       schedule: invite?.schedule || "",

@@ -63,7 +63,7 @@ const Hostroom = () => {
       updateGameState({
         name: player?.name || "Guest",
         roomid: roomid,
-        ticketCount: player?.ticket_count || 1,
+        ticketCount: player?.ticketCount || 1,
         assign_numbers: player?.assign_numbers || [],
         patterns: setting?.patterns || [],
         schedule: setting?.schedule || null,

@@ -99,11 +99,16 @@ io.on("connection", (socket) => {
             schedule: room.schedule || null,
             claimTrack: room.claimTrack || [],
             assign_numbers: assignNumber || [],
+            ticketCount: room?.players?.find((p) => p.id === player.id)
+              ?.ticketCount,
             roomid: roomid,
           });
           setTimeout(() => {
-            socket.emit("number_drawn", room.drawno);
+            socket.emit("number_drawn", room.drawno || []);
           }, 500);
+          setTimeout(() => {
+            socket.emit("reconnectedPlayer", room.drawno || []);
+          }, 2000);
         }
         setTimeout(() => {
           io.to(roomid).emit("player_update", room?.playersList || []);
@@ -200,7 +205,6 @@ io.on("connection", (socket) => {
         socket.emit("error", "Server error");
       }
     });
-
     // Pick number (working fine)
     socket.on("pick_number", (roomid, id) => {
       try {
@@ -265,8 +269,7 @@ io.on("connection", (socket) => {
         socket.emit("error", "Server error while requesting ticket");
       }
     });
-
-    //end this game (not yet suggested)
+    //end this game
     socket.on("end_game", async (roomid, id) => {
       try {
         if (!roomid || !activeRooms.has(roomid) || !id) {
