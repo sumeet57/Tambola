@@ -279,3 +279,31 @@ export const logoutUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const changeRole = async (req, res) => {
+  // console.log("Change role called");
+  try {
+    const id = req.cookies.id;
+    // console.log("ID from cookies:", id);
+
+    if (!id) {
+      return res.status(400).json({ message: "Id is not found" });
+    }
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    // console.log("User found:", user.role);
+    if (user.role === "host") {
+      user.role = "user";
+    } else if (user.role === "user") {
+      user.role = "host";
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+    await user.save();
+    res.status(200).json({ user, message: "User role changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

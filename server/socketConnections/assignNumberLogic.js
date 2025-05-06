@@ -1,15 +1,17 @@
 export const assignNumbersToPlayers = (players) => {
   players.forEach((player) => {
-    player.assign_numbers = [];
-    if (player.ticketCount > 6) {
-      player.ticketCount = 6; // Limit to 6 tickets
-    }
-    const ticketCount = player.ticketCount || 1; // Default to 1 if not provided
+    if (player.ticketCount != 0) {
+      player.assign_numbers = [];
+      if (player.ticketCount > 6) {
+        player.ticketCount = 6; // Limit to 6 tickets
+      }
+      const ticketCount = player.ticketCount || 1; // Default to 1 if not provided
 
-    const numbers = assignNumbersToPlayer(ticketCount);
+      const numbers = assignNumbersToPlayer(ticketCount);
 
-    if (numbers.length > 0) {
-      player.assign_numbers = numbers;
+      if (numbers.length > 0) {
+        player.assign_numbers = numbers;
+      }
     }
   });
 

@@ -109,6 +109,8 @@ export const getPlayer = async (req, res) => {
 export const inviteUser = async (req, res) => {
   try {
     let { phone, room, id } = req.body;
+
+    // console.log("room", room);
     phone = phone.toString().trim();
     if (!phone || !id) {
       return res.status(400).json({ message: "All fields are required" });
@@ -118,12 +120,14 @@ export const inviteUser = async (req, res) => {
     }
 
     const user = await User.findOne({ phone });
+
     if (!user) {
       return res.status(400).json({ message: "Player not found" });
     }
     const playerInvited = user.invites.some(
-      (invite) => invite.roomid === room.roomid
+      (invite) => invite.id == room.roomid
     );
+
     if (playerInvited) {
       return res.status(400).json({ message: "Player already invited" });
     }
@@ -132,7 +136,7 @@ export const inviteUser = async (req, res) => {
       return res.status(400).json({ message: "Host not found" });
     }
 
-    user.invites = [];
+    // user.invites = [];
     user.invites.push({
       id: room.roomid,
       schedule: room.schedule,

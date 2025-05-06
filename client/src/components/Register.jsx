@@ -81,63 +81,6 @@ const Register = () => {
     }
   };
 
-  const submitHost = async (e) => {
-    e.preventDefault();
-    // validate user input
-    if (!name || !phone || !password) {
-      setMessageToggle(false);
-      setMessageStore("Please fill all fields");
-      setMessageToggle(true);
-      return;
-    } else if (!/^\d{10}$/.test(phone)) {
-      setMessageToggle(false);
-      setMessageStore(
-        "Phone number should be 10 digits and contain only numbers"
-      );
-      setMessageToggle(true);
-      return;
-    } else if (password.length < 6) {
-      setMessageToggle(false);
-      setMessageStore("Password should be between 6 to 20 characters");
-      setMessageToggle(true);
-      return;
-    } else if (name.length < 3 || name.length > 20) {
-      setMessageToggle(false);
-      setMessageStore("Name should be between 3 to 20 characters");
-      setMessageToggle(true);
-      return;
-    }
-
-    setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/host/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ name, phone, password }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.status === 200) {
-      // remove user id and user from storage (utils/storageUtils.js)
-      localStorage.clear();
-      sessionStorage.clear();
-      updateLocalStorage("id", data.hostid);
-      updatePlayer({
-        name: data?.user?.name,
-        phone: data?.user?.phone,
-        id: data?.id,
-        role: data?.user?.role,
-      });
-      navigate("/");
-    } else {
-      setMessageToggle(false);
-      setMessageStore(data.message || "Failed to register as host");
-      setMessageToggle(true);
-    }
-  };
-
   return (
     <>
       {loading ? (
@@ -209,13 +152,7 @@ const Register = () => {
                   onClick={submitUser}
                   className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
                 >
-                  Register as User
-                </button>
-                <button
-                  onClick={submitHost}
-                  className="w-full py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 ml-4"
-                >
-                  Register as Host
+                  Register
                 </button>
               </div>
               <div className="text-center mt-4">

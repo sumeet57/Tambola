@@ -53,6 +53,33 @@ const Header = () => {
     }
   };
 
+  // switching between host and user
+  const [changeClick, setChangeClick] = useState(false);
+  const changeClickHandler = () => {
+    setChangeClick(!changeClick);
+  };
+  const handleRoleChange = async () => {
+    setLoading(true);
+    const res = await fetch(`${apiBaseUrl}/api/user/changeRole`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+    setLoading(false);
+    const data = await res.json();
+    if (res.status === 200) {
+      updatePlayer(data.user); // Update the player context with the new role
+      setChangeClick(false);
+      setTimeout(() => {
+        navigate("/"); // Navigate to home
+        window.location.reload(); // Refresh the page
+      }, 1000);
+    } else {
+      console.log("Error changing role:", data.message);
+    }
+  };
   return (
     <>
       {loading ? (
@@ -110,9 +137,25 @@ const Header = () => {
                 <ul className="space-y-6">
                   <li>
                     <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
-                      {Player?.role == "host" && (
-                        <p className="text-red-500">Host</p>
-                      )}
+                      <div className="flex items-center justify-start mb-2">
+                        {Player?.role === "host" && (
+                          <p className="text-red-500 font-semibold uppercase text-xl">
+                            Host
+                          </p>
+                        )}
+                        {Player?.role === "user" && (
+                          <p className="text-blue-500 font-semibold uppercase text-xl">
+                            User
+                          </p>
+                        )}
+                        <button
+                          onClick={changeClickHandler}
+                          className="px-2 py-[2px] ml-2 text-sm bg-blue-500 text-white rounded-full shadow hover:bg-blue-600 transition duration-300"
+                        >
+                          Change
+                        </button>
+                      </div>
+
                       <div className="flex flex-col">
                         {Player?.name && (
                           <h2 className="text-2xl font-semibold mb-2">
@@ -166,6 +209,58 @@ const Header = () => {
                     Sumeet
                   </a>
                 </p>
+              </div>
+            </div>
+          )}
+          {changeClick && (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex justify-end">
+              <div className="bg-white relative w-64 h-full shadow-lg p-6">
+                {/* Close Button */}
+                <div
+                  onClick={changeClickHandler}
+                  className="text-lg mb-4 w-full text-right"
+                >
+                  <button className="bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 transition duration-300">
+                    <svg
+                      className="w-6 h-6"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3.293 4.293a1 1 0 011.414 0L10 10.586l5.293-5.293a1 1 0 111.414 1.414L11.414 12l5.293 5.293a1 1 0 01-1.414 1.414L10 13.414 4.707 18.707a1 1 0 01-1.414-1.414L8.586 12 3.293 6.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Role Switch Message */}
+                <ul className="space-y-6">
+                  <li>
+                    {Player?.role === "host" ? (
+                      <p className="text-gray-800 text-lg">
+                        Do you want to change role to{" "}
+                        <span className="font-semibold">User</span>?
+                      </p>
+                    ) : (
+                      <p className="text-gray-800 text-lg">
+                        Do you want to change role to{" "}
+                        <span className="font-semibold">Host</span>?
+                      </p>
+                    )}
+                  </li>
+
+                  {/* Confirm Button */}
+                  <li>
+                    <button
+                      onClick={handleRoleChange} // Make sure this function exists
+                      className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
+                    >
+                      Confirm
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
           )}

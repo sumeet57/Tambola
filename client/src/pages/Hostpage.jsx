@@ -27,9 +27,10 @@ const Hostpage = () => {
   const temproomid = useParams();
 
   const [roomId, setRoomId] = useState(temproomid.roomid || "");
-  const [ticketCount, setTicketCount] = useState(1);
+  const [ticketCount, setTicketCount] = useState(0);
   const [gameSchedule, setGameSchedule] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hostPlay, setHostPlay] = useState(false);
 
   const [messageStore, setMessageStore] = useState("");
   const [messageToggle, setMessageToggle] = useState(false);
@@ -48,7 +49,7 @@ const Hostpage = () => {
 
     if (location.pathname === "/host") {
       setRoomId("");
-      setTicketCount(1);
+      setTicketCount(0);
       setGameSchedule("");
     } else if (location.pathname === `/host/${roomId}`) {
       setRoomId(roomId);
@@ -161,28 +162,52 @@ const Hostpage = () => {
                   </button>
                 </div>
                 <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="ticketCount"
-                  >
-                    Number of Tickets
-                  </label>
-                  <select
-                    id="ticketCount"
-                    value={ticketCount}
-                    onChange={(e) => {
-                      const selectedValue = Number(e.target.value);
-                      setTicketCount(selectedValue);
-                    }}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                    <option value={5}>5</option>
-                    <option value={6}>6</option>
-                  </select>
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id="hostPlay"
+                      checked={hostPlay}
+                      onChange={(e) => {
+                        setHostPlay(e.target.checked);
+                        console.log(ticketCount);
+                      }}
+                      className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="hostPlay"
+                      className="ml-2 block text-sm font-medium text-gray-900"
+                    >
+                      Host can also play🎮
+                    </label>
+                  </div>
+
+                  {hostPlay && (
+                    <>
+                      <label
+                        className="block text-gray-700 text-sm font-semibold mb-2"
+                        htmlFor="ticketCount"
+                      >
+                        Number of Tickets :
+                      </label>
+                      <select
+                        id="ticketCount"
+                        value={ticketCount}
+                        onChange={(e) => {
+                          const selectedValue = Number(e.target.value);
+                          setTicketCount(selectedValue);
+                        }}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      >
+                        <option value={0}>0</option>
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                        <option value={5}>5</option>
+                        <option value={6}>6</option>
+                      </select>
+                    </>
+                  )}
                 </div>
 
                 <PatternMenu />

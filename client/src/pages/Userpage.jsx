@@ -76,6 +76,7 @@ const Userpage = () => {
       const invitedData = await invitedRes.json();
       setLoading(false);
       if (invitedRes.status === 200) {
+        console.log(Player, roomId);
         socket.emit("join_room", Player, roomId);
         setLoading(true);
       } else {

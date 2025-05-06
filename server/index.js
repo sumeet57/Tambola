@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
           return;
         }
         setTimeout(() => {
-          io.to(setting.roomid).emit("player_update", room?.playersList || []);
+          io.to(setting.roomId).emit("player_update", room?.playersList || []);
         }, 1000);
       } catch (err) {
         console.error("Error in create_room:", err);
@@ -84,7 +84,6 @@ io.on("connection", (socket) => {
           socket.emit("room_joined", roomid);
           socket.emit("reconnectToRoom", roomid);
           setTimeout(() => {
-            io.to(roomid).emit("player_update", room.playersList || []);
             io.to(roomid).emit(
               "requestedTicket",
               room?.requestedTicketCount || []
@@ -132,20 +131,8 @@ io.on("connection", (socket) => {
           return;
         }
 
-        if (room?.players) {
-          let found = false;
-          for (const player of room.players) {
-            if (player.id == id) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            socket.emit("error", "You are not authorized to start the game");
-            return;
-          }
-        } else {
-          socket.emit("error", "No players in the room");
+        if (room?.host !== id) {
+          socket.emit("error", "You are not authorized to start the game");
           return;
         }
 
@@ -217,13 +204,9 @@ io.on("connection", (socket) => {
           socket.emit("error", "Room not found");
           return;
         }
-        if (room?.players) {
-          // let found = false;
-          let found = room?.players?.some((player) => player.id === id);
-          if (!found) {
-            socket.emit("error", "You are not authorized to pick the number");
-            return;
-          }
+        if (room?.host !== id) {
+          socket.emit("error", "You are not authorized to pick a number");
+          return;
         }
 
         if (room.drawno.length >= 90) {

@@ -72,15 +72,26 @@ export const createRoom = async (player, setting) => {
       requestedTicketCount: [],
     };
 
-    newRoom.players.push({
-      id: player?.id,
-      socketid: player?.socketId,
-      name: player?.name,
-      phone: player?.phone,
-      claims: [],
-      assign_numbers: [],
-      ticketCount: player.ticketCount || 1,
-    });
+    if (player?.ticketCount == 0) {
+      newRoom.players.push({
+        id: player?.id,
+        socketid: player?.socketId,
+        name: player?.name,
+        phone: player?.phone,
+        ticketCount: player?.ticketCount || 0,
+      });
+    }
+    if (player?.ticketCount > 0) {
+      newRoom.players.push({
+        id: player?.id,
+        socketid: player?.socketId,
+        name: player?.name,
+        phone: player?.phone,
+        claims: [],
+        assign_numbers: [],
+        ticketCount: player.ticketCount || 1,
+      });
+    }
 
     newRoom.playersList.push(player?.name);
 
@@ -165,6 +176,10 @@ export const joinRoom = async (player, roomid) => {
     const roomData = activeRooms.get(roomId);
     const alreadyExists = roomData.players.some((p) => p.id === player.id);
     const playerIndex = roomData.players.findIndex((p) => p.id === player.id);
+    let isNotHost = roomData.host != player.id;
+    if (!isNotHost) {
+      return "You are Host of this room, you cannot join as a player";
+    }
     if (alreadyExists && roomData.isOngoing) {
       roomData.players[playerIndex].socketid = player.socketId; // Update socket ID
       return true;
@@ -353,7 +368,11 @@ export const assignNumbers = (roomid) => {
     }
 
     if (
-      !roomData.players.some((player) => player.assign_numbers.length === 0)
+      !roomData.players
+        .filter((player) => player?.assign_numbers !== undefined)
+        .some(
+          (playerWithNumbers) => playerWithNumbers.assign_numbers.length === 0
+        )
     ) {
       return "Numbers already assigned";
     }

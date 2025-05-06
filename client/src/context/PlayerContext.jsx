@@ -21,14 +21,13 @@ export const PlayerProvider = ({ children }) => {
     setPlayer((prevUser) => {
       const updatedUser = {
         ...prevUser,
-        ...Object.fromEntries(
-          Object.entries(newUser).filter(([_, value]) => value !== "")
-        ),
+        ...newUser, // <- no filter here, apply directly
       };
       updateSessionStorage("player", updatedUser);
       return updatedUser;
     });
   };
+
   // delete property from the player object by there name
   const deletePlayerProperty = (propertyName) => {
     setPlayer((prevUser) => {
@@ -42,26 +41,34 @@ export const PlayerProvider = ({ children }) => {
   // Socket connection handler
   React.useEffect(() => {
     const handleConnect = () => {
-      console.log(`✅ Connected with ID: ${socket.id}`);
-      setSocketId(socket.id);
-      localStorage.setItem("socketid", socket.id);
-      updatePlayer({ socketId: socket.id });
-      setLoading(false); // Socket is connected, hide loading
+      const newId = socket.id;
+      // Update localStorage
+      localStorage.setItem("socketid", newId);
+
+      // Update context + session storage
+      setPlayer((prev) => {
+        const updated = { ...prev, socketId: newId };
+        updateSessionStorage("player", updated);
+        return updated;
+      });
+
+      setSocketId(newId);
+      setLoading(false);
     };
 
     const handleDisconnect = () => {
       console.log("❌ Disconnected");
-      setLoading(true); // Set loading to true on disconnect
+      setLoading(true);
     };
-
-    if (!socket.connected) {
-      setLoading(true); // Only show loading if socket is not connected
-    }
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
 
-    // Clean up the event listeners
+    if (socket.connected) {
+      // ✅ In case socket is already connected, ensure it's called
+      handleConnect();
+    }
+
     return () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);

@@ -4,6 +4,7 @@ import {
   loginUser,
   getUser,
   logoutUser,
+  changeRole,
 } from "../controllers/user.controller.js";
 import express from "express";
 
@@ -14,5 +15,6 @@ userRouter.post("/login", loginUser);
 userRouter.post("/find", findUser);
 userRouter.get("/get", getUser);
 userRouter.get("/logout", logoutUser);
+userRouter.get("/changeRole", changeRole);
 
 export default userRouter;

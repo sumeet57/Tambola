@@ -63,7 +63,7 @@ const Hostroom = () => {
       updateGameState({
         name: player?.name || "Guest",
         roomid: roomid,
-        ticketCount: player?.ticketCount || 1,
+        ticketCount: player?.ticketCount || 0,
         assign_numbers: player?.assign_numbers || [],
         patterns: setting?.patterns || [],
         schedule: setting?.schedule || null,
@@ -100,6 +100,7 @@ const Hostroom = () => {
   const [requestMenu, setRequestMenu] = useState(false);
   const [requestTicketsList, setRequestTicketsList] = useState([]);
   const [count, setCount] = useState(0);
+  const [warningPopup, setWarningPopup] = useState(false);
 
   //invite button click popup toggle logic
   const handleInviteClick = () => {
@@ -369,18 +370,52 @@ const Hostroom = () => {
 
                       <button
                         onClick={() => {
-                          socket.emit(
-                            "requestTicket",
-                            data.id,
-                            roomid,
-                            data.count
-                          );
-                          setRequestMenu(false);
+                          setWarningPopup(true);
                         }}
                         className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded-md transition-all active:scale-95"
                       >
                         Approve
                       </button>
+                      {warningPopup && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm transition-all">
+                          <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-6 animate-fadeIn">
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                              {data?.phone} - {data?.name}
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                              Requesting{" "}
+                              <span className="font-semibold text-black">
+                                {data?.count}
+                              </span>{" "}
+                              ticket{data?.count > 1 ? "s" : ""}.<br />
+                              Are you sure you want to approve this request?
+                            </p>
+                            <div className="flex justify-end gap-3">
+                              <button
+                                onClick={() => setWarningPopup(false)}
+                                className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all active:scale-95"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => {
+                                  socket.emit(
+                                    "requestTicket",
+                                    data.id,
+                                    roomid,
+                                    data.count
+                                  );
+                                  setRequestMenu(false);
+                                  setWarningPopup(false);
+                                }}
+                                className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all active:scale-95"
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

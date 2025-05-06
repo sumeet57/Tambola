@@ -51,10 +51,10 @@ const ReconnectPage = () => {
       patterns: data.patterns || [],
       schedule: data.schedule || null,
       assign_numbers: data.assign_numbers || [],
-      ticketCount: data.ticketCount || 1,
+      ticketCount: data.ticketCount || 0,
       claimTrack: data.claimTrack || [],
       DrawNumbers: data.DrawNumbers || [],
-      name: Player.name,
+      name: Player?.name || "Guest",
     });
     navigate("/game");
   };
