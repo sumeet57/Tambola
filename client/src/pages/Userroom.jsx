@@ -1,23 +1,29 @@
 import React, { useState, useEffect, useContext } from "react";
-import socket from "../utils/websocket";
 import { useNavigate } from "react-router-dom";
+
+// import centralized socket connection
+import socket from "../utils/websocket";
+
+//import context
 import { GameContext } from "../context/GameContext";
 
 const Userroom = () => {
+  //for navigation
   const navigate = useNavigate();
 
-  // for context
+  //context state
   const { gameState, updateGameState } = useContext(GameContext);
 
+  //joined players list state
   const [playersList, setPLayersList] = useState([]);
 
+  //socket event listeners for player updates and game start
   useEffect(() => {
     const handleUpdatePlayers = (players) => {
       setPLayersList(players);
     };
 
     const handleNumbersAssigned = (data) => {
-      console.log("data", data);
       const setting = data?.setting || {};
       const player = data?.player || {};
       updateGameState({
@@ -42,6 +48,33 @@ const Userroom = () => {
     };
   }, [navigate]);
 
+  //socket event listeners for disconnection check
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    // Emit socket connection when the component mounts
+    socket.connect();
+
+    // Check if already connected on initial mount
+    if (socket.connected) {
+      setIsConnected(false);
+    }
+
+    // Handle connection establishment
+    const handleConnect = () => {
+      setIsConnected(true); // Update connection state
+    };
+
+    // Listen to socket events
+    socket.on("connect", handleConnect);
+
+    return () => {
+      // Clean up socket event listeners on component unmount
+      socket.off("connect", handleConnect);
+    };
+  }, []);
+
+  //warning before leaving the page
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       event.preventDefault();
@@ -75,6 +108,23 @@ const Userroom = () => {
           )}
         </div>
       </div>
+      {isConnected && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+          <div className="bg-white text-red-600 border border-red-200 shadow-xl rounded-2xl p-6 w-full max-w-md text-center animate-fade-in-down">
+            <h2 className="text-xl font-bold mb-2">⚠️ Connection Lost</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Your connection was lost. Please reconnect to continue the game.
+            </p>
+
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-3 rounded-xl shadow-md hover:from-blue-500 hover:to-blue-400 transition-all duration-200"
+            >
+              🔄 Reconnect to Game
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

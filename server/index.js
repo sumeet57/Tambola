@@ -83,31 +83,15 @@ io.on("connection", (socket) => {
         if (res === false) {
           socket.emit("room_joined", roomid);
           socket.emit("reconnectToRoom", roomid);
+          let hostSocketId = room.players.find(
+            (p) => p?.id == room?.host
+          ).socketid;
           setTimeout(() => {
-            io.to(roomid).emit(
+            io.to(hostSocketId).emit(
               "requestedTicket",
               room?.requestedTicketCount || []
             );
           }, 1000);
-        } else if (res === true) {
-          const assignNumber =
-            room.players?.find((p) => p.id === player.id)?.assign_numbers || [];
-          socket.emit("reconnectToGame", {
-            drawno: room.drawno || 0,
-            patterns: room.patterns || [],
-            schedule: room.schedule || null,
-            claimTrack: room.claimTrack || [],
-            assign_numbers: assignNumber || [],
-            ticketCount: room?.players?.find((p) => p.id === player.id)
-              ?.ticketCount,
-            roomid: roomid,
-          });
-          setTimeout(() => {
-            socket.emit("number_drawn", room.drawno || []);
-          }, 500);
-          setTimeout(() => {
-            socket.emit("reconnectedPlayer", room.drawno || []);
-          }, 2000);
         }
         setTimeout(() => {
           io.to(roomid).emit("player_update", room?.playersList || []);
@@ -279,10 +263,58 @@ io.on("connection", (socket) => {
         socket.emit("error", "Server error");
       }
     });
+    // reconnect player
+    socket.on("reconnect_player", async (player, roomid) => {
+      try {
+        if (!player || !roomid) {
+          socket.emit("error", "Invalid input");
+          return;
+        }
+        const res = await reconnectPlayer(player, roomid);
+        if (typeof res === "string") {
+          socket.emit("error", res);
+          return;
+        }
+        let room = activeRooms.get(roomid);
+        if (!room) {
+          socket.emit("error", "Room not found in memory");
+          return;
+        }
+        socket.join(roomid);
+        if (res === false) {
+          socket.emit("reconnectToRoom", roomid);
+          // io.to(roomid).emit("player_update", room?.playersList || []);
+        } else if (res === true) {
+          const assignNumber =
+            room.players?.find((p) => p.id === player.id)?.assign_numbers || [];
+          socket.emit("reconnectToGame", {
+            drawno: room.drawno || 0,
+            patterns: room.patterns || [],
+            schedule: room.schedule || null,
+            claimTrack: room.claimTrack || [],
+            assign_numbers: assignNumber || [],
+            ticketCount: room?.players?.find((p) => p.id === player.id)
+              ?.ticketCount,
+            roomid: roomid,
+          });
+          setTimeout(() => {
+            socket.emit("number_drawn", room.drawno || []);
+          }, 500);
+          setTimeout(() => {
+            socket.emit("reconnectedPlayer", room.drawno || []);
+          }, 1000);
+        }
+        setTimeout(() => {
+          io.to(roomid).emit("player_update", room?.playersList || []);
+        }, 1000);
+      } catch (err) {
+        console.error("Error in reconnect_player:", err);
+        socket.emit("error", "Server error");
+      }
+    });
 
     // Handle player disconnection
-
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       try {
         for (const [roomId, room] of activeRooms.entries()) {
           const players = room?.players || [];

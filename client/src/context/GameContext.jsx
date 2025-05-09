@@ -27,7 +27,6 @@ export const GameContextProvider = ({ children }) => {
     }));
   };
   const updateGameState = (newState) => {
-    console.log("newState", newState);
     setGameState((prevState) => ({
       ...prevState,
       ...newState,

@@ -72,25 +72,5 @@ room model collection :
 }
 
 
-const newRoom = {
-      host: player?.id,
-      players: [],
-      patterns: setting.pattern || [],
-      schedule: setting.schedule || null,
-      claimData: [],
-      claimTrack: setting.pattern || [],
-      playersList: [],
-      isOngoing: false,
-      isCompleted: false,
-    };
-
-    newRoom.players.push({
-      id: player?.id,
-      socketid: player?.socketId,
-      name: player?.name,
-      phone: player?.phone,
-      claims: [],
-      assign_numbers: [],
-      requestedTicketCount: player?.requestedTicketCount || 1,
-      ticketCount: player.ticketCount || 1,
-    });
+create logic, join logic, claimpoint logic,
+saveroom in db, 

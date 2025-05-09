@@ -166,6 +166,7 @@ const Hostroom = () => {
   // const [isConnected, setIsConnected] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
     if (!Player || !Player.id || Player.role !== "host") {
@@ -356,10 +357,15 @@ const Hostroom = () => {
                       <input
                         type="number"
                         min="1"
+                        max="6"
                         className="w-16 text-center border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={data.count}
                         onChange={(e) => {
                           const newCount = parseInt(e.target.value) || 0;
+                          if (newCount > 6) {
+                            alert("Please enter a number between 1 and 6");
+                            return;
+                          }
                           setRequestTicketsList((prev) =>
                             prev.map((item, i) =>
                               i === index ? { ...item, count: newCount } : item
@@ -370,43 +376,60 @@ const Hostroom = () => {
 
                       <button
                         onClick={() => {
+                          setSelectedRequest(data);
                           setWarningPopup(true);
                         }}
                         className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded-md transition-all active:scale-95"
                       >
                         Approve
                       </button>
-                      {warningPopup && (
+                      {warningPopup && selectedRequest && (
                         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm transition-all">
                           <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-6 animate-fadeIn">
                             <h3 className="text-xl font-bold text-gray-800 mb-2">
-                              {data?.phone} - {data?.name}
+                              {selectedRequest.phone} - {selectedRequest.name}
                             </h3>
                             <p className="text-sm text-gray-500 mb-4">
                               Requesting{" "}
                               <span className="font-semibold text-black">
-                                {data?.count}
+                                {selectedRequest.count}
                               </span>{" "}
-                              ticket{data?.count > 1 ? "s" : ""}.<br />
+                              ticket{selectedRequest.count > 1 ? "s" : ""}.
+                              <br />
                               Are you sure you want to approve this request?
                             </p>
                             <div className="flex justify-end gap-3">
                               <button
-                                onClick={() => setWarningPopup(false)}
+                                onClick={() => {
+                                  setWarningPopup(false);
+                                  setSelectedRequest(null);
+                                }}
                                 className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all active:scale-95"
                               >
                                 Cancel
                               </button>
                               <button
                                 onClick={() => {
+                                  if (
+                                    selectedRequest.count > 6 ||
+                                    selectedRequest.count < 1
+                                  ) {
+                                    alert(
+                                      "Please enter a number between 1 and 6"
+                                    );
+                                    setWarningPopup(false);
+                                    setSelectedRequest(null);
+                                    return;
+                                  }
                                   socket.emit(
                                     "requestTicket",
-                                    data.id,
+                                    selectedRequest.id,
                                     roomid,
-                                    data.count
+                                    selectedRequest.count
                                   );
-                                  setRequestMenu(false);
+
                                   setWarningPopup(false);
+                                  setSelectedRequest(null);
                                 }}
                                 className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all active:scale-95"
                               >

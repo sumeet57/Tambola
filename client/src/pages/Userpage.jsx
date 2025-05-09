@@ -1,18 +1,18 @@
 import React, { useContext, useEffect, useState } from "react";
-import socket from "../utils/websocket";
 import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
+
+//import centralized socket connection
+import socket from "../utils/websocket";
+
+//import components
 import Header from "../components/Header";
-import {
-  updateLocalStorage,
-  updateSessionStorage,
-} from "../utils/storageUtils";
 import Loading from "../components/Loading";
 
-//context import
+//import context
 import { PlayerContext } from "../context/PlayerContext";
 import { GameContext } from "../context/GameContext";
-// import { }
-//import env
+
+//import environment variables
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Userpage = () => {
@@ -25,9 +25,10 @@ const Userpage = () => {
 
   //for loading
   const [loading, setLoading] = useState(false);
+
+  //for message handling
   const [messageStore, setMessageStore] = useState("");
   const [messageToggle, setMessageToggle] = useState(false);
-
   const messageHandler = (message) => {
     setMessageToggle(false);
     setMessageStore(message);
@@ -44,6 +45,7 @@ const Userpage = () => {
   const [roomId, setRoomId] = useState(roomid || ""); //if params is present then set it to roomid else empty string
   const [requestTickets, setRequestTickets] = useState(1);
 
+  //for updating player state when user selects tickets
   useEffect(() => {
     updatePlayer({
       requestedTicketCount: requestTickets,
@@ -103,24 +105,6 @@ const Userpage = () => {
     socket.on("error", (message) => {
       messageHandler(message);
       setLoading(false);
-    });
-
-    socket.on("reconnectToRoom", (data) => {
-      navigate(`/${Player.role}/room/${data}`);
-      setLoading(false);
-    });
-    socket.on("reconnectToGame", (data) => {
-      setLoading(false);
-      updateGameState({
-        patterns: data.patterns || [],
-        schedule: data.schedule || null,
-        claimTrack: data.claimTrack || [],
-        assign_numbers: data.assign_numbers || [],
-        drawnNumbers: data.drawno || [],
-        name: Player.name || "Guest",
-        roomid: data.roomid,
-      });
-      navigate(`/game`);
     });
 
     // Cleanup

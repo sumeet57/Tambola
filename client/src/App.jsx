@@ -1,20 +1,22 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+
+// import centralized socket connection
+import socket from "./utils/websocket.js";
+
+//import components
+import Header from "./components/Header.jsx";
+import Loading from "./components/Loading.jsx";
+
+//import context
 import { PlayerContext } from "./context/PlayerContext.jsx";
 import { GameContext } from "./context/GameContext.jsx";
-import socket from "./utils/websocket.js";
-import { useNavigate } from "react-router-dom";
-import Header from "./components/Header.jsx";
-import {
-  updateLocalStorage,
-  updateSessionStorage,
-} from "./utils/storageUtils.js";
-import Loading from "./components/Loading.jsx";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const App = () => {
-  // for user context
+  //context state
   const { Player, updatePlayer, loading, setLoading } =
     useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
@@ -22,17 +24,18 @@ const App = () => {
   // for navigation
   const navigate = useNavigate();
 
-  const [invites, setInvites] = useState([]);
-  // const [loading, setLoading] = useState(false);
-  // console.log(loading);
-
   // handle click events
   const handleHostClick = () => {
     navigate("/host");
-    // console.log(player);
   };
   const handleJoinClick = () => {
     navigate("/user");
+  };
+  const handleRegisterClick = () => {
+    navigate("/register");
+  };
+  const handleLoginClick = () => {
+    navigate("/login");
   };
 
   // socket event handling
@@ -47,6 +50,8 @@ const App = () => {
     };
   }, []);
 
+  // invitation or norification state
+  const [invites, setInvites] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const handleNotificationCloseClick = () => {
     setShowNotifications(false);
@@ -67,8 +72,11 @@ const App = () => {
     }
     // setShowNotifications(true);
   };
+  useEffect(() => {
+    handleNotificationClick();
+  }, []);
 
-  // for reconnection
+  //reconnection state
   const [showReconnect, setShowReconnect] = useState(false);
   const handleReconnectionCloseClick = () => {
     setShowReconnect(false);
@@ -80,14 +88,6 @@ const App = () => {
   //handle room join click
   const handleRoomJoinClick = (room) => {
     navigate(`/${Player?.role}/${room}`);
-  };
-
-  //button click events
-  const handleRegisterClick = () => {
-    navigate("/register");
-  };
-  const handleLoginClick = () => {
-    navigate("/login");
   };
 
   return (
@@ -130,12 +130,19 @@ const App = () => {
                   )}
                   {Player?.role === "user" && (
                     <button
-                      className="bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                      className="relative bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
                       onClick={() => {
                         setShowNotifications(true);
                         handleNotificationClick();
                       }}
                     >
+                      <span
+                        className={`absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2 py-1 text-xs font-bold ${
+                          invites?.length > 0 ? "block" : "hidden"
+                        }`}
+                      >
+                        {invites?.length > 0 ? invites.length : ""}
+                      </span>
                       📩 Invitations
                     </button>
                   )}

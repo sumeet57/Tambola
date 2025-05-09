@@ -42,11 +42,11 @@ const Dashboard = () => {
     fetchRooms();
   }, []);
 
-  useEffect(() => {
-    if (!Player || Player.role !== "host") {
-      navigate("/login");
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!Player || Player.role !== "host") {
+  //     navigate("/login");
+  //   }
+  // }, []);
 
   if (id) {
     // Detail page logic

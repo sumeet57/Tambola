@@ -87,7 +87,13 @@ const Header = () => {
       ) : (
         <>
           <nav className="w-full py-3 flex justify-between items-center p-4 bg-zinc-700 fixed shadow-md">
-            <div className="text-2xl sm:text-3xl font-bold font-sans text-white">
+            <div
+              onClick={() => {
+                navigate("/");
+                window.location.reload(); // Refresh the page
+              }}
+              className="text-2xl sm:text-3xl font-bold font-sans text-white"
+            >
               Tambola
             </div>
             <div className="flex items-center gap-2">
