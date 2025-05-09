@@ -169,7 +169,6 @@ const Hostpage = () => {
                       checked={hostPlay}
                       onChange={(e) => {
                         setHostPlay(e.target.checked);
-                        console.log(ticketCount);
                       }}
                       className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
@@ -228,7 +227,7 @@ const Hostpage = () => {
                     <input
                       onChange={(e) => {
                         const date = new Date(e.target.value);
-                        console.log("date", date);
+
                         const formattedDate = date.toLocaleString("en-US", {
                           year: "numeric",
                           month: "2-digit",

@@ -218,9 +218,8 @@ const Game = () => {
             {endMenu && (
               <div className="w-[400px] flex flex-col items-center gap-6 absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] bg-zinc-900 p-6 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold text-white text-center">
-                  Are you sure you want to end the game? All your progress will
-                  be stored in the database, but the winner will not be
-                  declared.
+                  ⚠️ Are you sure you want to end the game? All your progress
+                  will be stored in the database.
                 </h2>
                 <button
                   onClick={endGame}
