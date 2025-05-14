@@ -281,25 +281,29 @@ export const logoutUser = async (req, res) => {
 };
 
 export const changeRole = async (req, res) => {
-  // console.log("Change role called");
+  let { role } = req.body;
+  role = role.toString().trim();
   try {
     const id = req.cookies.id;
-    // console.log("ID from cookies:", id);
 
     if (!id) {
-      return res.status(400).json({ message: "Id is not found" });
+      return res.status(401).json({ message: "Id is not found" });
     }
     const user = await User.findById(id).select("-password");
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      // send user for login
+      return res.status(401).json({ message: "User not found" });
     }
     // console.log("User found:", user.role);
-    if (user.role === "host") {
-      user.role = "user";
-    } else if (user.role === "user") {
+    if (user.role === role) {
+      return res.status(200).json({ message: "User already has this role" });
+    } else if (role === "host" && user.role !== "host") {
       user.role = "host";
-    } else {
-      return res.status(400).json({ message: "Invalid role" });
+    } else if (role === "user" && user.role !== "user") {
+      user.role = "user";
+    } else if (role !== "user" && role !== "host") {
+      // send user for login
+      return res.status(401).json({ message: "Invalid role" });
     }
     await user.save();
     res.status(200).json({ user, message: "User role changed successfully" });

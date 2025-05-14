@@ -15,6 +15,6 @@ userRouter.post("/login", loginUser);
 userRouter.post("/find", findUser);
 userRouter.get("/get", getUser);
 userRouter.get("/logout", logoutUser);
-userRouter.get("/changeRole", changeRole);
+userRouter.post("/changeRole", changeRole);
 
 export default userRouter;

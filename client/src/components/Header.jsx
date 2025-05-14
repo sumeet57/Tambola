@@ -59,12 +59,17 @@ const Header = () => {
     setChangeClick(!changeClick);
   };
   const handleRoleChange = async () => {
+    let newRole;
+    if (Player) {
+      newRole = Player.role === "host" ? "user" : "host";
+    }
     setLoading(true);
     const res = await fetch(`${apiBaseUrl}/api/user/changeRole`, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ role: newRole }),
       credentials: "include",
     });
     setLoading(false);
@@ -72,10 +77,11 @@ const Header = () => {
     if (res.status === 200) {
       updatePlayer(data.user); // Update the player context with the new role
       setChangeClick(false);
-      setTimeout(() => {
-        navigate("/"); // Navigate to home
-        window.location.reload(); // Refresh the page
-      }, 1000);
+    } else if (res.status === 401) {
+      setLoading(false);
+      setChangeClick(false);
+      console.log("Unauthorized, redirecting to login");
+      navigate("/login");
     } else {
       console.log("Error changing role:", data.message);
     }

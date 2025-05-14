@@ -68,7 +68,7 @@ export const getInvites = async (req, res) => {
   try {
     const id = req.cookies.id;
     if (!id) {
-      return res.status(400).json({ message: "ID is required" });
+      return res.status(401).json({ message: "ID is required" });
     }
     const data = await User.findById(id).select("invites");
     if (!data) {

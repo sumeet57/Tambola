@@ -6,7 +6,7 @@ export async function withRoomLock(
   { rejectIfBusy = false, timeout = 10000 } = {} // Added timeout option
 ) {
   if (rejectIfBusy && roomMutex.locks.has(roomId)) {
-    return "Room is currently busy"; // Return a message instead of blocking
+    return "Room is currently busy, Try again"; // Return a message instead of blocking
   }
 
   const release = await roomMutex.lock(roomId, timeout); // Ensure lock acquisition doesn't block forever

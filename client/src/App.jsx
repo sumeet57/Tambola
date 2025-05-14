@@ -69,12 +69,46 @@ const App = () => {
     setLoading(false);
     if (res.status === 200) {
       setInvites(data?.invites);
+    } else if (res.status === 401) {
+      navigate("/login");
+    } else {
+      console.log("Error fetching invites:", data.message);
     }
     // setShowNotifications(true);
   };
   useEffect(() => {
     handleNotificationClick();
+    RoleWindowClickHandler();
   }, []);
+
+  //change role state (popup for role change)
+  const [showRoleWindow, setShowRoleWindow] = useState(false);
+  const RoleWindowClickHandler = () => {
+    setShowRoleWindow(!showRoleWindow);
+  };
+  const handleRoleChange = async (role) => {
+    setLoading(true);
+    const res = await fetch(`${apiBaseUrl}/api/user/changeRole`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        role: role,
+      }),
+    });
+    setLoading(false);
+    const data = await res.json();
+    if (res.status === 200) {
+      updatePlayer(data.user); // Update the player context with the new role
+      RoleWindowClickHandler();
+    } else if (res.status === 401) {
+      navigate("/login");
+    } else {
+      console.log("Error changing role:", data.message);
+    }
+  };
 
   //reconnection state
   const [showReconnect, setShowReconnect] = useState(false);
@@ -362,6 +396,44 @@ const App = () => {
                       No Rooms available 😕
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Role Change Modal */}
+          {showRoleWindow && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+              <div className="bg-white rounded-xl shadow-2xl w-[90%] max-w-sm max-h-[90vh] overflow-y-auto relative">
+                {/* Header */}
+                <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b border-gray-200">
+                  <h2 className="text-2xl font-semibold text-gray-800">
+                    🤔 Choose your role
+                  </h2>
+                  <button
+                    onClick={RoleWindowClickHandler}
+                    className="text-gray-700 hover:text-red-600 transition"
+                    aria-label="Close"
+                  >
+                    <span className="text-4xl rounded-full leading-none">
+                      &times;
+                    </span>
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 flex flex-col gap-6">
+                  <button
+                    onClick={() => handleRoleChange("host")}
+                    className="w-full py-3 text-lg font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 transition"
+                  >
+                    Host
+                  </button>
+                  <button
+                    onClick={() => handleRoleChange("user")}
+                    className="w-full py-3 text-lg font-medium text-white bg-green-600 rounded-lg shadow hover:bg-green-700 transition"
+                  >
+                    Player
+                  </button>
                 </div>
               </div>
             </div>
