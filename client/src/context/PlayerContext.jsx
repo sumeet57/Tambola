@@ -95,6 +95,7 @@ export const PlayerProvider = ({ children }) => {
 
   // Load user from sessionStorage or server
   React.useEffect(() => {
+    setLoading(true);
     const userData = JSON.parse(sessionStorage.getItem("player"));
     if (userData && userData.name && userData.phone && userData.id) {
       updatePlayer(userData);
@@ -110,7 +111,7 @@ export const PlayerProvider = ({ children }) => {
               "Content-Type": "application/json",
             },
           });
-          // setLoading(false);
+
           const data = await res.json();
 
           if (res.status === 200 && data.data) {
@@ -135,6 +136,7 @@ export const PlayerProvider = ({ children }) => {
 
       fetchUser();
     }
+    setLoading(false);
   }, []);
 
   return (

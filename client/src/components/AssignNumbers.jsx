@@ -108,7 +108,7 @@ const AssignNumbers = () => {
 
     if (!success) {
       handleWarningMessage(
-        "Unable to generate valid tickets. Please try again."
+        "Unable to generate valid tickets. Please Reconnect."
       );
       setLoading(false);
       return;

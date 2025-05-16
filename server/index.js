@@ -327,11 +327,13 @@ io.on("connection", (socket) => {
 
             // Remove player from the room if the room is not ongoing
             if (!room.isOngoing) {
-              players.splice(playerIndex, 1);
-              room.playersList = players.map((player) => player.name);
-              room.players = players;
-              io.to(roomId).emit("player_update", room.playersList);
-              io.to(roomId).emit("updatePlayers", players);
+              if (room.host !== disconnectedPlayer.id) {
+                players.splice(playerIndex, 1);
+                room.playersList = players.map((player) => player.name);
+                room.players = players;
+                io.to(roomId).emit("player_update", room.playersList);
+                io.to(roomId).emit("updatePlayers", players);
+              }
             } else {
               players[playerIndex].socketid = null; // Set socket ID to null for ongoing games
               room.playersList = players

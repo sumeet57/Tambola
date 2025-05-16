@@ -76,9 +76,9 @@ const router = createBrowserRouter([
   {
     path: "/user",
     element: (
-      <ProtectedRoute allowedRoles={["user"]}>
-        <Userpage />
-      </ProtectedRoute>
+      // <ProtectedRoute allowedRoles={["user"]}>
+      <Userpage />
+      // </ProtectedRoute>
     ),
     children: [
       {
@@ -93,9 +93,9 @@ const router = createBrowserRouter([
       {
         path: ":roomid",
         element: (
-          <ProtectedRoute allowedRoles={["user"]}>
-            <Userpage />
-          </ProtectedRoute>
+          // <ProtectedRoute allowedRoles={["user"]}>
+          <Userpage />
+          // </ProtectedRoute>
         ),
       },
     ],
