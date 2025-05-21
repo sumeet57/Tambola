@@ -100,7 +100,7 @@ const ReconnectPage = () => {
     const invitedData = await invitedRes.json();
     setLoading(false);
     if (invitedRes.status === 200) {
-      console.log("the player is invited");
+      // console.log("the player is invited");
       socket.emit("reconnect_player", Player, roomId);
       setLoading(true);
     } else {

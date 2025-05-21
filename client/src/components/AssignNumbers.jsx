@@ -151,12 +151,13 @@ const AssignNumbers = () => {
     setDrawNumber(gameState.drawnNumbers);
   }, [gameState.drawnNumbers]);
 
+  // increase the timer by 1 sec, then previous time
   const [claimMessage, setClaimMessage] = useState("");
   const handleClaimMessage = (data) => {
     setClaimMessage(data?.message);
     setTimeout(() => {
       setClaimMessage("");
-    }, 5000);
+    }, 6000);
   };
 
   useEffect(() => {
@@ -625,8 +626,7 @@ const AssignNumbers = () => {
         )}
 
         {claimMessage && (
-          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 text-black font-bold text-lg rounded-3xl shadow-md">
-            <span className="text-xl">🎊</span>
+          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 w-[400px] px-3 py-2 bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 text-black font-bold text-lg rounded-3xl shadow-md">
             {claimMessage}
           </div>
         )}

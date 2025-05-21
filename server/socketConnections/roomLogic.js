@@ -264,7 +264,7 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
 
       // 📢 Broadcast claim updates
       io.to(roomId).emit("pattern_claimed", {
-        message: `${player?.name} claimed ${patternName}`,
+        message: `🎉 Congratulations ${player?.name} for claiming ${patternName}! 🏆`,
       });
       io.to(roomId).emit("claimedList", roomData.claimTrack);
 
