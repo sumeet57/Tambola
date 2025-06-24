@@ -4,6 +4,9 @@ import { useLocation, useParams, Outlet, useNavigate } from "react-router-dom";
 //import centralized socket connection
 import socket from "../utils/websocket";
 
+//import utilities functions
+import { hashToText } from "../utils/game.js";
+
 //import components
 import Header from "../components/Header";
 import Loading from "../components/Loading";
@@ -12,12 +15,16 @@ import Loading from "../components/Loading";
 import { PlayerContext } from "../context/PlayerContext";
 import { GameContext } from "../context/GameContext";
 
+//import toastify
+import { toast } from "react-toastify";
+
 //import environment variables
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Userpage = () => {
   //for extracting roomid from params if present
-  const { roomid } = useParams();
+  const { publicId } = useParams();
+  let roomid = hashToText(publicId || ""); //if publicId is present then convert it to roomid else empty string
 
   //for context
   const { Player, updatePlayer } = useContext(PlayerContext);
@@ -54,38 +61,21 @@ const Userpage = () => {
 
   //for handling join room
   const handleJoin = async () => {
-    if (!roomId) {
-      messageHandler("Room ID cannot be empty");
+    if (!roomId || !publicId) {
+      toast.warning("Public ID or Room ID is missing");
       return;
     } else if (requestTickets < 1) {
-      messageHandler("Tickets should be atleast 1");
+      toast.warning("Please select at least 1 ticket");
       return;
     }
     //for checking if player has enough points
     if (Player) {
       setLoading(true);
       // for checking if player is invited or not
-      const invitedRes = await fetch(`${apiBaseUrl}/api/game/invited`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: Player?.phone,
-          roomid: roomId,
-        }),
-      });
-      const invitedData = await invitedRes.json();
-      setLoading(false);
-      if (invitedRes.status === 200) {
-        socket.emit("join_room", Player, roomId);
-        setLoading(true);
-      } else {
-        const message = invitedData?.message;
-        messageHandler(message);
-      }
+      socket.emit("join_room", Player, roomId, publicId);
     } else {
-      messageHandler("player not found login again");
+      toast.warning("Please login to join a room");
+      navigate("/login");
     }
   };
 
@@ -102,7 +92,7 @@ const Userpage = () => {
 
     // Handle errors
     socket.on("error", (message) => {
-      messageHandler(message);
+      toast.error(message);
       setLoading(false);
     });
 
@@ -121,7 +111,7 @@ const Userpage = () => {
         <>
           <Header />
           {location.pathname === "/user" ||
-          location.pathname === `/user/${roomid}` ? (
+          location.pathname === `/user/${publicId}` ? (
             <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
               <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">
                 <h2 className="text-2xl font-bold mb-4">Join a Room</h2>

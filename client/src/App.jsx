@@ -164,7 +164,7 @@ const App = () => {
                   )}
                   {Player?.role === "user" && (
                     <button
-                      className="relative bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
+                      className="hidden relative bg-red-400 text-white w-44 py-3 rounded-lg shadow-md hover:bg-red-500 transition duration-300"
                       onClick={() => {
                         setShowNotifications(true);
                         handleNotificationClick();

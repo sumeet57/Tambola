@@ -7,6 +7,9 @@ import {
 import Loading from "./Loading.jsx";
 import { PlayerContext } from "../context/PlayerContext.jsx";
 
+//toastify
+import { toast } from "react-toastify";
+
 // import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,26 +28,24 @@ const Register = () => {
     e.preventDefault();
     // validate user input
     if (!name || !phone || !password) {
-      setMessageToggle(false);
-      setMessageStore("Please fill all fields");
-      setMessageToggle(true);
+      toast.warning("Please fill all the fields", {
+        autoClose: 2000,
+      });
       return;
     } else if (!/^\d{10}$/.test(phone)) {
-      setMessageToggle(false);
-      setMessageStore(
-        "Phone number should be 10 digits and contain only numbers"
-      );
-      setMessageToggle(true);
+      toast.warning("Please enter a valid 10-digit phone number", {
+        autoClose: 2000,
+      });
       return;
     } else if (password.length < 6) {
-      setMessageToggle(false);
-      setMessageStore("Password should be between 6 to 20 characters");
-      setMessageToggle(true);
+      toast.warning("Password should be at least 6 characters long", {
+        autoClose: 2000,
+      });
       return;
     } else if (name.length < 3 || name.length > 20) {
-      setMessageToggle(false);
-      setMessageStore("Name should be between 3 to 20 characters");
-      setMessageToggle(true);
+      toast.warning("Name should be between 3 and 20 characters long", {
+        autoClose: 2000,
+      });
       return;
     }
 
@@ -73,11 +74,10 @@ const Register = () => {
         id: data?.id,
         role: data?.user?.role,
       });
+      toast.success("Registered successfully");
       navigate("/");
     } else {
-      setMessageToggle(false);
-      setMessageStore(data.message || "Failed to register as user");
-      setMessageToggle(true);
+      toast.error(data?.message || "Registration failed");
     }
   };
 
@@ -142,11 +142,7 @@ const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {messageToggle && (
-                <div className="message text-red-500 text-center mt-4">
-                  {messageStore}
-                </div>
-              )}
+
               <div className="flex justify-between">
                 <button
                   onClick={submitUser}

@@ -1,3 +1,7 @@
+import CryptoJS from "crypto-js";
+// roomid and publicId hashing utility functions
+// const SECRET_KEY = "tambola-secret-key-1234-5678";
+
 export const distributeNumbersEqually = (data) => {
   const ticketSize = 15;
   const ticketCount = Math.floor(data.length / ticketSize);
@@ -189,3 +193,47 @@ export const generateTambolaTickets = (numbers) => {
 
   return tickets;
 };
+
+// cryptoUtils.js
+// import CryptoJS from "crypto-js";
+
+const SECRET_KEY = CryptoJS.enc.Utf8.parse("12345678901234567890123456789012");
+
+// Encrypt function
+export function textToHash(text) {
+  // console.log("[textToHash] Called with:", text);
+  const iv = CryptoJS.lib.WordArray.random(16);
+  const encrypted = CryptoJS.AES.encrypt(text, SECRET_KEY, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+
+  const encryptedText = CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
+  const ivString = CryptoJS.enc.Base64.stringify(iv);
+
+  const result = `${ivString}:${encryptedText}`;
+  // console.log("[textToHash] Returning:", result);
+  return result;
+}
+
+// Decrypt function
+export function hashToText(hash) {
+  if (typeof hash !== "string" || !hash.includes(":")) return "";
+
+  const [ivBase64url, encryptedBase64url] = hash.split(":");
+  const iv = CryptoJS.enc.Base64url.parse(ivBase64url);
+  const encryptedHexStr = CryptoJS.enc.Base64url.parse(encryptedBase64url);
+
+  const encrypted = CryptoJS.lib.CipherParams.create({
+    ciphertext: encryptedHexStr,
+  });
+
+  const decrypted = CryptoJS.AES.decrypt(encrypted, SECRET_KEY, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+
+  return decrypted.toString(CryptoJS.enc.Utf8); // Returns "" if decryption fails
+}

@@ -8,6 +8,11 @@ const roomSchema = new mongoose.Schema(
       required: [true, "Room ID is required"],
       unique: true,
     },
+    publicId: {
+      type: String,
+      required: [true, "Public id is not generated, please create a new room"],
+      unique: true,
+    },
     host: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

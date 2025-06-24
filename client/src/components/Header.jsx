@@ -5,6 +5,8 @@ import { PlayerContext } from "../context/PlayerContext";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+import { toast } from "react-toastify";
+
 const Header = () => {
   //for context
   const { Player, updatePlayer } = useContext(PlayerContext);
@@ -38,11 +40,15 @@ const Header = () => {
         sessionStorage.clear();
         toggleMenu();
         setLoading(false);
+        toast.success("Logged out successfully", {
+          autoClose: 2000,
+        });
         setTimeout(() => {
           navigate("/"); // Navigate to home
           window.location.reload(); // Refresh the page
         }, 1000);
       } else {
+        setLoading(false);
         console.log("Error logging out:", data.message);
         navigate("/login");
         window.location.reload(); // Refresh the page
@@ -76,6 +82,9 @@ const Header = () => {
     const data = await res.json();
     if (res.status === 200) {
       updatePlayer(data.user); // Update the player context with the new role
+      toast.success(`Role changed to ${newRole}`, {
+        autoClose: 2000,
+      });
       setChangeClick(false);
     } else if (res.status === 401) {
       setLoading(false);
@@ -83,7 +92,7 @@ const Header = () => {
       console.log("Unauthorized, redirecting to login");
       navigate("/login");
     } else {
-      console.log("Error changing role:", data.message);
+      toast.error("error changing role " + data?.message);
     }
   };
   return (

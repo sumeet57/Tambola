@@ -49,12 +49,18 @@ io.on("connection", (socket) => {
           return;
         }
         socket.join(setting.roomId);
-        socket.emit("room_created", setting.roomId);
         let room = activeRooms.get(setting.roomId);
         if (!room) {
           socket.emit("error", "Room not found in memory");
           return;
         }
+        socket.emit(
+          "room_created",
+          (room = {
+            id: setting.roomId,
+            publicId: room.publicId,
+          })
+        );
         setTimeout(() => {
           io.to(setting.roomId).emit("player_update", room?.playersList || []);
         }, 1000);
@@ -65,14 +71,14 @@ io.on("connection", (socket) => {
     });
 
     // Joining room
-    socket.on("join_room", async (player, roomid) => {
+    socket.on("join_room", async (player, roomid, publicId) => {
       try {
-        if (!player || !roomid) {
+        if (!player || !roomid || !publicId) {
           socket.emit("error", "Invalid input");
           return;
         }
 
-        const res = await joinRoom(player, roomid);
+        const res = await joinRoom(player, roomid, publicId);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;
@@ -282,7 +288,10 @@ io.on("connection", (socket) => {
         }
         socket.join(roomid);
         if (res === false) {
-          socket.emit("reconnectToRoom", roomid);
+          socket.emit("reconnectToRoom", {
+            roomid: roomid,
+            publicId: room?.publicId || "",
+          });
           // io.to(roomid).emit("player_update", room?.playersList || []);
         } else if (res === true) {
           const assignNumber =

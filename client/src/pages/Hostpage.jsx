@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useLocation, Outlet, useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import socket from "../utils/websocket";
@@ -9,6 +9,8 @@ import { PlayerContext } from "../context/PlayerContext";
 import DrawNumbers from "../components/DrawNumbers";
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+import { toast } from "react-toastify";
 
 const Hostpage = () => {
   //for context
@@ -32,19 +34,17 @@ const Hostpage = () => {
   const [loading, setLoading] = useState(false);
   const [hostPlay, setHostPlay] = useState(false);
 
-  const [messageStore, setMessageStore] = useState("");
-  const [messageToggle, setMessageToggle] = useState(false);
-
-  const messageHandler = (message) => {
-    setMessageToggle(false);
-    setMessageStore(message);
-    setMessageToggle(true);
-  };
-
   useEffect(() => {
     if (Player.role !== "host") {
-      messageHandler("You are not authorized to access this page.");
-      navigate("/");
+      toast.error(
+        "You are not authorized to access this page. Redirecting to home page.",
+        {
+          autoClose: 3000,
+          onClose: () => {
+            navigate("/");
+          },
+        }
+      );
     }
 
     if (location.pathname === "/host") {
@@ -62,12 +62,15 @@ const Hostpage = () => {
       socket.emit("create_room", { ...Player }, { ...gameSettings });
     } catch (err) {
       setLoading(false);
-      messageHandler("Error creating room. Please try again.");
+      toast.error("Failed to create room. Please try again.");
     }
   };
 
   const handleRoomJoined = (room) => {
-    navigate(`/host/room/${room}`);
+    navigate(`/host/room/${room.id}`);
+    updateGameState({
+      publicId: room.publicId,
+    });
     setLoading(false);
   };
   const handleReconnectToRoom = (room) => {
@@ -96,7 +99,7 @@ const Hostpage = () => {
 
     socket.on("error", (message) => {
       setLoading(false);
-      messageHandler(message);
+      toast.error(message);
     });
 
     // Cleanup
@@ -121,6 +124,17 @@ const Hostpage = () => {
     updateGameSettings({ roomId: randomId });
   };
 
+  const datetimeRef = useRef(null);
+
+  useEffect(() => {
+    const container = datetimeRef.current?.parentElement;
+    const openPicker = () => {
+      datetimeRef.current?.focus();
+      datetimeRef.current?.showPicker();
+    };
+    container?.addEventListener("click", openPicker);
+    return () => container?.removeEventListener("click", openPicker);
+  }, []);
   return (
     <>
       {loading ? (
@@ -223,39 +237,40 @@ const Hostpage = () => {
                     />
                     Schedule Game
                   </label>
-                  <div className="flex">
+                  <div className="relative w-full">
                     <input
+                      ref={datetimeRef}
+                      type="datetime-local"
                       onChange={(e) => {
                         const date = new Date(e.target.value);
-
-                        const formattedDate = date.toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        });
-
                         updateGameSettings({
-                          schedule: formattedDate,
+                          schedule: date.toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          }),
                         });
                       }}
-                      type="datetime-local"
                       className={`${
                         gameSettings.isScheduled ? "block" : "hidden"
-                      } shadow appearance-none rounded w-full outline-none py-2 px-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                      } rounded w-full py-2 px-3 outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
                       required
-                      placeholder="Tap to select date and time"
                     />
+                    <span
+                      className={`${
+                        gameSettings.isScheduled ? "absolute" : "hidden"
+                      }
+                      ${gameSettings.schedule ? "hidden" : "absolute"}
+                      left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bold  border-2 border-black rounded grid place-items-center pointer-events-none bg-white w-full h-full`}
+                    >
+                      Click to select date/time 📅
+                    </span>
                   </div>
                 </div>
 
-                {messageToggle && (
-                  <p className="text-red-500 text-center font-semibold mt-4">
-                    {messageStore}
-                  </p>
-                )}
                 <div className="flex justify-center mt-4 mb-3">
                   <button
                     onClick={handleCreateRoom}

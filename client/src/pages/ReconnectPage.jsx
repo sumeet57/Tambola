@@ -6,6 +6,8 @@ import Loading from "../components/Loading";
 import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
 
+import { toast } from "react-toastify";
+
 const ReconnectPage = () => {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const { gameSettings, updateGameSettings, gameState, updateGameState } =
@@ -40,7 +42,10 @@ const ReconnectPage = () => {
     setLoading(false);
   };
   const handleReconnectToRoom = (room) => {
-    navigate(`/host/room/${room}`);
+    navigate(`/host/room/${room.roomid}`);
+    updateGameState({
+      publicId: room.publicId || "",
+    });
     setLoading(false);
   };
   const handleReconnectToGame = (data) => {

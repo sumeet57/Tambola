@@ -9,6 +9,9 @@ import Loading from "./Loading.jsx";
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+//toastify
+import { toast } from "react-toastify";
+
 //context
 import { PlayerContext } from "../context/PlayerContext.jsx";
 
@@ -25,26 +28,24 @@ const Login = () => {
   const [messageStore, setMessageStore] = useState("");
   const [messageToggle, setMessageToggle] = useState(false);
 
-  const messageHandler = (message) => {
-    setMessageToggle(false);
-    setMessageStore(message);
-    setMessageToggle(true);
-  };
-
   const submitUser = async (e) => {
     // validate user input
     e.preventDefault();
     // validate user input
     if (!phone || !password) {
-      messageHandler("Please fill all fields");
+      toast.warning("Please fill all the fields", {
+        autoClose: 2000,
+      });
       return;
     } else if (!/^\d{10}$/.test(phone)) {
-      messageHandler(
-        "Phone number should be 10 digits and contain only numbers"
-      );
+      toast.warning("Please enter a valid 10-digit phone number", {
+        autoClose: 2000,
+      });
       return;
     } else if (password.length < 6 || password.length > 20) {
-      messageHandler("Password should be between 6 to 20 characters");
+      toast.warning("Password should be between 6 and 20 characters long", {
+        autoClose: 2000,
+      });
       return;
     }
     setLoading(true);
@@ -68,9 +69,10 @@ const Login = () => {
         role: data?.user?.role,
       });
       updateLocalStorage("userid", data.userid);
+      toast.success("Login successful");
       navigate("/");
     } else {
-      messageHandler(data.message);
+      toast.error(data?.message || "Login failed");
     }
   };
 
@@ -117,7 +119,7 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {messageToggle && <p className="text-red-500">{messageStore}</p>}
+
               <div className="flex justify-between">
                 <button
                   onClick={submitUser}

@@ -14,6 +14,9 @@ import { GameContext } from "../context/GameContext.jsx";
 import Loading from "./Loading.jsx";
 import { updateLocalStorage } from "../utils/storageUtils.js";
 
+// toastify
+import { toast } from "react-toastify";
+
 const AssignNumbers = () => {
   const navigate = useNavigate();
 
@@ -151,18 +154,15 @@ const AssignNumbers = () => {
     setDrawNumber(gameState.drawnNumbers);
   }, [gameState.drawnNumbers]);
 
-  // increase the timer by 1 sec, then previous time
-  const [claimMessage, setClaimMessage] = useState("");
   const handleClaimMessage = (data) => {
-    setClaimMessage(data?.message);
-    setTimeout(() => {
-      setClaimMessage("");
-    }, 6000);
+    toast.success(data.message, {
+      autoClose: 5000,
+    });
   };
 
   useEffect(() => {
     const handleGameOver = () => {
-      handleMessageBox("Game over");
+      toast.info("Game Over!");
       localStorage.removeItem(`${gameState?.roomid}`);
       setTimeout(() => {
         navigate("gameover");
@@ -196,7 +196,7 @@ const AssignNumbers = () => {
     socket.on("room_data_stored", handleGameOver);
 
     return () => {
-      socket.off("pattern_claimed", handleMessageBox);
+      socket.off("pattern_claimed", handleClaimMessage);
       // socket.off("error", handleMessageBox);
       socket.off("claimedList", handleClaimList);
       socket.off("game_over", handleGameOver);
@@ -240,7 +240,7 @@ const AssignNumbers = () => {
             }
           });
           if (firstLineNumbers.some((num) => !selectedNumbers.includes(num))) {
-            handleMessageBox("Select all First Line Numbers");
+            toast.warning("Select all First Line Numbers");
             claimMenuToggle();
             return;
           }
@@ -254,7 +254,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -271,7 +271,7 @@ const AssignNumbers = () => {
             }
           });
           if (secondLineNumbers.some((num) => !selectedNumbers.includes(num))) {
-            handleMessageBox("Select all Second Line Numbers");
+            toast.warning("Select all Second Line Numbers");
             claimMenuToggle();
             return;
           }
@@ -284,7 +284,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -301,7 +301,7 @@ const AssignNumbers = () => {
             }
           });
           if (thirdLineNumbers.some((num) => !selectedNumbers.includes(num))) {
-            handleMessageBox("Select all Third Line Numbers");
+            toast.warning("Select all Third Line Numbers");
             claimMenuToggle();
             return;
           }
@@ -313,7 +313,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -334,7 +334,7 @@ const AssignNumbers = () => {
             selectedNumbers.filter((num) => earlyFiveNumbers.includes(num))
               .length >= 5;
           if (!isvalid) {
-            handleMessageBox("Select all Numbers for Early Five");
+            toast.warning("Select all Numbers for Early Five");
             claimMenuToggle();
             return;
           }
@@ -348,7 +348,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -369,7 +369,7 @@ const AssignNumbers = () => {
             middleNumber === undefined ||
             !selectedNumbers.includes(middleNumber)
           ) {
-            handleMessageBox("Select Middle Numbers");
+            toast.warning("Select Middle Number");
             claimMenuToggle();
             return;
           }
@@ -381,7 +381,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -402,7 +402,7 @@ const AssignNumbers = () => {
             selectedNumbers.filter((num) => earlySevenNumbers.includes(num))
               .length >= 7;
           if (!isvalid) {
-            handleMessageBox("Select all Numbers for Early Seven");
+            toast.warning("Select all Numbers for Early Seven");
             claimMenuToggle();
             return;
           }
@@ -416,7 +416,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -448,7 +448,7 @@ const AssignNumbers = () => {
             return selectedNumbers.includes(num);
           });
           if (!isvalid) {
-            handleMessageBox("Select all Valid Corner Numbers");
+            toast.warning("Select all Corner Numbers");
             claimMenuToggle();
             return;
           }
@@ -461,7 +461,7 @@ const AssignNumbers = () => {
             socket.emit("claim", Player, gameState.roomid, pattern);
             claimMenuToggle();
           } else {
-            handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
             setDisqualify((prev) => [...prev, selectedTicket]);
             claimMenuToggle();
           }
@@ -489,7 +489,7 @@ const AssignNumbers = () => {
               return selectedNumbers.includes(num);
             });
             if (!isvalid) {
-              handleMessageBox("Select all Numbers for full house");
+              toast.warning("Select all Full House Numbers");
               claimMenuToggle();
               return;
             }
@@ -502,15 +502,13 @@ const AssignNumbers = () => {
               socket.emit("claim", Player, gameState.roomid, pattern);
               claimMenuToggle();
             } else {
-              handleMessageBox(`Ticket no ${selectedTicket} is disqualified`);
+              toast.error(`Ticket no ${selectedTicket} is disqualified`);
               setDisqualify((prev) => [...prev, selectedTicket]);
               claimMenuToggle();
             }
           }
         } else {
-          handleMessageBox(
-            "Claim remaining patterns before claiming Full House"
-          );
+          toast.warning("Claim all patterns before claiming Full House");
           claimMenuToggle();
         }
       }
@@ -615,19 +613,6 @@ const AssignNumbers = () => {
                 return null;
               })}
             </div>
-          </div>
-        )}
-
-        {messageBox.length > 0 && (
-          <div className="messageBox fixed bottom-10 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-gradient-to-r from-pink-200 via-yellow-200 to-blue-200 text-black font-medium rounded-3xl shadow-md">
-            {/* {messageBox} */}
-            😔 {messageBox}
-          </div>
-        )}
-
-        {claimMessage && (
-          <div className="messageBox fixed top-10 left-1/2 transform -translate-x-1/2 w-[400px] px-3 py-2 bg-gradient-to-r from-green-200 via-teal-200 to-blue-200 text-black font-bold text-lg rounded-3xl shadow-md">
-            {claimMessage}
           </div>
         )}
 

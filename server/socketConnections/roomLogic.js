@@ -5,6 +5,8 @@ import { assignNumbersToPlayers } from "./assignNumberLogic.js";
 import { SaveExistingGameInDb, SaveGameInDb } from "../utils/game.utils.js";
 import { withRoomLock } from "../utils/mutexManager.js";
 
+import { textToHash, hashToText } from "../utils/game.utils.js";
+
 export const createRoom = async (player, setting) => {
   const roomId = setting?.roomId;
   if (!player?.id || !roomId) return "Invalid player or setting data";
@@ -33,7 +35,10 @@ export const createRoom = async (player, setting) => {
         await user.save();
       }
 
+      const publicId = textToHash(roomId);
+
       const newRoom = {
+        publicId: publicId,
         host: player?.id,
         players: [],
         patterns: setting.pattern || [],
@@ -86,8 +91,8 @@ export const createRoom = async (player, setting) => {
 };
 
 // updated the code, tested (latest approch)
-export const joinRoom = async (player, roomid) => {
-  if (!player || !roomid) {
+export const joinRoom = async (player, roomid, publicId) => {
+  if (!player || !roomid || !publicId) {
     return "Invalid player data";
   }
 
@@ -116,6 +121,17 @@ export const joinRoom = async (player, roomid) => {
           return "Room is ongoing, please reconnect.";
         }
 
+        const isPublicIdMatch =
+          (room && room.publicId) || (dbRoom && dbRoom.publicId);
+        if (isPublicIdMatch === publicId) {
+          let isValid = hashToText(publicId);
+          if (!isValid || isValid !== roomId) {
+            return "Invalid public ID";
+          }
+        } else {
+          return "Public ID does not match the room Public ID";
+        }
+
         if (!room && dbRoom) {
           room = {
             host: dbRoom.host,
@@ -126,6 +142,7 @@ export const joinRoom = async (player, roomid) => {
             claimData: [],
             claimTrack: dbRoom.settings.patterns || [],
             playersList: dbRoom.players?.map((p) => p.name) || [],
+            requestedTicketCount: dbRoom.requestedTicketCount || [],
             isOngoing: dbRoom.isOngoing,
             isCompleted: dbRoom.isCompleted,
             finishTime: dbRoom.finishTime,
@@ -163,6 +180,22 @@ export const joinRoom = async (player, roomid) => {
           requestedTicketCount: player.requestedTicketCount || 1,
           ticketCount: player.ticketCount || 1,
         };
+
+        const user = await User.findById(player.id);
+        if (!user) {
+          return "User not found, please login again";
+        } else {
+          const alreadyInvited = user.invites.some(
+            (invite) => invite?.id === roomId
+          );
+          if (!alreadyInvited) {
+            user.invites.push({
+              id: roomId,
+              schedule: roomData.schedule || null,
+            });
+            await user.save();
+          }
+        }
 
         roomData.players.push(newPlayer);
         roomData.playersList.push(player.name);
@@ -374,6 +407,8 @@ export const reconnectPlayer = async (player, roomid) => {
           console.log("Room not found in memory, loading from DB");
           const loadedRoom = {
             host: roomInDb?.host,
+            publicId: roomInDb?.publicId || null,
+
             players: roomInDb.players || [],
             patterns: roomInDb.settings?.patterns || [],
             schedule: roomInDb.settings?.schedule || null,
@@ -384,6 +419,7 @@ export const reconnectPlayer = async (player, roomid) => {
             isOngoing: roomInDb?.isOngoing,
             isCompleted: roomInDb?.isCompleted,
             finishTime: roomInDb?.finishTime,
+            requestedTicketCount: roomInDb?.requestedTicketCount || [],
           };
           activeRooms.set(roomId, loadedRoom);
           roomInMemory = activeRooms.get(roomId);

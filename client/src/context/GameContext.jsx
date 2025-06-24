@@ -11,6 +11,7 @@ export const GameContextProvider = ({ children }) => {
   });
 
   const [gameState, setGameState] = React.useState({
+    publicId: "",
     name: "",
     ticketCount: 1,
     roomid: "",

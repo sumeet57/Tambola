@@ -1,6 +1,8 @@
 import React, { useContext, useState } from "react";
 import { GameContext } from "../context/GameContext";
 
+import { toast } from "react-toastify";
+
 const PatternMenu = () => {
   const { gameSettings, updateGameSettings } = useContext(GameContext);
 
@@ -32,11 +34,11 @@ const PatternMenu = () => {
   const handleWinnersChange = (id, winners) => {
     // Validate if winners is a positive integer
     if (winners < 0) {
-      alert("Winners must be a positive integer.");
+      toast.warning("Winners must be a positive number.");
       return;
     }
     if (winners > 6) {
-      alert("Winners must be less than 6.");
+      toast.warning("Winners cannot be more than 6.");
       return;
     }
     if (isNaN(winners)) {
@@ -44,7 +46,7 @@ const PatternMenu = () => {
       return;
     }
     if (winners % 1 !== 0) {
-      alert("Winners must be an integer.");
+      toast.warning("Winners must be an integer.");
       return;
     }
     // Update the winners for the selected pattern

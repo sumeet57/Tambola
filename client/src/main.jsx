@@ -33,6 +33,11 @@ import { GameContextProvider } from "./context/GameContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import UnAuthorizePage from "./pages/UnAuthorizePage.jsx";
 
+//tostify
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Bounce } from "react-toastify";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -91,7 +96,7 @@ const router = createBrowserRouter([
       },
       //this /user/:roomid is when user is invited to join a room by host to extract roomid from url
       {
-        path: ":roomid",
+        path: ":publicId",
         element: (
           // <ProtectedRoute allowedRoles={["user"]}>
           <Userpage />
@@ -145,5 +150,19 @@ createRoot(document.getElementById("root")).render(
         <RouterProvider router={router}></RouterProvider>
       </GameContextProvider>
     </PlayerProvider>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      limit={5}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      transition={Bounce}
+    />
   </StrictMode>
 );

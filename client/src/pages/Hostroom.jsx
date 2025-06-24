@@ -8,17 +8,22 @@ import {
 import Loading from "../components/Loading";
 import { PlayerContext } from "../context/PlayerContext";
 import { GameContext } from "../context/GameContext";
+import { textToHash } from "../utils/game.js";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+// toastify
+import { toast } from "react-toastify";
+
 const Hostroom = () => {
   //for extracting roomid from params if present
-  const param = useParams();
-  const roomid = param.roomid;
-
   const { Player, updatePlayer } = useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
+
+  const param = useParams();
+  const roomid = param.roomid;
+  const publicId = gameState.publicId || "";
 
   //for navigation
   const navigate = useNavigate();
@@ -85,7 +90,7 @@ const Hostroom = () => {
 
     socket.on("error", (message) => {
       console.log(message);
-      messageHandler(message);
+      toast.error(message);
       setLoading(false);
     });
 
@@ -154,7 +159,7 @@ const Hostroom = () => {
   //start game button click logic
   const handleStartClick = async () => {
     if (Player?.role !== "host") {
-      messageHandler("You are not authorized to start the game");
+      toast.error("You are not authorized to start the game");
       return;
     }
     socket.emit("start_game", roomid, Player.id);
@@ -170,7 +175,7 @@ const Hostroom = () => {
 
   useEffect(() => {
     if (!Player || !Player.id || Player.role !== "host") {
-      messageHandler("You are not authorized to start the game");
+      toast.error("You are not authorized to access this page");
       navigate("/");
       return;
     }
@@ -219,7 +224,7 @@ const Hostroom = () => {
             <>
               <div className="flex justify-start mb-4 capitalize font-medium">
                 <button
-                  className="bg-blue-600 text-white px-2 py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all active:scale-95 "
+                  className="hidden bg-blue-600 text-white px-2 py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all active:scale-95 "
                   onClick={Player?.role === "host" ? handleInviteClick : null}
                 >
                   Invite Player
@@ -241,9 +246,13 @@ const Hostroom = () => {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(
-                      `https://tambolatesting.vercel.app/user/${roomid}`
+                      `https://tambolatesting.vercel.app/user/${publicId}`
                     );
-                    messageHandler("Link copied to clipboard");
+
+                    // navigator.clipboard.writeText(
+                    //   `http://localhost:5173/user/${publicId}` // for local testing
+                    // );
+                    toast.success("Link copied to clipboard");
                   }}
                   className="bg-green-600 text-white px-2 py-3 rounded-lg shadow-md hover:bg-green-700 transition-all active:scale-95 ml-4"
                 >
@@ -325,10 +334,6 @@ const Hostroom = () => {
               Start Game
             </button>
           </div>
-
-          {messageToggle && (
-            <p className="text-red-500 text-center mt-4">{messageStore}</p>
-          )}
 
           {requestMenu && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
@@ -430,6 +435,10 @@ const Hostroom = () => {
 
                                   setWarningPopup(false);
                                   setSelectedRequest(null);
+                                  // console.log(requestTicketsList.length);
+                                  if (requestTicketsList.length === 1) {
+                                    setRequestMenu(false);
+                                  }
                                 }}
                                 className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all active:scale-95"
                               >

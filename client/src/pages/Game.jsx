@@ -8,6 +8,9 @@ import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
 import Loading from "../components/Loading";
 
+// import toastify
+import { toast } from "react-toastify";
+
 const Game = () => {
   //for context
   const { gameState, updateGameState } = useContext(GameContext);
@@ -45,13 +48,13 @@ const Game = () => {
       setTimerToggled(!timerToggled);
       handleTimer();
       if (drawNumber.length >= 90) {
-        handleMessageBox("All numbers are drawn");
+        toast.warning("All numbers are drawn!");
         return;
       } else if (drawNumber.length < 90) {
         socket.emit("pick_number", roomid, Player.id);
       }
     } else {
-      handleMessageBox("Only host can pick the number");
+      toast.warning("Only the host can pick numbers!");
     }
   };
 
@@ -106,7 +109,7 @@ const Game = () => {
   // socket event handlers, functions and states (drawn numbers, error messages)
   useEffect(() => {
     socket.on("error", (message) => {
-      handleMessageBox(message);
+      toast.error(message);
       setLoading(false);
     });
     const pickedNumber = (number) => {
@@ -201,9 +204,9 @@ const Game = () => {
             <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
               <DrawNumbers />
             </div>
-            {/* Message Section */}
+            {/* Message Section  | Message section remove */}
             <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
-              <Message />
+              {/* <Message /> */}
             </div>
 
             {/* Tickets Section */}
@@ -233,12 +236,6 @@ const Game = () => {
                 >
                   Cancel
                 </button>
-              </div>
-            )}
-
-            {messageBox.length > 0 && (
-              <div className="messageBox fixed top-40 left-1/2 transform -translate-x-1/2 p-4 px-4 py-3 bg-red-500 text-white font-medium rounded-3xl shadow-md">
-                😔 {messageBox}
               </div>
             )}
 
