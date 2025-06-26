@@ -196,7 +196,7 @@ const Game = () => {
               <DrawNumbers />
             </div>
             {/* Message Section  | Message section remove */}
-            <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
+            <div className="w-full hidden flex-col items-center bg-white p-2 rounded-lg shadow-lg">
               {/* <Message /> */}
             </div>
 

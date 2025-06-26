@@ -57,6 +57,14 @@ const Hostpage = () => {
   }, []);
 
   const handleCreateRoom = () => {
+    if (!gameSettings?.roomId || gameSettings?.roomId?.length < 3) {
+      toast.warning("Please enter a valid Room ID (at least 3 characters).");
+      return;
+    }
+    if (gameSettings?.pattern?.length === 0) {
+      toast.warning("Please select at least one pattern.");
+      return;
+    }
     setLoading(true);
     try {
       socket.emit("create_room", { ...Player }, { ...gameSettings });
@@ -124,8 +132,8 @@ const Hostpage = () => {
     updateGameSettings({ roomId: randomId });
   };
 
+  // Handle click on datetime input to open the date/time picker
   const datetimeRef = useRef(null);
-
   useEffect(() => {
     const container = datetimeRef.current?.parentElement;
     const openPicker = () => {
@@ -135,6 +143,9 @@ const Hostpage = () => {
     container?.addEventListener("click", openPicker);
     return () => container?.removeEventListener("click", openPicker);
   }, []);
+
+  // handle the Edit Patterns
+  const [editPatterns, setEditPatterns] = useState(false);
   return (
     <>
       {loading ? (
@@ -145,7 +156,7 @@ const Hostpage = () => {
           {location.pathname === "/host" ||
           location.pathname === `/host/${roomId}` ? (
             <div className="flex flex-col items-center justify-center min-h-screen pt-8 bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
-              <div className="bg-white py-2 px-5 rounded-lg shadow-lg w-full max-w-md">
+              <div className="bg-white relative py-2 px-5 rounded-lg shadow-lg w-full max-w-md">
                 <h1 className="text-2xl font-extrabold mb-2 p-4 border-b-2 border-black text-center text-blue-600">
                   Create or Join a Room
                 </h1>
@@ -223,20 +234,72 @@ const Hostpage = () => {
                   )}
                 </div>
 
-                <PatternMenu />
+                <div>
+                  <button
+                    className="relative mr-4 bg-yellow-600 hover:bg-yellow-700 transition-all active:scale-90 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                    onClick={() => {
+                      setEditPatterns(!editPatterns);
+                    }}
+                  >
+                    <span
+                      className="
+                      absolute -top-2 -right-2 bg-red-500 text-white font-bold rounded-full text-sm px-1.5
+
+                    "
+                    >
+                      {gameSettings?.pattern?.length}
+                    </span>
+                    Edit patterns
+                  </button>
+                  <button
+                    className={`${
+                      gameSettings.isScheduled ? "bg-red-500" : "bg-green-500"
+                    } hover:bg-${
+                      gameSettings.isScheduled ? "red" : "green"
+                    }-700 transition-all active:scale-90 text-white font-bold py-2 px-4 rounded focus:outline-none `}
+                    onClick={(e) => {
+                      const isChecked = gameSettings.isScheduled;
+                      updateGameSettings({ isScheduled: !isChecked });
+                    }}
+                  >
+                    Schedule
+                  </button>
+                </div>
+
+                {editPatterns && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2">
+                    {/* Modal Content Container */}
+                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4">
+                      {/* Close Button */}
+                      <button
+                        type="button" // Important: Prevent form submission if nested in a form
+                        onClick={() => setEditPatterns(false)}
+                        className="absolute top-3 right-3 p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+                        aria-label="Close pattern selection"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          ></path>
+                        </svg>
+                      </button>
+
+                      {/* PatternMenu Component */}
+                      <PatternMenu />
+                    </div>
+                  </div>
+                )}
 
                 <div className="schedule mt-4 rounded-lg border flex flex-col border-gray-200">
-                  <label className="flex items-center p-3 cursor-pointer w-full text-gray-700 font-semibold">
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 mr-2"
-                      onChange={(e) => {
-                        const isChecked = gameSettings.isScheduled;
-                        updateGameSettings({ isScheduled: !isChecked });
-                      }}
-                    />
-                    Schedule Game
-                  </label>
                   <div className="relative w-full">
                     <input
                       ref={datetimeRef}
@@ -274,7 +337,13 @@ const Hostpage = () => {
                 <div className="flex justify-center mt-4 mb-3">
                   <button
                     onClick={handleCreateRoom}
-                    className="bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 mr-2"
+                    className={`${
+                      roomId || gameSettings?.pattern?.length > 0
+                        ? "bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 mr-2"
+                        : "bg-gray-500"
+                    }
+                    text-white font-bold py-2 px-4 rounded`}
+                    // disabled={!roomId || gameSettings?.pattern?.length === 0}
                   >
                     Create Room
                   </button>

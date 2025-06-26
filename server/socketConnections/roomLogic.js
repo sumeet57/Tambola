@@ -15,6 +15,7 @@ export const createRoom = async (player, setting) => {
     roomId,
     async () => {
       const exist = await Room.findOne({ roomid: roomId });
+
       if (activeRooms.has(roomId) || exist) {
         return "Room exists, choose another ID or reconnect.";
       }
