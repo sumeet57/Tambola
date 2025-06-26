@@ -5,14 +5,14 @@ import { PlayerContext } from "../context/PlayerContext";
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { Player, loading } = useContext(PlayerContext);
 
-  // If player is still null after loading → not logged in
-  if (!Player) return <Navigate to="/login" replace />;
+  // If player is still null after loading - not logged in
+  if (!Player) return <Navigate to="/auth" replace />;
 
-  // If role not allowed → unauthorized
+  // If role not allowed - unauthorized
   if (!allowedRoles.includes(Player.role))
     return <Navigate to="/unauthorized" replace />;
 
-  // Otherwise → allowed
+  // Otherwise - allowed
   return children;
 };
 

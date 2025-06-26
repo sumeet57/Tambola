@@ -28,15 +28,6 @@ const ReconnectPage = () => {
   const [ticketCount, setTicketCount] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [messageStore, setMessageStore] = useState("");
-  const [messageToggle, setMessageToggle] = useState(false);
-
-  const messageHandler = (message) => {
-    setMessageToggle(false);
-    setMessageStore(message);
-    setMessageToggle(true);
-  };
-
   const handleRoomJoined = (room) => {
     navigate(`/host/room/${room}`);
     setLoading(false);
@@ -71,7 +62,9 @@ const ReconnectPage = () => {
 
     socket.on("error", (message) => {
       setLoading(false);
-      messageHandler(message);
+      toast.error(message, {
+        autoClose: 2000,
+      });
     });
 
     // Cleanup
@@ -110,7 +103,10 @@ const ReconnectPage = () => {
       setLoading(true);
     } else {
       const message = invitedData?.message;
-      messageHandler(message);
+      setLoading(false);
+      toast.error(message || "You are not joined the room", {
+        autoClose: 2000,
+      });
     }
   };
   return (
@@ -146,11 +142,6 @@ const ReconnectPage = () => {
                   />
                 </div>
 
-                {messageToggle && (
-                  <p className="text-red-500 text-center font-medium mt-4">
-                    {messageStore}
-                  </p>
-                )}
                 <div className="flex justify-center mt-8">
                   <button
                     onClick={handleJoinRoom}

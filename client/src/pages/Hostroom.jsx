@@ -1,14 +1,9 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import socket from "../utils/websocket";
-import {
-  updateLocalStorage,
-  updateSessionStorage,
-} from "../utils/storageUtils";
 import Loading from "../components/Loading";
 import { PlayerContext } from "../context/PlayerContext";
 import { GameContext } from "../context/GameContext";
-import { textToHash } from "../utils/game.js";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -34,16 +29,6 @@ const Hostroom = () => {
 
   // loading state
   const [loading, setLoading] = useState(false);
-
-  //message state
-  const [messageStore, setMessageStore] = useState("");
-  const [messageToggle, setMessageToggle] = useState(false);
-
-  const messageHandler = (message) => {
-    setMessageToggle(false);
-    setMessageStore(message);
-    setMessageToggle(true);
-  };
 
   // setting timer value for game
   const [timerValue, setTimerValue] = useState(3); // State for UI updates
@@ -89,7 +74,6 @@ const Hostroom = () => {
     });
 
     socket.on("error", (message) => {
-      console.log(message);
       toast.error(message);
       setLoading(false);
     });
@@ -109,50 +93,10 @@ const Hostroom = () => {
 
   //invite button click popup toggle logic
   const handleInviteClick = () => {
-    setIsPopupOpen(true);
-  };
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-  };
-
-  const handleInvitePlayer = async () => {
-    if (Player?.role !== "host") {
-      messageHandler("You are not authorized to invite players");
-      return;
-    }
-    if (playerPhone.length !== 10 || isNaN(playerPhone)) {
-      messageHandler("Please enter a valid phone number");
-      return;
-    }
-    setLoading(true);
-    try {
-      const inviteRes = await fetch(`${apiBaseUrl}/api/game/invite`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: playerPhone,
-          room: {
-            roomid: roomid,
-            schedule: gameState.schedule,
-          },
-          id: Player?.id,
-        }),
-      });
-      const inviteData = await inviteRes.json();
-      setLoading(false);
-      if (inviteRes.status === 200) {
-        messageHandler("Player invited successfully");
-        setIsPopupOpen(false);
-        setPlayerPhone("");
-      } else {
-        messageHandler(inviteData.message);
-      }
-    } catch (error) {
-      setLoading(false);
-      messageHandler("Error inviting player. Please try again.");
+    if (isPopupOpen) {
+      setIsPopupOpen(false);
+    } else {
+      setIsPopupOpen(true);
     }
   };
 
@@ -162,6 +106,7 @@ const Hostroom = () => {
       toast.error("You are not authorized to start the game");
       return;
     }
+
     socket.emit("start_game", roomid, Player.id);
     sessionStorage.setItem("roomid", roomid);
     setLoading(true);
@@ -222,76 +167,109 @@ const Hostroom = () => {
         <div className="p-4 pt-20 bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300 min-h-screen">
           {Player?.role === "host" && (
             <>
-              <div className="flex justify-start mb-4 capitalize font-medium">
+              <div className="flex justify-center md:justify-start mb-6 space-x-2 sm:space-x-4">
+                {/* Request Menu Button */}
                 <button
-                  className="hidden bg-blue-600 text-white px-2 py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all active:scale-95 "
-                  onClick={Player?.role === "host" ? handleInviteClick : null}
-                >
-                  Invite Player
-                </button>
-                <button
-                  className="bg-yellow-600 text-white relative py-3 px-2 rounded-lg shadow-md hover:bg-yellow-700 transition-all active:scale-95 ml-4"
+                  className="relative bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold
+               py-2 px-4 text-base rounded-lg shadow-md
+               sm:py-3 sm:px-6 sm:text-lg
+               hover:from-yellow-600 hover:to-orange-600 transition-all duration-300
+               transform hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-yellow-300
+               capitalize"
                   onClick={() => setRequestMenu(true)}
                 >
-                  Request Menu{" "}
+                  Request Menu
                   <sup
                     className={`
-                    ${requestTicketsList.length > 0 ? "block" : "hidden"}
-                absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs font-bold
-                `}
+        ${requestTicketsList.length > 0 ? "block" : "hidden"}
+        absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold ring-2 ring-white
+        sm:-top-2 sm:-right-2 sm:h-6 sm:w-6
+      `}
                   >
                     {requestTicketsList.length}
                   </sup>
                 </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `https://tambolatesting.vercel.app/user/${publicId}`
-                    );
 
-                    // navigator.clipboard.writeText(
-                    //   `http://localhost:5173/user/${publicId}` // for local testing
-                    // );
-                    toast.success("Link copied to clipboard");
-                  }}
-                  className="bg-green-600 text-white px-2 py-3 rounded-lg shadow-md hover:bg-green-700 transition-all active:scale-95 ml-4"
+                {/* Invite Button */}
+                <button
+                  onClick={handleInviteClick}
+                  className="bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold
+               py-2 px-4 text-base rounded-lg shadow-md
+               sm:py-3 sm:px-6 sm:text-lg
+               hover:from-green-600 hover:to-teal-600 transition-all duration-300
+               transform hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-green-300"
                 >
-                  copy link
+                  Invite
                 </button>
               </div>
             </>
           )}
 
           {isPopupOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75">
-              <div className="bg-white p-6 rounded-lg shadow-lg relative w-96">
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-50 p-4">
+              <div className="bg-white p-8 rounded-xl shadow-2xl relative w-full max-w-md transform transition-all duration-300 scale-100 opacity-100">
                 <button
-                  className="absolute top-2 right-2 text-gray-600 text-4xl hover:text-gray-800"
-                  onClick={handleClosePopup}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 text-4xl leading-none"
+                  onClick={handleInviteClick}
+                  aria-label="Close popup"
                 >
                   &times;
                 </button>
-                <h2 className="text-2xl font-semibold mb-4">Invite Player</h2>
-                <input
-                  type="tel"
-                  className="border p-3 w-full mb-4 rounded-lg"
-                  placeholder="Enter player PhoneNo"
-                  required
-                  pattern="[0-9]{10}"
-                  value={playerPhone}
-                  onChange={(e) => setPlayerPhone(e.target.value)}
-                />
-                {messageToggle && (
-                  <p className="text-red-500 text-center mb-4">
-                    {messageStore}
+                <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+                  Invite Your Friends!
+                </h2>
+
+                <p className="text-gray-700 text-lg mb-6 text-center">
+                  Ready to play? Share this link with your friends to invite
+                  them to the game!
+                </p>
+
+                <div className="flex flex-col space-y-4">
+                  <button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg">
+                    <a
+                      className="wp-share flex items-center space-x-2 text-lg"
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                        `🎉 Hey! Let's play Tambola together! 🎲🔥\n\nClick this link to join the game now:\n👉 https://tambolatesting.vercel.app/user/${publicId}\n\nIt’s fun, easy, and free! 🥳`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12.04 2C7.03 2 3 6.03 3 11.04c0 1.74.5 3.38 1.45 4.82L3.08 21.08l5.25-1.38c1.38.7 2.97 1.07 4.16 1.07 5.01 0 9.04-4.02 9.04-9.04S17.05 2 12.04 2zm4.07 13.63c-.15.08-.88.44-1.27.46-.38.01-.66.02-.95-.01-.28-.05-.66-.18-.92-.47-.26-.29-1.28-1.25-1.56-1.63-.29-.38-.24-.31-.05-.6.18-.28.4-.55.59-.74.19-.19.24-.33.35-.55.12-.22.06-.41-.02-.57-.08-.16-.76-1.83-1.04-2.5-.27-.67-.54-.58-.74-.58-.19 0-.41-.02-.6-.02-.19 0-.5.07-.76.33-.26.26-1 1-1 2.41 0 1.41 1.02 2.76 1.17 2.96.15.2.29.45.62.91.32.47.65.6.97.7.32.1.6.08.88.06.28-.02.88.35 1.05.47.17.11.4.19.62.24.22.05.42.02.58-.09.16-.11.48-.61.64-.82.17-.21.28-.35.4-.43.12-.08.73-.34 1.34-.63.6-.29.98-.49 1.16-.58.19-.09.35-.14.54-.18.19-.04.48-.02.7-.01.22 0 .58.11.8.28.22.17.27.32.32.43.05.11.66 1.54.66 1.68 0 .14-.02.26-.06.39-.04.13-.24.3-.47.45z" />
+                      </svg>
+                      <span>Share on WhatsApp</span>
+                    </a>
+                  </button>
+
+                  <p className="text-gray-600 text-md text-center  w-full px-6">
+                    Copy link & share with friends! 🔗 They just click to join!
+                    🎉
                   </p>
-                )}
-                <button
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition-all active:scale-95 w-full"
-                  onClick={handleInvitePlayer}
-                >
-                  Invite
-                </button>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`https://tambolatesting.vercel.app/user/${publicId}`}
+                      className="w-full p-3 pr-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `https://tambolatesting.vercel.app/user/${publicId}`
+                        );
+                        toast.success("Link copied to clipboard!");
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1.5 px-3 rounded-md transition-colors duration-200 text-sm"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

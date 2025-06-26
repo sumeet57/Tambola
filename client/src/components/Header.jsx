@@ -50,8 +50,7 @@ const Header = () => {
       } else {
         setLoading(false);
         console.log("Error logging out:", data.message);
-        navigate("/login");
-        window.location.reload(); // Refresh the page
+        navigate("/auth");
       }
     } catch (err) {
       setLoading(false);
@@ -90,7 +89,7 @@ const Header = () => {
       setLoading(false);
       setChangeClick(false);
       console.log("Unauthorized, redirecting to login");
-      navigate("/login");
+      navigate("/auth");
     } else {
       toast.error("error changing role " + data?.message);
     }

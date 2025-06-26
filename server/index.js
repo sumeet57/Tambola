@@ -71,14 +71,14 @@ io.on("connection", (socket) => {
     });
 
     // Joining room
-    socket.on("join_room", async (player, roomid, publicId) => {
+    socket.on("join_room", async (socketid, player, roomid, publicId) => {
       try {
-        if (!player || !roomid || !publicId) {
+        if (!socketid || !player || !roomid || !publicId) {
           socket.emit("error", "Invalid input");
           return;
         }
 
-        const res = await joinRoom(player, roomid, publicId);
+        const res = await joinRoom(socketid, player, roomid, publicId);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;
@@ -137,19 +137,18 @@ io.on("connection", (socket) => {
           await roomInDb.save();
         }
         room.isOngoing = true;
-        setTimeout(() => {
-          room.players?.forEach((player) => {
-            io.to(player.socketid).emit("started_game", {
-              player,
-              setting: {
-                roomid: roomid,
-                patterns: room?.patterns || [],
-                schedule: room?.schedule || null,
-                claimTrack: room?.claimTrack || [],
-              },
-            });
+
+        room.players?.forEach((player) => {
+          io.to(player.socketid).emit("started_game", {
+            player,
+            setting: {
+              roomid: roomid,
+              patterns: room?.patterns || [],
+              schedule: room?.schedule || null,
+              claimTrack: room?.claimTrack || [],
+            },
           });
-        }, 2000);
+        });
       } catch (err) {
         console.error("Error in start_game:", err);
         socket.emit("error", "Server error");

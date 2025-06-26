@@ -91,8 +91,8 @@ export const createRoom = async (player, setting) => {
 };
 
 // updated the code, tested (latest approch)
-export const joinRoom = async (player, roomid, publicId) => {
-  if (!player || !roomid || !publicId) {
+export const joinRoom = async (socketid, player, roomid, publicId) => {
+  if (!socketid || !player || !roomid || !publicId) {
     return "Invalid player data";
   }
 
@@ -166,13 +166,13 @@ export const joinRoom = async (player, roomid, publicId) => {
           return "You are Host of this room, you cannot join as a player";
         }
         if (alreadyExists) {
-          roomData.players[playerIndex].socketid = player.socketId;
+          roomData.players[playerIndex].socketid = socketid;
           return false;
         }
 
         const newPlayer = {
           id: player.id,
-          socketid: player.socketId,
+          socketid: socketid,
           name: player.name,
           phone: player.phone,
           claims: [],

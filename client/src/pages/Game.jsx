@@ -3,7 +3,6 @@ import AssignNumbers from "../components/AssignNumbers";
 import DrawNumbers from "../components/DrawNumbers";
 import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import socket from "../utils/websocket";
-import Message from "../components/Message";
 import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
 import Loading from "../components/Loading";
@@ -26,17 +25,9 @@ const Game = () => {
   let roomId = sessionStorage.getItem("roomid");
 
   const roomid = gameState.roomid || roomId || ""; // Default room ID
-  const [messageBox, setMessageBox] = useState("");
 
   // for loading state
   const [loading, setLoading] = useState(false);
-
-  const handleMessageBox = (message) => {
-    setMessageBox(message);
-    setTimeout(() => {
-      setMessageBox("");
-    }, 2000);
-  };
 
   const [timerToggled, setTimerToggled] = useState(false);
 

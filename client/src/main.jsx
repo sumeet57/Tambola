@@ -11,8 +11,7 @@ import {
 } from "react-router-dom";
 
 //import components
-import Login from "./components/Login.jsx";
-import Register from "./components/Register.jsx";
+import Authentication from "./components/Authentication.jsx";
 
 //imported host, user, and game pages
 import Hostroom from "./pages/Hostroom.jsx";
@@ -45,12 +44,8 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
+    path: "/auth",
+    element: <Authentication />,
   },
   {
     path: "/dashboard",

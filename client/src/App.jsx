@@ -11,14 +11,21 @@ import Loading from "./components/Loading.jsx";
 //import context
 import { PlayerContext } from "./context/PlayerContext.jsx";
 import { GameContext } from "./context/GameContext.jsx";
+import Authentication from "./components/Authentication.jsx";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const App = () => {
   //context state
-  const { Player, updatePlayer, loading, setLoading } =
-    useContext(PlayerContext);
+  const {
+    Player,
+    updatePlayer,
+    loading,
+    setLoading,
+    isLoggedIn,
+    setIsLoggedIn,
+  } = useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
 
   // for navigation
@@ -30,12 +37,6 @@ const App = () => {
   };
   const handleJoinClick = () => {
     navigate("/user");
-  };
-  const handleRegisterClick = () => {
-    navigate("/register");
-  };
-  const handleLoginClick = () => {
-    navigate("/login");
   };
 
   // socket event handling
@@ -70,7 +71,7 @@ const App = () => {
     if (res.status === 200) {
       setInvites(data?.invites);
     } else if (res.status === 401) {
-      navigate("/login");
+      navigate("/auth");
     } else {
       console.log("Error fetching invites:", data.message);
     }
@@ -104,7 +105,7 @@ const App = () => {
       updatePlayer(data.user); // Update the player context with the new role
       RoleWindowClickHandler();
     } else if (res.status === 401) {
-      navigate("/login");
+      navigate("/auth");
     } else {
       console.log("Error changing role:", data.message);
     }
@@ -438,6 +439,8 @@ const App = () => {
               </div>
             </div>
           )}
+
+          {/* {Player?.id === "undefined" && <Authentication />} */}
         </>
       )}
     </>

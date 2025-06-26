@@ -12,7 +12,6 @@ import { GameContext } from "../context/GameContext.jsx";
 
 // for loading
 import Loading from "./Loading.jsx";
-import { updateLocalStorage } from "../utils/storageUtils.js";
 
 // toastify
 import { toast } from "react-toastify";
@@ -39,6 +38,7 @@ const AssignNumbers = () => {
     setWarningToggle(true);
     setTimeout(() => {
       setWarningToggle(false);
+      navigate(`/`); // Redirect to home page after 10 seconds
     }, 10000);
   };
 
@@ -572,46 +572,56 @@ const AssignNumbers = () => {
         ))}
 
         {claimMenu && (
-          <div className="cont w-80 h-80 fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-4 bg-gradient-to-t from-pink-100 via-yellow-100 to-blue-100 rounded-3xl border-2 border-zinc-900 shadow-lg">
-            <div
-              onClick={claimMenuToggle}
-              className="closeButton absolute grid place-items-center top-2 right-2 text-3xl transition-all active:scale-90 w-10 h-10 text-black cursor-pointer rounded-full hover:bg-red-500 hover:text-white"
-            >
-              &times;
-            </div>
-            <div className="claimsButton pt-14 grid grid-cols-2 gap-4">
-              {gameState?.patterns.map((claim) => {
-                if (!ClaimHistory?.includes(claim.id)) {
-                  const foundClaim = gameState?.claimTrack.find(
-                    (item) => item.id === claim.id
-                  );
-                  const winners = foundClaim?.winners;
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 bg-black/30 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-3xl border border-white/30 bg-white/30 backdrop-blur-md shadow-2xl p-6 sm:p-8">
+              {/* Close Button */}
+              <button
+                onClick={claimMenuToggle}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full text-xl sm:text-2xl font-bold text-red-600 hover:bg-red-500 hover:text-white bg-white shadow transition-all duration-200 grid place-items-center active:scale-90"
+                aria-label="Close"
+              >
+                &times;
+              </button>
 
-                  return (
-                    <button
-                      onClick={() => {
-                        if (winners !== 0 && foundClaim) {
-                          claimClick(parseInt(claim.id));
-                        }
-                      }}
-                      key={claim.id}
-                      className={`x-6 py-2
-            ${
-              winners === 0
-                ? "cursor-not-allowed bg-gray-300"
-                : "cursor-pointer bg-gradient-to-r from-blue-200 via-teal-200 to-green-200 hover:from-blue-300 hover:via-teal-300 hover:to-green-300 transition-all active:scale-90"
-            }
-            text-black rounded-3xl shadow-lg font-bold`}
-                      disabled={winners === 0} // Consider using the disabled attribute for better accessibility
-                    >
-                      {`${claimGuide[claim.id] || "Unknown"} (${
-                        winners !== undefined ? winners : "claimed"
-                      })`}
-                    </button>
-                  );
-                }
-                return null;
-              })}
+              {/* Title */}
+              <h2 className="text-center text-xl sm:text-2xl font-bold text-gray-800 mb-6">
+                Select a Claim Pattern
+              </h2>
+
+              {/* Claim Buttons */}
+              <div className="grid grid-cols-2 gap-4">
+                {gameState?.patterns.map((claim) => {
+                  if (!ClaimHistory?.includes(claim.id)) {
+                    const foundClaim = gameState?.claimTrack.find(
+                      (item) => item.id === claim.id
+                    );
+                    const winners = foundClaim?.winners;
+
+                    return (
+                      <button
+                        key={claim.id}
+                        onClick={() => {
+                          if (winners !== 0 && foundClaim) {
+                            claimClick(parseInt(claim.id));
+                          }
+                        }}
+                        disabled={winners === 0}
+                        className={`text-center py-2 px-3 text-sm sm:text-base font-semibold rounded-xl shadow-md transition-all duration-200
+                  ${
+                    winners === 0
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-br from-green-300 via-blue-300 to-purple-300 hover:from-green-400 hover:to-purple-400 text-gray-800 hover:scale-105 active:scale-95"
+                  }`}
+                      >
+                        {`${claimGuide[claim.id] || "Unknown"} (${
+                          winners !== undefined ? winners : "claimed"
+                        })`}
+                      </button>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
             </div>
           </div>
         )}

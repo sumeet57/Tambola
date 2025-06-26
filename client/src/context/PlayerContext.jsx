@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import socket from "../utils/websocket";
 import { updateSessionStorage } from "../utils/storageUtils";
+import Authentication from "../components/Authentication";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -14,6 +15,10 @@ export const PlayerProvider = ({ children }) => {
   const [Player, setPlayer] = React.useState(() => {
     const userData = sessionStorage.getItem("player");
     return userData ? JSON.parse(userData) : {};
+  });
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+    const userData = sessionStorage.getItem("player");
+    return userData ? true : false;
   });
 
   // update or add a new property to the player object
@@ -118,12 +123,12 @@ export const PlayerProvider = ({ children }) => {
             const { name, phone, _id: id, role } = data.data;
             updatePlayer({ name, phone, id, role });
           } else if (res.status === 400) {
-            if (location == "/login" || location == "/register") {
-              // Redirect to login page if user is not found
+            if (location == "/auth") {
+              // User not found, already on auth page
             } else {
-              window.location.href = "/login";
+              setIsLoggedIn(false);
             }
-            console.error("User not found, redirecting to login page.");
+            // console.error("User not found, redirecting to login page.");
           } else {
             console.error("Failed to fetch user:", data.message);
           }
@@ -147,6 +152,8 @@ export const PlayerProvider = ({ children }) => {
         deletePlayerProperty,
         loading,
         setLoading,
+        isLoggedIn,
+        setIsLoggedIn,
       }}
     >
       {children}
