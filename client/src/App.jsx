@@ -208,15 +208,11 @@ const App = () => {
                 <>
                   <button
                     className="bg-green-500 text-white w-44 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300"
-                    onClick={handleRegisterClick}
+                    onClick={() => {
+                      navigate("/auth");
+                    }}
                   >
-                    📝 Register
-                  </button>
-                  <button
-                    className="bg-yellow-500 text-white w-44 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300"
-                    onClick={handleLoginClick}
-                  >
-                    🔐 Login
+                    📝 Register / Login
                   </button>
                 </>
               )}
