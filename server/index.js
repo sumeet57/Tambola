@@ -216,7 +216,7 @@ io.on("connection", (socket) => {
       }
     });
 
-    socket.on("requestTicket", (id, roomid, count) => {
+    socket.on("requestTicket", (id, roomid, Tcount) => {
       try {
         let roomData = activeRooms.get(roomid);
         if (!roomData) {
@@ -228,7 +228,7 @@ io.on("connection", (socket) => {
             (player) => player.id == id
           );
           if (foundIndex) {
-            roomData.players[foundIndex].ticketCount = count;
+            roomData.players[foundIndex].ticketCount = Tcount;
             roomData.requestedTicketCount =
               roomData.requestedTicketCount.filter(
                 (player) => player.id !== id

@@ -178,7 +178,7 @@ export const joinRoom = async (socketid, player, roomid, publicId) => {
           claims: [],
           assign_numbers: [],
           requestedTicketCount: player.requestedTicketCount || 1,
-          ticketCount: player.ticketCount || 1,
+          ticketCount: 1,
         };
 
         const user = await User.findById(player.id);
