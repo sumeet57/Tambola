@@ -1,64 +1,101 @@
-# Tambola Multiplayer Game
+# 🎲 Tambola Game (Housie) - Multiplayer Web App
 
-A realtime Multiplayer game using websocket/MERN
+A real-time Tambola (Housie) game built with **MERN stack** and **Socket.IO** for seamless multiplayer experience. The game supports real-time number drawing, claim patterns, role-based login, room locking, reconnections, and beautiful modern UI.
 
-## API Endpoints (Backend)
+---
 
-### User Endpoints
+## 🚀 Features
 
-- **Login**: `POST /api/user/login`
+- 🎯 Role-based access (Host / Player)
+- 🔒 Room locking with custom mutex system
+- 🧠 Reconnection logic for ongoing rooms
+- 🔢 Number drawing in real-time
+- 📢 Optional text-to-speech for drawn numbers
+- 🏆 Claim patterns with claim tracking
+- 🖥️ Responsive UI for desktop and mobile
+- 🔗 WhatsApp game invite link with encoded room access
+- ♻️ Memory + DB room sync for persistent rooms
 
-  - Request body: `{ name, password }`
-  - Description: Login with name and password.
+---
 
-- **Register**: `POST /api/user/register`
+## 🛠️ Tech Stack
 
-  - Request body: `{ name, phone, password }`
-  - Description: Register with name, phone number, and password.
+- **Frontend**: React, Tailwind CSS, React Router, Context API
+- **Backend**: Node.js, Express, Socket.IO
+- **Database**: MongoDB (Mongoose)
+- **Storage**: Local Memory (for normal rooms), MongoDB (for scheduled)
+- **Authentication**: Role-based context (not third-party login)
+- **Utilities**: 
+  - Custom room mutex with Promise chaining
+  - CryptoJS for public room ID hashing
 
-- **Find User**: `POST /api/user/find`
-  - Request body: `{ userid }` (stored in local storage)
-  - Description: Find and receive user data.
+---
 
-### Host Endpoints
+## 🧩 Setup Instructions
 
-- **Login**: `POST /api/host/login`
+### 📦 Backend
 
-  - Request body: `{ phone, password }`
-  - Description: Login with phone number, and password.
+```bash
+cd server
+npm install
+node index.js
+```
 
-- **Register**: `POST /api/host/register`
+### 💻 Frontend
 
-  - Request body: `{ name, phone, password }`
-  - Description: Register with name, phone number, and password.
+```bash
+cd client
+npm install
+npm run dev
+```
 
-- **Invite Player**: `POST /api/host/invite`
-  - Request body: `{ name: playername, roomid, points }`
-  - Description: Invite the player and offer them points which will be deducted from the host.
+Make sure your backend server is running on `http://localhost:PORT` and client connects to the correct WebSocket server.
 
-### Game Endpoints
+---
 
-- **Deduct Points**: `POST /api/game/points`
+## 🔐 Room Joining with Hash
 
-  - Request body: `{ id, points }` (host/user id both acceptable)
-  - Description: Deduct points from player data for their ticket.
+- Public room ID is hashed using AES encryption.
+- Hash is verified on join for secure invitation.
+- No two hashes are the same due to unique IV usage.
 
-- **Check Invitation**: `POST /api/game/invited`
+---
 
-  - Request body: `{ name, roomid }` (phone number can be used as primary identifier)
-  - Description: Check if the player is invited or not.
+## 🧠 Reconnection Logic
 
-- **Check Points Availability**: `POST /api/game/available`
+- If player refreshes page or loses connection:
+  - Checks if room is ongoing or not.
+  - Rejoins and syncs draw state and tickets.
+  - Host and players are automatically restored.
 
-  - Request body: `{ id, ticket }` (host/user id both acceptable)
-  - Description: Check if the points are available to deduct.
+---
 
-- **Get Player Data**: `POST /api/game/player`
-  - Request body: `{ id }` (host/user id both acceptable)
-  - Description: Return player data.
+## 📱 Invite Players via WhatsApp
 
-## Environments Variables
+Invite link auto-generates with encoded room ID:
 
-PORT=3000
+```
+https://tambolatesting.vercel.app/user/:publicId
+```
 
-MONGO_URI={databaseURL/Name}
+---
+
+
+## ⚠️ License & Usage Notice
+
+This project is **copyrighted** and protected under the "All Rights Reserved" license.
+
+> ❌ **You are not allowed to copy, fork, reuse, or modify this code** without explicit permission.
+
+This repository is made public **only to showcase the work** of the original developer.
+
+If you're interested in collaboration or want to discuss this project, feel free to [contact me](mailto:sum.pro57@gmail.com).
+
+---
+
+## 🙋‍♂️ Developer
+
+Built with ❤️ by **Sumeet Umbalkar**
+
+[GitHub Profile](https://github.com/sumeet57) · [Portfolio](https://sumeet.codes)
+
