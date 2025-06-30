@@ -254,7 +254,7 @@ const Hostroom = () => {
                     <input
                       type="text"
                       readOnly
-                      value={`https://tambola-dozn.onrender.com/user/${publicId}`}
+                      value={`https://tambolatesting.vercel.app/user/${publicId}`}
                       className="w-full p-3 pr-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
