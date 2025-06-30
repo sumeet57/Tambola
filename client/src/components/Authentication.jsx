@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  updateLocalStorage,
-  updateSessionStorage,
-} from "../utils/storageUtils.js";
 import Loading from "./Loading.jsx";
+import authApi, { setAccessToken } from "../utils/authApi.js";
 
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -34,7 +31,6 @@ const Authentication = () => {
   const path = location.pathname;
 
   const loginUser = async (e) => {
-    // validate user input
     e.preventDefault();
     // validate user input
     if (!phone || !password) {
@@ -54,33 +50,37 @@ const Authentication = () => {
       return;
     }
     setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/user/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ phone, password }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.status === 200) {
-      localStorage.clear();
-      sessionStorage.clear();
+
+    try {
+      const res = await authApi.post("/login", { phone, password });
+      
+
+      toast.success("Successfully logged in");
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("sessionId", res.data.sessionId);
       updatePlayer({
-        name: data?.user?.name,
-        phone: data?.user?.phone,
-        id: data?.id,
-        role: data?.user?.role,
+        id: res.data.user.id,
+        name: res.data.user.name,
+        phone: res.data.user.phone,
+        role: res.data.user.role,
       });
-      updateLocalStorage("userid", data.userid);
-      toast.success("Login successful");
+      setAccessToken(res.data.accessToken);
       if (path === "/auth") {
         navigate("/");
       }
-    } else {
-      toast.error(data?.message || "Login failed");
+    } catch (err) {
+      console.error("Login error:", err);
+
+      if (err.status === 400) {
+        toast.error(err.message || "Invalid credentials");
+      } else if (err.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     }
+
+    setLoading(false);
   };
   const registerUser = async (e) => {
     e.preventDefault();
@@ -111,40 +111,34 @@ const Authentication = () => {
       return;
     }
 
-    // e.preventDefault();
-
     setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/user/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ name, phone, password }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.status === 200) {
-      // remove host id and host from storage
-      localStorage.clear();
-      sessionStorage.clear();
-      updateLocalStorage("id", data?.id);
+    try {
+      const res = await authApi.post("/register", { name, phone, password });
 
+      toast.success("Successfully registered");
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("sessionId", res.data.sessionId);
       updatePlayer({
-        name: data?.user?.name,
-        phone: data?.user?.phone,
-        id: data?.id,
-        role: data?.user?.role,
+        id: res.data.user.id,
+        name: res.data.user.name,
+        phone: res.data.user.phone,
+        role: res.data.user.role,
       });
-      toast.success("Registered successfully");
+      setAccessToken(res.data.accessToken);
       if (path === "/auth") {
         navigate("/");
       }
+    } catch (err) {
+      console.error("Registration error:", err);
 
-      // navigate("/");
-    } else {
-      toast.error(data?.message || "Registration failed");
+      if (err.status === 400) {
+        toast.error(err.message || "Invalid data");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     }
+
+    setLoading(false);
   };
 
   // password visibility toggle
@@ -231,26 +225,14 @@ const Authentication = () => {
                           viewBox="0 0 24 24"
                           fill="none"
                         >
-                          <path
-                            d="M2 2L22 22"
-                            stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
+                          <path d="M2 2L22 22" stroke="#000000" />
                           <path
                             d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                           <path
                             d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                         </svg>
                       ) : (
@@ -264,26 +246,12 @@ const Authentication = () => {
                           <path
                             d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                           <path
                             d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                            stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
+                          <circle cx="12" cy="12" r="3" stroke="#000000" />
                         </svg>
                       )}
                     </button>
@@ -367,26 +335,14 @@ const Authentication = () => {
                           viewBox="0 0 24 24"
                           fill="none"
                         >
-                          <path
-                            d="M2 2L22 22"
-                            stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
+                          <path d="M2 2L22 22" stroke="#000000" />
                           <path
                             d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                           <path
                             d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                         </svg>
                       ) : (
@@ -400,26 +356,12 @@ const Authentication = () => {
                           <path
                             d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
                           <path
                             d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12"
                             stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
                           />
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                            stroke="#000000"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
+                          <circle cx="12" cy="12" r="3" stroke="#000000" />
                         </svg>
                       )}
                     </button>
@@ -441,9 +383,7 @@ const Authentication = () => {
                   Don't have an account?{" "}
                   <button
                     onClick={() => {
-                      console.log("Switching to register");
                       setSwitchToRegister(true);
-                      console.log(switchToRegister);
                     }}
                     className="text-blue-500 hover:underline"
                   >

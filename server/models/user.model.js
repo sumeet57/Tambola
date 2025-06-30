@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+const sessionSchema = new mongoose.Schema({
+  sessionId: String,
+  createdAt: { type: Date, default: Date.now, expires: '30d' }
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -32,6 +37,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: "user",
   },
+  sessions: [sessionSchema],
 });
 
 const User = mongoose.model("User", userSchema);

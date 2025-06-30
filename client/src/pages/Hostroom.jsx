@@ -31,13 +31,13 @@ const Hostroom = () => {
   const [loading, setLoading] = useState(false);
 
   // setting timer value for game
-  const [timerValue, setTimerValue] = useState(3); // State for UI updates
-  const timerValueRef = useRef(3); // Ref for instant access
+  const [timerValue, setTimerValue] = useState(3); 
+  const timerValueRef = useRef(3); 
 
   const handleTimerChange = (e) => {
     const newValue = parseInt(e.target.value);
-    setTimerValue(newValue); // Update state for UI
-    timerValueRef.current = newValue; // Update ref for instant access
+    setTimerValue(newValue); 
+    timerValueRef.current = newValue; 
   };
 
   //socket event handlers, functions and states

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import socket from "../utils/websocket";
+import { useNavigate } from "react-router-dom";
 import { updateSessionStorage } from "../utils/storageUtils";
 import Authentication from "../components/Authentication";
+import authApi, {getAccessToken,setAccessToken, markAsLoggedOut} from "../utils/authApi";
+
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -16,32 +19,19 @@ export const PlayerProvider = ({ children }) => {
     const userData = sessionStorage.getItem("player");
     return userData ? JSON.parse(userData) : {};
   });
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-    const userData = sessionStorage.getItem("player");
-    return userData ? true : false;
-  });
 
   // update or add a new property to the player object
   const updatePlayer = (newUser) => {
     setPlayer((prevUser) => {
       const updatedUser = {
         ...prevUser,
-        ...newUser, // <- no filter here, apply directly
+        ...newUser,
       };
       updateSessionStorage("player", updatedUser);
       return updatedUser;
     });
   };
 
-  // delete property from the player object by there name
-  const deletePlayerProperty = (propertyName) => {
-    setPlayer((prevUser) => {
-      const updatedUser = { ...prevUser };
-      delete updatedUser[propertyName];
-      updateSessionStorage("player", updatedUser);
-      return updatedUser;
-    });
-  };
 
   // Socket connection handler
   React.useEffect(() => {
@@ -100,60 +90,95 @@ export const PlayerProvider = ({ children }) => {
 
   // Load user from sessionStorage or server
   React.useEffect(() => {
-    setLoading(true);
-    const userData = JSON.parse(sessionStorage.getItem("player"));
-    if (userData && userData.name && userData.phone && userData.id) {
-      updatePlayer(userData);
-      setLoading(false);
-    } else {
-      const fetchUser = async () => {
-        // setLoading(true);
-        try {
-          const res = await fetch(`${apiBaseUrl}/api/game/player`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+  setLoading(true);
+  const userData = JSON.parse(sessionStorage.getItem("player"));
 
-          const data = await res.json();
-
-          if (res.status === 200 && data.data) {
-            const { name, phone, _id: id, role } = data.data;
-            updatePlayer({ name, phone, id, role });
-          } else if (res.status === 400) {
-            if (location == "/auth") {
-              // User not found, already on auth page
-            } else {
-              setIsLoggedIn(false);
-            }
-            // console.error("User not found, redirecting to login page.");
-          } else {
-            console.error("Failed to fetch user:", data.message);
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error.message);
-        } finally {
-          // setLoading(false);
-        }
-      };
-
-      fetchUser();
-    }
+  if (userData && userData.name && userData.phone && userData.id) {
+    updatePlayer(userData);
     setLoading(false);
-  }, []);
+    // return;
+  }
+
+  // Refresh token and get new access token first
+  const tryRestoreSession = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!refreshToken || !sessionId) {
+      setLoading(false);
+      
+      setPlayer(null);
+      if (location === "/") {
+        window.location.href = "/auth";
+      }
+      return;
+    }
+
+    try {
+      // Refresh token
+      const res = await authApi.post("/tokens", { refreshToken, sessionId });
+      const accessToken = res.data.accessToken;
+
+      // Store new access token in memory
+      setAccessToken(accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+
+      // Then fetch the user
+      const { data } = await authApi.get("/me");
+
+      updatePlayer({
+        name: data?.name || "",
+        phone: data?.phone || "",
+        role: data?.role || "user",
+        id: data?._id || "",
+      });
+
+      sessionStorage.setItem("player", JSON.stringify({
+        name: data?.name || "",
+        phone: data?.phone || "",
+        role: data?.role || "user",
+        id: data?._id || "",
+      }));
+
+      
+    } catch (err) {
+      console.error("Session invalid, redirecting:", err.message);
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      setPlayer(null);
+      window.location.href = "/auth";
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  tryRestoreSession();
+}, []);
+
+
+  // logout handler
+  const logout = () => {
+    setAccessToken(null);
+    markAsLoggedOut();
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('sessionId');
+    sessionStorage.removeItem('player');
+    setPlayer(null);
+    window.location.href = '/auth';
+  };
 
   return (
     <PlayerContext.Provider
       value={{
         Player,
         updatePlayer,
-        deletePlayerProperty,
         loading,
         setLoading,
-        isLoggedIn,
-        setIsLoggedIn,
+        getAccessToken,
+        setAccessToken,
+        logout
       }}
     >
       {children}

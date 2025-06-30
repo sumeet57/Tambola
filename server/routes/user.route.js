@@ -1,20 +1,24 @@
 import {
   createUser,
-  findUser,
   loginUser,
+  refreshToken,
   getUser,
-  logoutUser,
+  getInvites,
   changeRole,
+  logoutSession
 } from "../controllers/user.controller.js";
 import express from "express";
+import authenticate from "../middleware/auth.middleware.js";
+import authorizeRoles from "../middleware/rbac.middleware.js";
 
 const userRouter = express.Router();
 
 userRouter.post("/register", createUser);
 userRouter.post("/login", loginUser);
-userRouter.post("/find", findUser);
-userRouter.get("/get", getUser);
-userRouter.get("/logout", logoutUser);
-userRouter.post("/changeRole", changeRole);
+userRouter.post("/tokens", refreshToken);
+userRouter.get("/me",authenticate ,getUser);
+userRouter.get("/get-invites", authenticate, getInvites);
+userRouter.post("/change-role", authenticate, changeRole);
+userRouter.post("/logout", authenticate, logoutSession);
 
 export default userRouter;

@@ -12,17 +12,20 @@ const Dashboard = () => {
   const location = useLocation();
   const { id } = useParams(); // room ID from route
 
-  const { Player } = useContext(PlayerContext);
+  const { Player,getAccessToken } = useContext(PlayerContext);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         setLoading(true);
+        const accessToken = getAccessToken();
+
         const response = await fetch(`${apiBaseUrl}/api/game/rooms`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken || ""}`,
           },
           credentials: "include",
         });
@@ -39,7 +42,11 @@ const Dashboard = () => {
       }
     };
 
-    fetchRooms();
+    setLoading(true);
+    setTimeout(() => {
+      fetchRooms();
+      setLoading(false);
+    }, 500);
   }, []);
 
   useEffect(() => {

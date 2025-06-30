@@ -158,6 +158,7 @@ createRoot(document.getElementById("root")).render(
       pauseOnHover
       theme="dark"
       transition={Bounce}
+      className="app-toast-container"
     />
   </StrictMode>
 );
