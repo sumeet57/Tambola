@@ -260,7 +260,7 @@ const Hostroom = () => {
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `https://tambola-dozn.onrender.com/user/${publicId}`
+                          `https://tambolatesting.vercel.app/user/${publicId}`
                         );
                         toast.success("Link copied to clipboard!");
                       }}
