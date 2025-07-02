@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import { PlayerContext } from "../context/PlayerContext";
+import authApi from "../utils/authApi.js";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,7 +10,7 @@ import { toast } from "react-toastify";
 
 const Header = () => {
   //for context
-  const { Player, updatePlayer } = useContext(PlayerContext);
+  const { Player, updatePlayer, logout } = useContext(PlayerContext);
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -25,30 +26,14 @@ const Header = () => {
   const logoutClick = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${apiBaseUrl}/api/user/logout`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const res = await authApi.post('/logout', { sessionId: localStorage.getItem('sessionId') });
       setLoading(false);
-      const data = await res.json();
       if (res.status === 200) {
-        // Clear local storage and session storage
-        localStorage.clear();
-        sessionStorage.clear();
-        toggleMenu();
-        setLoading(false);
         toast.success("Logged out successfully", {
           autoClose: 2000,
         });
-        setTimeout(() => {
-          navigate("/"); // Navigate to home
-          window.location.reload(); // Refresh the page
-        }, 1000);
+        logout();
       } else {
-        setLoading(false);
         console.log("Error logging out:", data.message);
         navigate("/auth");
       }
@@ -69,30 +54,17 @@ const Header = () => {
       newRole = Player.role === "host" ? "user" : "host";
     }
     setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/user/changeRole`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ role: newRole }),
-      credentials: "include",
-    });
-    setLoading(false);
-    const data = await res.json();
-    if (res.status === 200) {
-      updatePlayer(data.user); // Update the player context with the new role
-      toast.success(`Role changed to ${newRole}`, {
-        autoClose: 2000,
-      });
-      setChangeClick(false);
-    } else if (res.status === 401) {
-      setLoading(false);
-      setChangeClick(false);
-      console.log("Unauthorized, redirecting to login");
-      navigate("/auth");
-    } else {
-      toast.error("error changing role " + data?.message);
+    const res = await authApi.post("/change-role", { role: newRole });
+    if(res.status === 200) {
+      toast.success(`Role changed to ${newRole}`);
+      updatePlayer(res.data.user);
+      toggleMenu();
+    }else{
+      console.error("Error changing role:", res.data.message);
+      alert("Error changing role. Please try again.");
     }
+    setLoading(false);
+    changeClickHandler();
   };
   return (
     <>

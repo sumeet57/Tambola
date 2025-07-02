@@ -13,6 +13,9 @@ import { PlayerContext } from "./context/PlayerContext.jsx";
 import { GameContext } from "./context/GameContext.jsx";
 import Authentication from "./components/Authentication.jsx";
 
+import authApi from "./utils/authApi.js";
+import { toast } from "react-toastify";
+
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,10 +26,10 @@ const App = () => {
     updatePlayer,
     loading,
     setLoading,
-    isLoggedIn,
-    setIsLoggedIn,
+    getAccessToken
   } = useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
+
 
   // for navigation
   const navigate = useNavigate();
@@ -59,17 +62,10 @@ const App = () => {
   };
   const handleNotificationClick = async () => {
     setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/game/invites`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await res.json();
+    const res = await authApi.get("/get-invites");
     setLoading(false);
     if (res.status === 200) {
-      setInvites(data?.invites);
+      setInvites(res.data?.invites);
     } else if (res.status === 401) {
       navigate("/auth");
     } else {
@@ -78,7 +74,7 @@ const App = () => {
     // setShowNotifications(true);
   };
   useEffect(() => {
-    handleNotificationClick();
+    // handleNotificationClick();
     RoleWindowClickHandler();
   }, []);
 
@@ -89,26 +85,16 @@ const App = () => {
   };
   const handleRoleChange = async (role) => {
     setLoading(true);
-    const res = await fetch(`${apiBaseUrl}/api/user/changeRole`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        role: role,
-      }),
-    });
-    setLoading(false);
-    const data = await res.json();
-    if (res.status === 200) {
-      updatePlayer(data.user); // Update the player context with the new role
-      RoleWindowClickHandler();
-    } else if (res.status === 401) {
-      navigate("/auth");
-    } else {
-      console.log("Error changing role:", data.message);
+    const res = await authApi.post("/change-role", { role });
+    if(res.status === 200) {
+      updatePlayer(res.data.user);
+      toast.success(`Role changed to ${role}`);
+    }else{
+      console.error("Error changing role:", res.data.message);
+      toast.error("Error changing role. Please try again.");
     }
+    setLoading(false);
+    RoleWindowClickHandler();
   };
 
   //reconnection state
@@ -261,8 +247,14 @@ const App = () => {
                             </button>
                             <button
                               onClick={async () => {
+                                const accessToken = getAccessToken();
+                                if (!accessToken) {
+                                  console.error("Access token not found");
+                                  return;
+                                }
                                 try {
                                   setLoading(true);
+                                  console.log("Deleting invite:", accessToken);
                                   const res = await fetch(
                                     `${apiBaseUrl}/api/game/invite/${invite.id}`, // fixed route
                                     {
@@ -270,6 +262,7 @@ const App = () => {
                                       credentials: "include",
                                       headers: {
                                         "Content-Type": "application/json",
+                                        Authorization: `Bearer ${accessToken}`,
                                       },
                                     }
                                   );
@@ -352,6 +345,11 @@ const App = () => {
                             <button
                               onClick={async () => {
                                 try {
+                                  const accessToken = getAccessToken();
+                                  if (!accessToken) {
+                                    console.error("Access token not found");
+                                    return;
+                                  }
                                   setLoading(true);
                                   const res = await fetch(
                                     `${apiBaseUrl}/api/game/invite/${invite.id}`, // fixed route
@@ -360,6 +358,7 @@ const App = () => {
                                       credentials: "include",
                                       headers: {
                                         "Content-Type": "application/json",
+                                        Authorization: `Bearer ${accessToken}`,
                                       },
                                     }
                                   );
@@ -436,7 +435,7 @@ const App = () => {
             </div>
           )}
 
-          {/* {Player?.id === "undefined" && <Authentication />} */}
+          
         </>
       )}
     </>

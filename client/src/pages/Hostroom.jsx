@@ -31,13 +31,13 @@ const Hostroom = () => {
   const [loading, setLoading] = useState(false);
 
   // setting timer value for game
-  const [timerValue, setTimerValue] = useState(3); // State for UI updates
-  const timerValueRef = useRef(3); // Ref for instant access
+  const [timerValue, setTimerValue] = useState(3); 
+  const timerValueRef = useRef(3); 
 
   const handleTimerChange = (e) => {
     const newValue = parseInt(e.target.value);
-    setTimerValue(newValue); // Update state for UI
-    timerValueRef.current = newValue; // Update ref for instant access
+    setTimerValue(newValue); 
+    timerValueRef.current = newValue; 
   };
 
   //socket event handlers, functions and states
@@ -254,13 +254,13 @@ const Hostroom = () => {
                     <input
                       type="text"
                       readOnly
-                      value={`https://tambola-dozn.onrender.com/user/${publicId}`}
+                      value={`https://tambolatesting.vercel.app/user/${publicId}`}
                       className="w-full p-3 pr-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `https://tambola-dozn.onrender.com/user/${publicId}`
+                          `https://tambolatesting.vercel.app/user/${publicId}`
                         );
                         toast.success("Link copied to clipboard!");
                       }}

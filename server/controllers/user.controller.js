@@ -1,9 +1,14 @@
 // import Host from "../models/host.model.js";
 import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { createTokens } from "../utils/auth.utils.js";
+import { v4 as uuidv4 } from "uuid";
 
 // /api/user/register
 export const createUser = async (req, res) => {
   try {
+    // destructure body and trim inputs
     let { name, phone, password } = req.body;
     phone = phone.toString().trim();
     password = password.toString().trim();
@@ -26,22 +31,45 @@ export const createUser = async (req, res) => {
         .json({ message: "Name must be between 3 to 20 characters" });
     }
 
+    // check if user already exists (phone is unique)
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
       return res.status(400).json({ message: "Phone is already register" });
     }
 
-    const user = await User.create({ name, phone, password });
-    const id = user._id;
+    // getting sessionId
+    const sessionId = uuidv4();
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // create user
+    const user = await User.create({ name, phone, password: hashedPassword, sessions: [{ sessionId }] });
+
+
+    // check session limit
+    if (user.sessions.length > 5) {
+      // Sort by createdAt, keep latest 4
+      user.sessions.sort((a, b) => b.createdAt - a.createdAt);
+      user.sessions = user.sessions.slice(0, 5); // keep only 5 latest
+    }
+
+    // save user
+    await user.save();
+
+
+    // generate JWT token
+    const tokens = createTokens(user._id.toString(), sessionId);
+
+    // sending response with tokens and sessionId
     res
-      .cookie("id", id, {
-        httpOnly: true,
-        secure: true, // make sure it's only sent over HTTPS
-        sameSite: "None", // needed for cross-origin cookies
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      })
       .status(200)
-      .json({ user, id, message: "User created successfully" });
+      .json({ ...tokens, sessionId,user:{
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role
+      }, message: "User created successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -50,6 +78,7 @@ export const createUser = async (req, res) => {
 // /api/user/login
 export const loginUser = async (req, res) => {
   try {
+    // destructure body and trim inputs
     let { phone, password } = req.body;
     phone = phone.toString().trim();
     password = password.toString().trim();
@@ -67,237 +96,117 @@ export const loginUser = async (req, res) => {
         .json({ message: "Password must be between 6 to 20 characters" });
     }
 
+    // check if user exists
     const user = await User.findOne({ phone });
     if (!user) {
       return res.status(400).json({ message: "User not registered" });
     }
-    const passwordMatch = user.password === password;
+    // check if password matches
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-    const id = user._id;
-    res
-      .cookie("id", id, {
-        httpOnly: true,
-        secure: true, // make sure it's only sent over HTTPS
-        sameSite: "None", // needed for cross-origin cookies
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      })
-      .status(200)
-      .json({ user, id, message: "User logged in successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// /api/host/register
-export const createHost = async (req, res) => {
-  try {
-    let { name, phone, password } = req.body;
-
-    // Trim and convert to strings
-    name = name?.toString().trim();
-    phone = phone?.toString().trim();
-    password = password?.toString().trim();
-
-    // Validation
-    if (!name || !phone || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-    if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-      return res
-        .status(400)
-        .json({ message: "Phone number must be 10 digits" });
-    }
-    if (password.length < 6 || password.length > 20) {
-      return res
-        .status(400)
-        .json({ message: "Password must be between 6 to 20 characters" });
-    }
-    if (name.length < 3 || name.length > 20) {
-      return res
-        .status(400)
-        .json({ message: "Name must be between 3 to 20 characters" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check if host already exists
-    const existingHost = await User.findOne({ phone });
-    if (existingHost) {
-      return res.status(400).json({ message: "Phone is already registered" });
+    // getting sessionId and adding to user sessions
+    const sessionId = uuidv4();
+    user.sessions.push({ sessionId });
+
+    if (user.sessions.length > 5) {
+      // Sort by createdAt, keep latest 4
+      user.sessions.sort((a, b) => b.createdAt - a.createdAt);
+      user.sessions = user.sessions.slice(0, 5); // keep only 5 latest
     }
-
-    // Create user
-    const user = await User.create({ name, phone, password, role: "host" });
-    const id = user._id;
-
-    // Set cookie and send response
-    res
-      .cookie("id", id, {
-        httpOnly: true,
-        secure: true, // make sure it's only sent over HTTPS
-        sameSite: "None", // needed for cross-origin cookies
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      })
-      .status(200)
-      .json({ user, message: "Host created successfully" });
-  } catch (error) {
-    console.error("Error in createHost:", error);
-    res.status(500).json({ message: error.message || "Server Error" });
-  }
-};
-
-// /api/host/login
-export const loginHost = async (req, res) => {
-  try {
-    let { phone, password } = req.body;
-    phone = phone.toString().trim();
-    password = password.toString().trim();
-
-    //validation
-    if (!phone || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    } else if (phone.length !== 10) {
-      return res
-        .status(400)
-        .json({ message: "Phone number must be 10 digits" });
-    } else if (password.length < 6 || password.length > 20) {
-      return res
-        .status(400)
-        .json({ message: "Password must be between 6 to 20 characters" });
-    }
-
-    const user = await User.findOne({ phone }).select("+password");
-    if (!user) {
-      return res.status(400).json({ message: "Host not found" });
-    }
-    const passwordMatch = user.password === password;
-    if (!passwordMatch) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-    const id = user._id;
-    res
-      .cookie("id", id, {
-        httpOnly: true,
-        secure: true, // make sure it's only sent over HTTPS
-        sameSite: "None", // needed for cross-origin cookies
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      })
-      .status(200)
-      .json({ user, id, message: "Host logged in successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// /api/user/find
-export const findUser = async (req, res) => {
-  try {
-    let { userid } = req.body;
-    userid = userid.toString().trim();
-
-    const user = await User.findById(userid);
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-    res.status(200).json({ user, message: "User found successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// /api/user/get
-
-export const getUser = async (req, res) => {
-  try {
-    const id = req.cookies.id;
-    if (!id) {
-      return res.status(400).json({ message: "Id is not found" });
-    }
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-    res.status(200).json({ data, message: "User found successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// /api/user/invite
-
-export const inviteUser = async (req, res) => {
-  try {
-    let { phone, invite } = req.body;
-    const { id } = req.cookies;
-    phone = phone.toString().trim();
-    if (!phone || !invite) {
-      return res.status(400).json({ message: "All fields are required" });
-    } else if (phone.length !== 10) {
-      return res
-        .status(400)
-        .json({ message: "Phone number must be 10 digits" });
-    }
-
-    // dont take password from user
-    const isHost = User.findById(id).select("-password");
-    if (!isHost) {
-      return res.status(400).json({ message: "User not found" });
-    } else if (isHost.role !== "host") {
-      return res.status(400).json({ message: "You are not a host" });
-    }
-
-    const user = User.findById({ phone });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-    // invite is [{}, {}]
-    const isInvited = user.invites.find((invite) => invite.roomid === roomid);
-    if (isInvited) {
-      return res.status(400).json({ message: "User already invited" });
-    }
-    user.invites.push({
-      roomid: invite?.roomid,
-      schedule: invite?.schedule || "",
-    });
     await user.save();
-    res.status(200).json({ message: "User invited successfully" });
+
+    // generate JWT token
+    const tokens = createTokens(user._id.toString(), sessionId);
+
+    // sending response with tokens and sessionId
+    res
+      .status(200)
+      .json({ ...tokens, sessionId, user:{
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role
+      }, message: "User logged in successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export const logoutUser = async (req, res) => {
+// /api/user/tokens
+export async function refreshToken(req, res) {
+  // destructure body and validate inputs
+  const { refreshToken, sessionId } = req.body;
+  if (!refreshToken || !sessionId) {
+    return res.status(400).json({ message: 'Refresh token and session ID are required' });
+  }
+
   try {
-    res.clearCookie("id", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      path: "/",
-    });
-    res.status(200).json({ message: "User logged out successfully" });
+    // verify refresh token and check session ID
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    if (payload.sid !== sessionId) throw new Error();
+
+    // find user by ID (extracted id from payload) and check if session exists
+    const user = await User.findById(payload.sub);
+    const session = user.sessions.find(s => s.sessionId === sessionId);
+    if (!session) return res.status(403).json({ message: 'Invalid session' });
+
+    // generate new tokens
+    const tokens = createTokens(user._id.toString(), sessionId);
+
+    // send new tokens and session ID in response
+    res.json({ ...tokens, sessionId });
+  } catch {
+    res.status(403).json({ message: 'Invalid refresh token' });
+  }
+}
+
+// /api/user/me
+export async function getUser(req, res) {
+  const user = await User.findById(req.userId).select('-password -sessions');
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  res.json(user);
+}
+
+
+// /api/user/get-invites
+export const getInvites = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('invites -_id');
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    if (user.invites.length === 0) {
+      return res.status(200).json({ invites: [], message: "No invites found" });
+    }
+    res.status(200).json({ invites: user.invites, message: "Invites fetched successfully" });
   } catch (error) {
+    console.error("Error fetching invites:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
+
+export async function logoutSession(req, res) {
+  const { sessionId } = req.body;
+  const user = await User.findById(req.userId);
+  user.sessions = user.sessions.filter(s => s.sessionId !== sessionId);
+  await user.save();
+  res.json({ message: 'Logged out successfully' });
+}
 
 export const changeRole = async (req, res) => {
   let { role } = req.body;
   role = role.toString().trim();
   try {
-    const id = req.cookies.id;
+    const user = await User.findById(req.userId).select('-password -sessions ');
 
-    if (!id) {
-      return res.status(401).json({ message: "Id is not found" });
-    }
-    const user = await User.findById(id).select("-password");
     if (!user) {
       // send user for login
       return res.status(401).json({ message: "User not found" });
     }
-    // console.log("User found:", user.role);
-    if (user.role === role) {
-      return res.status(200).json({ message: "User already has this role" });
-    } else if (role === "host" && user.role !== "host") {
+    if (role === "host" && user.role !== "host") {
       user.role = "host";
     } else if (role === "user" && user.role !== "user") {
       user.role = "user";
@@ -305,9 +214,17 @@ export const changeRole = async (req, res) => {
       // send user for login
       return res.status(401).json({ message: "Invalid role" });
     }
-    await user.save();
-    res.status(200).json({ user, message: "User role changed successfully" });
+  await user.save();
+
+
+    res.status(200).json({ user : {
+      id : user._id,
+      name: user.name,
+      phone: user.phone,
+      role: user.role
+    }, message: "User role changed successfully" });
   } catch (error) {
+    console.error("Error changing user role:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
