@@ -202,9 +202,6 @@ const Game = () => {
 
             {/* Tickets Section */}
             <div className="w-full bg-white p-2 rounded-lg shadow-lg overflow-y-auto max-h-[400px]">
-              <h3 className="text-lg font-semibold text-gray-700 text-center mb-4">
-                Your Tickets
-              </h3>
               {/* {console.log("nearest", gameState.assignedNumbers)} */}
               <AssignNumbers data={gameState.assign_numbers} />
             </div>

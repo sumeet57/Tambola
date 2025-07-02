@@ -469,47 +469,36 @@ const AssignNumbers = () => {
       }
     } else if (id === 8) {
       if (!disqualify.includes(selectedTicket)) {
-        if (
-          ClaimHistory.includes(1) &&
-          ClaimHistory.includes(2) &&
-          ClaimHistory.includes(3) &&
-          ClaimHistory.includes(4) &&
-          ClaimHistory.includes(5)
-        ) {
-          if (finalTickets && Object.keys(finalTickets).length > 0) {
-            let fullHouseNumbers = [];
-            finalTickets[selectedTicket].forEach((row) => {
-              row.forEach((num) => {
-                if (num !== null && num !== undefined) {
-                  fullHouseNumbers.push(num);
-                }
-              });
+        if (finalTickets && Object.keys(finalTickets).length > 0) {
+          let fullHouseNumbers = [];
+          finalTickets[selectedTicket].forEach((row) => {
+            row.forEach((num) => {
+              if (num !== null && num !== undefined) {
+                fullHouseNumbers.push(num);
+              }
             });
-            let isvalid = fullHouseNumbers.every((num) => {
-              return selectedNumbers.includes(num);
-            });
-            if (!isvalid) {
-              toast.warning("Select all Full House Numbers");
-              claimMenuToggle();
-              return;
-            }
-            let isClaimed = fullHouseNumbers.every(
-              (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
-            );
-            if (isClaimed) {
-              const pattern = parseInt(id);
-
-              socket.emit("claim", Player, gameState.roomid, pattern);
-              claimMenuToggle();
-            } else {
-              toast.error(`Ticket no ${selectedTicket} is disqualified`);
-              setDisqualify((prev) => [...prev, selectedTicket]);
-              claimMenuToggle();
-            }
+          });
+          let isvalid = fullHouseNumbers.every((num) => {
+            return selectedNumbers.includes(num);
+          });
+          if (!isvalid) {
+            toast.warning("Select all Full House Numbers");
+            claimMenuToggle();
+            return;
           }
-        } else {
-          toast.warning("Claim all patterns before claiming Full House");
-          claimMenuToggle();
+          let isClaimed = fullHouseNumbers.every(
+            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+          );
+          if (isClaimed) {
+            const pattern = parseInt(id);
+
+            socket.emit("claim", Player, gameState.roomid, pattern);
+            claimMenuToggle();
+          } else {
+            toast.error(`Ticket no ${selectedTicket} is disqualified`);
+            setDisqualify((prev) => [...prev, selectedTicket]);
+            claimMenuToggle();
+          }
         }
       }
     }
@@ -522,9 +511,12 @@ const AssignNumbers = () => {
       <div className="flex flex-col gap-1 items-center relative">
         {Object.keys(finalTickets).map((ticketIndex) => (
           <React.Fragment key={ticketIndex}>
+            <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
+              ticket no {ticketIndex} :
+            </h2>
             <div
               key={ticketIndex}
-              className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 rounded-lg shadow-md"
+              className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
             >
               <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
                 {Array.isArray(finalTickets[ticketIndex]) &&

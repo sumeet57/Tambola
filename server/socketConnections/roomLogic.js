@@ -247,14 +247,14 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
       }
 
       const patternMap = {
-        1: "early five",
-        2: "middle number",
-        3: "early seven",
-        4: "first line",
-        5: "middle line",
-        6: "last line",
-        7: "corner",
-        8: "full house",
+        1: "Early Five",
+        2: "Middle Number",
+        3: "Early Seven",
+        4: "First Line",
+        5: "Middle Line",
+        6: "Last Line",
+        7: "Corner",
+        8: "Full House",
       };
 
       const patternName = patternMap[pattern];
@@ -298,7 +298,7 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
 
       // 📢 Broadcast claim updates
       io.to(roomId).emit("pattern_claimed", {
-        message: `🎉 Congratulations ${player?.name} for claiming ${patternName}! 🏆`,
+        message: `${patternName} Claimed by ${player?.name}, Approved by the System 🎉`,
       });
       io.to(roomId).emit("claimedList", roomData.claimTrack);
 
