@@ -1,3 +1,8 @@
+# Local configs
+*.local
+.env
+.env.local
+
 # Logs
 logs
 *.log
@@ -14,10 +19,6 @@ node_modules
 dist
 dist-ssr
 
-# Local configs
-*.local
-.env
-.env.local
 
 # Editor files
 .vscode/*

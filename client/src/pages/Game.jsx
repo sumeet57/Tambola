@@ -40,6 +40,7 @@ const Game = () => {
       handleTimer();
       if (drawNumber.length >= 90) {
         toast.warning("All numbers are drawn!");
+        socket.emit("end_game", roomid, Player.id);
         return;
       } else if (drawNumber.length < 90) {
         socket.emit("pick_number", roomid, Player.id);
@@ -104,6 +105,16 @@ const Game = () => {
       setLoading(false);
     });
     const pickedNumber = (number) => {
+      if (number.length === 90) {
+        setTimerToggled(false);
+        toast.success("All numbers are drawn!");
+        toast.info("Game will over in 5 seconds", {
+          autoClose: 5000,
+          onClose: () => {
+            socket.emit("end_game", roomid, Player.id);
+          },
+        });
+      }
       setDrawNumber(number);
     };
     socket.on("number_drawn", pickedNumber);

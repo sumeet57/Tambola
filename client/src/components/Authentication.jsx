@@ -53,11 +53,11 @@ const Authentication = () => {
 
     try {
       const res = await authApi.post("/login", { phone, password });
-      
 
       toast.success("Successfully logged in");
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("sessionId", res.data.sessionId);
+      localStorage.setItem("userid", res.data.user.id);
       updatePlayer({
         id: res.data.user.id,
         name: res.data.user.name,
@@ -118,6 +118,8 @@ const Authentication = () => {
       toast.success("Successfully registered");
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("sessionId", res.data.sessionId);
+      localStorage.setItem("userid", res.data.user.id);
+
       updatePlayer({
         id: res.data.user.id,
         name: res.data.user.name,

@@ -3,8 +3,11 @@ import socket from "../utils/websocket";
 import { useNavigate } from "react-router-dom";
 import { updateSessionStorage } from "../utils/storageUtils";
 import Authentication from "../components/Authentication";
-import authApi, {getAccessToken,setAccessToken, markAsLoggedOut} from "../utils/authApi";
-
+import authApi, {
+  getAccessToken,
+  setAccessToken,
+  markAsLoggedOut,
+} from "../utils/authApi";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -31,7 +34,6 @@ export const PlayerProvider = ({ children }) => {
       return updatedUser;
     });
   };
-
 
   // Socket connection handler
   React.useEffect(() => {
@@ -90,83 +92,83 @@ export const PlayerProvider = ({ children }) => {
 
   // Load user from sessionStorage or server
   React.useEffect(() => {
-  setLoading(true);
-  const userData = JSON.parse(sessionStorage.getItem("player"));
+    setLoading(true);
+    const userData = JSON.parse(sessionStorage.getItem("player"));
 
-  if (userData && userData.name && userData.phone && userData.id) {
-    updatePlayer(userData);
-    setLoading(false);
-    // return;
-  }
-
-  // Refresh token and get new access token first
-  const tryRestoreSession = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    const sessionId = localStorage.getItem("sessionId");
-
-    if (!refreshToken || !sessionId) {
+    if (userData && userData.name && userData.phone && userData.id) {
+      updatePlayer(userData);
       setLoading(false);
-      
-      setPlayer(null);
-      if (location === "/") {
-        window.location.href = "/auth";
+      // return;
+    }
+
+    // Refresh token and get new access token first
+    const tryRestoreSession = async () => {
+      const refreshToken = localStorage.getItem("refreshToken");
+      const sessionId = localStorage.getItem("sessionId");
+
+      if (!refreshToken || !sessionId) {
+        setLoading(false);
+
+        setPlayer(null);
+        if (location === "/") {
+          window.location.href = "/auth";
+        }
+        return;
       }
-      return;
-    }
 
-    try {
-      // Refresh token
-      const res = await authApi.post("/tokens", { refreshToken, sessionId });
-      const accessToken = res.data.accessToken;
+      try {
+        // Refresh token
+        const res = await authApi.post("/tokens", { refreshToken, sessionId });
+        const accessToken = res.data.accessToken;
 
-      // Store new access token in memory
-      setAccessToken(accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
+        // Store new access token in memory
+        setAccessToken(accessToken);
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+        localStorage.setItem("userid", res.data.id);
 
-      // Then fetch the user
-      const { data } = await authApi.get("/me");
+        // Then fetch the user
+        const { data } = await authApi.get("/me");
 
-      updatePlayer({
-        name: data?.name || "",
-        phone: data?.phone || "",
-        role: data?.role || "user",
-        id: data?._id || "",
-      });
+        updatePlayer({
+          name: data?.name || "",
+          phone: data?.phone || "",
+          role: data?.role || "user",
+          id: data?._id || "",
+        });
 
-      sessionStorage.setItem("player", JSON.stringify({
-        name: data?.name || "",
-        phone: data?.phone || "",
-        role: data?.role || "user",
-        id: data?._id || "",
-      }));
+        sessionStorage.setItem(
+          "player",
+          JSON.stringify({
+            name: data?.name || "",
+            phone: data?.phone || "",
+            role: data?.role || "user",
+            id: data?._id || "",
+          })
+        );
+      } catch (err) {
+        console.error("Session invalid, redirecting:", err.message);
+        localStorage.clear();
+        sessionStorage.clear();
 
-      
-    } catch (err) {
-      console.error("Session invalid, redirecting:", err.message);
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      setPlayer(null);
-      window.location.href = "/auth";
-    } finally {
-      setLoading(false);
-    }
-  };
+        setPlayer(null);
+        window.location.href = "/auth";
+      } finally {
+        setLoading(false);
+      }
+    };
 
-
-  tryRestoreSession();
-}, []);
-
+    tryRestoreSession();
+  }, []);
 
   // logout handler
   const logout = () => {
     setAccessToken(null);
     markAsLoggedOut();
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('sessionId');
-    sessionStorage.removeItem('player');
+    localStorage.clear();
+    sessionStorage.clear();
+    socket.disconnect();
     setPlayer(null);
-    window.location.href = '/auth';
+    window.location.href = "/auth";
   };
 
   return (
@@ -178,7 +180,7 @@ export const PlayerProvider = ({ children }) => {
         setLoading,
         getAccessToken,
         setAccessToken,
-        logout
+        logout,
       }}
     >
       {children}

@@ -25,10 +25,7 @@ const Hostpage = () => {
   // for getting the current path
   const location = useLocation();
 
-  // for storing the room id and ticket count
-  const temproomid = useParams();
-
-  const [roomId, setRoomId] = useState(temproomid.roomid || "");
+  const [roomId, setRoomId] = useState("");
   const [ticketCount, setTicketCount] = useState(0);
   const [gameSchedule, setGameSchedule] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,6 +58,12 @@ const Hostpage = () => {
       toast.warning("Please enter a valid Room ID (at least 3 characters).");
       return;
     }
+    // there should be no space in roomId or special characters because it is used in URL
+    // use all url friendly characters
+    if (/[^a-zA-Z0-9_-]/.test(gameSettings?.roomId)) {
+      toast.warning("No spaces or special characters in Room ID.");
+      return;
+    }
     if (gameSettings?.pattern?.length === 0) {
       toast.warning("Please select at least one pattern.");
       return;
@@ -70,16 +73,28 @@ const Hostpage = () => {
       socket.emit("create_room", { ...Player }, { ...gameSettings });
     } catch (err) {
       setLoading(false);
+
       toast.error("Failed to create room. Please try again.");
     }
+    setLoading(false);
   };
 
   const handleRoomJoined = (room) => {
+    setRoomId("");
+    updateGameSettings({
+      roomId: "",
+      isScheduled: false,
+      schedule: null,
+      pattern: [],
+    });
+    setTicketCount(0);
+    setGameSchedule("");
+    setHostPlay(false);
+    setLoading(false);
     navigate(`/host/room/${room.id}`);
     updateGameState({
       publicId: room.publicId,
     });
-    setLoading(false);
   };
   const handleReconnectToRoom = (room) => {
     navigate(`/host/room/${room}`);
@@ -171,7 +186,7 @@ const Hostpage = () => {
                     <input
                       type="text"
                       id="roomId"
-                      value={roomId || gameSettings?.roomId}
+                      value={roomId || gameSettings?.roomId || ""}
                       onChange={(e) => {
                         updateGameSettings({ roomId: e.target.value });
                         updateGameState({ roomId: e.target.value });

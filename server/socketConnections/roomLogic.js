@@ -405,7 +405,6 @@ export const reconnectPlayer = async (player, roomid) => {
 
         // Load into memory if not already present
         if (!roomInMemory) {
-          console.log("Room not found in memory, loading from DB");
           const loadedRoom = {
             host: roomInDb?.host,
             publicId: roomInDb?.publicId || null,

@@ -44,8 +44,12 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // create user
-    const user = await User.create({ name, phone, password: hashedPassword, sessions: [{ sessionId }] });
-
+    const user = await User.create({
+      name,
+      phone,
+      password: hashedPassword,
+      sessions: [{ sessionId }],
+    });
 
     // check session limit
     if (user.sessions.length > 5) {
@@ -57,19 +61,21 @@ export const createUser = async (req, res) => {
     // save user
     await user.save();
 
-
     // generate JWT token
     const tokens = createTokens(user._id.toString(), sessionId);
 
     // sending response with tokens and sessionId
-    res
-      .status(200)
-      .json({ ...tokens, sessionId,user:{
+    res.status(200).json({
+      ...tokens,
+      sessionId,
+      user: {
         id: user._id,
         name: user.name,
         phone: user.phone,
-        role: user.role
-      }, message: "User created successfully" });
+        role: user.role,
+      },
+      message: "User created successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -122,14 +128,17 @@ export const loginUser = async (req, res) => {
     const tokens = createTokens(user._id.toString(), sessionId);
 
     // sending response with tokens and sessionId
-    res
-      .status(200)
-      .json({ ...tokens, sessionId, user:{
+    res.status(200).json({
+      ...tokens,
+      sessionId,
+      user: {
         id: user._id,
         name: user.name,
         phone: user.phone,
-        role: user.role
-      }, message: "User logged in successfully" });
+        role: user.role,
+      },
+      message: "User logged in successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -140,7 +149,9 @@ export async function refreshToken(req, res) {
   // destructure body and validate inputs
   const { refreshToken, sessionId } = req.body;
   if (!refreshToken || !sessionId) {
-    return res.status(400).json({ message: 'Refresh token and session ID are required' });
+    return res
+      .status(400)
+      .json({ message: "Refresh token and session ID are required" });
   }
 
   try {
@@ -150,38 +161,39 @@ export async function refreshToken(req, res) {
 
     // find user by ID (extracted id from payload) and check if session exists
     const user = await User.findById(payload.sub);
-    const session = user.sessions.find(s => s.sessionId === sessionId);
-    if (!session) return res.status(403).json({ message: 'Invalid session' });
+    const session = user.sessions.find((s) => s.sessionId === sessionId);
+    if (!session) return res.status(403).json({ message: "Invalid session" });
 
     // generate new tokens
     const tokens = createTokens(user._id.toString(), sessionId);
 
     // send new tokens and session ID in response
-    res.json({ ...tokens, sessionId });
+    res.json({ ...tokens, sessionId, id: user._id });
   } catch {
-    res.status(403).json({ message: 'Invalid refresh token' });
+    res.status(403).json({ message: "Invalid refresh token" });
   }
 }
 
 // /api/user/me
 export async function getUser(req, res) {
-  const user = await User.findById(req.userId).select('-password -sessions');
-  if (!user) return res.status(404).json({ message: 'User not found' });
+  const user = await User.findById(req.userId).select("-password -sessions");
+  if (!user) return res.status(404).json({ message: "User not found" });
   res.json(user);
 }
-
 
 // /api/user/get-invites
 export const getInvites = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('invites -_id');
+    const user = await User.findById(req.userId).select("invites -_id");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
     if (user.invites.length === 0) {
       return res.status(200).json({ invites: [], message: "No invites found" });
     }
-    res.status(200).json({ invites: user.invites, message: "Invites fetched successfully" });
+    res
+      .status(200)
+      .json({ invites: user.invites, message: "Invites fetched successfully" });
   } catch (error) {
     console.error("Error fetching invites:", error.message);
     res.status(500).json({ message: error.message });
@@ -191,16 +203,16 @@ export const getInvites = async (req, res) => {
 export async function logoutSession(req, res) {
   const { sessionId } = req.body;
   const user = await User.findById(req.userId);
-  user.sessions = user.sessions.filter(s => s.sessionId !== sessionId);
+  user.sessions = user.sessions.filter((s) => s.sessionId !== sessionId);
   await user.save();
-  res.json({ message: 'Logged out successfully' });
+  res.json({ message: "Logged out successfully" });
 }
 
 export const changeRole = async (req, res) => {
   let { role } = req.body;
   role = role.toString().trim();
   try {
-    const user = await User.findById(req.userId).select('-password -sessions ');
+    const user = await User.findById(req.userId).select("-password -sessions ");
 
     if (!user) {
       // send user for login
@@ -214,15 +226,17 @@ export const changeRole = async (req, res) => {
       // send user for login
       return res.status(401).json({ message: "Invalid role" });
     }
-  await user.save();
+    await user.save();
 
-
-    res.status(200).json({ user : {
-      id : user._id,
-      name: user.name,
-      phone: user.phone,
-      role: user.role
-    }, message: "User role changed successfully" });
+    res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+      },
+      message: "User role changed successfully",
+    });
   } catch (error) {
     console.error("Error changing user role:", error.message);
     res.status(500).json({ message: error.message });

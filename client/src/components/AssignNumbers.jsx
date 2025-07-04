@@ -91,7 +91,8 @@ const AssignNumbers = () => {
 
     // Retry generation if invalid
     if (!success) {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
+        console.log(`Attempt ${i + 1} to generate valid tickets`);
         Object.keys(ticketsData).forEach((key) => {
           const newTicket = generateTambolaTickets(tickets[key - 1])[0];
           if (!isValidTicket(ticketsData[key])) {
@@ -118,34 +119,75 @@ const AssignNumbers = () => {
     }
 
     // Check for localStorage
-    const existingTickets = localStorage.getItem(`${gameState?.roomid}`);
-    if (existingTickets) {
-      const parsed = JSON.parse(existingTickets);
-      if (Object.keys(parsed).length === gameState?.ticketCount) {
-        setFinalTickets(parsed);
-        setLoading(false);
-        return;
+    const existingGameData = localStorage.getItem(`${gameState?.roomid}`);
+
+    if (existingGameData) {
+      try {
+        const parsedGameData = JSON.parse(existingGameData);
+
+        if (
+          parsedGameData.finalTickets &&
+          parsedGameData.selectedNumbers &&
+          Object.keys(parsedGameData.finalTickets).length ===
+            gameState?.ticketCount
+        ) {
+          setFinalTickets(parsedGameData.finalTickets);
+          setSelectedNumbers(parsedGameData.selectedNumbers);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.error("Error parsing localStorage data:", e);
       }
     }
+    const dataToSave = {
+      finalTickets: ticketsData,
+      selectedNumbers: {},
+    };
 
-    // No valid stored ticket, save and set new one
-    localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(ticketsData));
+    localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
     setFinalTickets(ticketsData);
+    setSelectedNumbers({});
     setLoading(false);
-  }, [tickets]);
+  }, [tickets, gameState?.roomid, gameState?.ticketCount]);
 
   // for claims and click on number
-  const [selectedNumbers, setSelectedNumbers] = useState([]);
+  const [selectedNumbers, setSelectedNumbers] = useState({});
 
-  const handleNumberClick = (e) => {
-    const number = parseInt(e.target.innerText);
+  const toggleNumberInSelected = (index, number) => {
+    const numericIndex = Number(index);
+    const numericNumber = Number(number);
 
-    setSelectedNumbers((prevSelected) => {
-      if (prevSelected.includes(number)) {
-        return prevSelected.filter((num) => num !== number); // Remove number correctly
+    setSelectedNumbers((prevSelectedNumbers) => {
+      const newSelectedNumbers = { ...prevSelectedNumbers };
+      const currentTicketArray = newSelectedNumbers[numericIndex] || [];
+
+      let updatedTicketArray;
+      const pos = currentTicketArray.indexOf(numericNumber);
+
+      if (pos === -1) {
+        updatedTicketArray = [...currentTicketArray, numericNumber];
       } else {
-        return [...prevSelected, number]; // Add number correctly
+        updatedTicketArray = currentTicketArray.filter(
+          (n) => n !== numericNumber
+        );
+        if (updatedTicketArray.length === 0) {
+          delete newSelectedNumbers[numericIndex];
+        }
       }
+
+      if (updatedTicketArray.length > 0 || pos === -1) {
+        newSelectedNumbers[numericIndex] = updatedTicketArray;
+      }
+
+      // Save to localStorage immediately after state update
+      const dataToSave = {
+        finalTickets: finalTickets, // Use the *current* finalTickets state
+        selectedNumbers: newSelectedNumbers,
+      };
+      localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
+
+      return newSelectedNumbers;
     });
   };
 
@@ -174,21 +216,6 @@ const AssignNumbers = () => {
       });
     };
 
-    const handleTickNumbers = (data) => {
-      if (data.length > 0) {
-        if (gameState.assign_numbers) {
-          let commonNumbers = gameState.assign_numbers.filter((num) =>
-            data.includes(num)
-          );
-          if (commonNumbers.length > 0) {
-            setSelectedNumbers((prev) => [...prev, ...commonNumbers]);
-          }
-        }
-      }
-    };
-
-    socket.on("reconnectedPlayer", handleTickNumbers);
-
     socket.on("pattern_claimed", handleClaimMessage);
     // socket.on("error", handleMessageBox);
     socket.on("claimedList", handleClaimList);
@@ -201,7 +228,6 @@ const AssignNumbers = () => {
       socket.off("claimedList", handleClaimList);
       socket.off("game_over", handleGameOver);
       socket.off("room_data_stored", handleGameOver);
-      socket.off("reconnectedPlayer", handleTickNumbers);
     };
   }, []);
 
@@ -239,13 +265,19 @@ const AssignNumbers = () => {
               firstLineNumbers.push(num);
             }
           });
-          if (firstLineNumbers.some((num) => !selectedNumbers.includes(num))) {
+          if (
+            firstLineNumbers.some(
+              (num) => !selectedNumbers[selectedTicket]?.includes(num)
+            )
+          ) {
             toast.warning("Select all First Line Numbers");
             claimMenuToggle();
             return;
           }
           let isClaimed = firstLineNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+            (num) =>
+              selectedNumbers[selectedTicket]?.includes(num) &&
+              drawNumber.includes(num)
           );
           if (isClaimed) {
             const pattern = parseInt(id);
@@ -270,13 +302,19 @@ const AssignNumbers = () => {
               secondLineNumbers.push(num);
             }
           });
-          if (secondLineNumbers.some((num) => !selectedNumbers.includes(num))) {
+          if (
+            secondLineNumbers.some(
+              (num) => !selectedNumbers[selectedTicket]?.includes(num)
+            )
+          ) {
             toast.warning("Select all Second Line Numbers");
             claimMenuToggle();
             return;
           }
           let isClaimed = secondLineNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+            (num) =>
+              selectedNumbers[selectedTicket]?.includes(num) &&
+              drawNumber.includes(num)
           );
           if (isClaimed) {
             const pattern = parseInt(id);
@@ -300,13 +338,19 @@ const AssignNumbers = () => {
               thirdLineNumbers.push(num);
             }
           });
-          if (thirdLineNumbers.some((num) => !selectedNumbers.includes(num))) {
+          if (
+            thirdLineNumbers.some(
+              (num) => !selectedNumbers[selectedTicket]?.includes(num)
+            )
+          ) {
             toast.warning("Select all Third Line Numbers");
             claimMenuToggle();
             return;
           }
           let isClaimed = thirdLineNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+            (num) =>
+              selectedNumbers[selectedTicket]?.includes(num) &&
+              drawNumber.includes(num)
           );
           if (isClaimed) {
             const pattern = parseInt(id);
@@ -331,15 +375,16 @@ const AssignNumbers = () => {
             });
           });
           let isvalid =
-            selectedNumbers.filter((num) => earlyFiveNumbers.includes(num))
-              .length >= 5;
+            selectedNumbers[selectedTicket]?.filter((num) =>
+              earlyFiveNumbers.includes(num)
+            ).length >= 5;
           if (!isvalid) {
             toast.warning("Select all Numbers for Early Five");
             claimMenuToggle();
             return;
           }
           let isClaimed =
-            selectedNumbers.filter(
+            selectedNumbers[selectedTicket]?.filter(
               (num) =>
                 drawNumber.includes(num) && earlyFiveNumbers.includes(num)
             ).length >= 5;
@@ -367,14 +412,14 @@ const AssignNumbers = () => {
           if (
             middleNumber === null ||
             middleNumber === undefined ||
-            !selectedNumbers.includes(middleNumber)
+            !selectedNumbers[selectedTicket]?.includes(middleNumber)
           ) {
             toast.warning("Select Middle Number");
             claimMenuToggle();
             return;
           }
           let isClaimed =
-            selectedNumbers.includes(middleNumber) &&
+            selectedNumbers[selectedTicket]?.includes(middleNumber) &&
             drawNumber.includes(middleNumber);
           if (isClaimed) {
             const pattern = id;
@@ -399,15 +444,16 @@ const AssignNumbers = () => {
             });
           });
           let isvalid =
-            selectedNumbers.filter((num) => earlySevenNumbers.includes(num))
-              .length >= 7;
+            selectedNumbers[selectedTicket]?.filter((num) =>
+              earlySevenNumbers.includes(num)
+            ).length >= 7;
           if (!isvalid) {
             toast.warning("Select all Numbers for Early Seven");
             claimMenuToggle();
             return;
           }
           let isClaimed =
-            selectedNumbers.filter(
+            selectedNumbers[selectedTicket]?.filter(
               (num) =>
                 drawNumber.includes(num) && earlySevenNumbers.includes(num)
             ).length >= 7;
@@ -445,7 +491,7 @@ const AssignNumbers = () => {
             }
           });
           let isvalid = cornerNumbers.every((num) => {
-            return selectedNumbers.includes(num);
+            return selectedNumbers[selectedTicket]?.includes(num);
           });
           if (!isvalid) {
             toast.warning("Select all Corner Numbers");
@@ -453,7 +499,10 @@ const AssignNumbers = () => {
             return;
           }
           let isClaimed = cornerNumbers.every((num) => {
-            return selectedNumbers.includes(num) && drawNumber.includes(num);
+            return (
+              selectedNumbers[selectedTicket]?.includes(num) &&
+              drawNumber.includes(num)
+            );
           });
           if (isClaimed) {
             const pattern = parseInt(id);
@@ -479,7 +528,7 @@ const AssignNumbers = () => {
             });
           });
           let isvalid = fullHouseNumbers.every((num) => {
-            return selectedNumbers.includes(num);
+            return selectedNumbers[selectedTicket]?.includes(num);
           });
           if (!isvalid) {
             toast.warning("Select all Full House Numbers");
@@ -487,7 +536,9 @@ const AssignNumbers = () => {
             return;
           }
           let isClaimed = fullHouseNumbers.every(
-            (num) => selectedNumbers.includes(num) && drawNumber.includes(num)
+            (num) =>
+              selectedNumbers[selectedTicket]?.includes(num) &&
+              drawNumber.includes(num)
           );
           if (isClaimed) {
             const pattern = parseInt(id);
@@ -509,59 +560,75 @@ const AssignNumbers = () => {
   ) : (
     <React.Fragment>
       <div className="flex flex-col gap-1 items-center relative">
-        {Object.keys(finalTickets).map((ticketIndex) => (
-          <React.Fragment key={ticketIndex}>
-            <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
-              ticket no {ticketIndex} :
-            </h2>
-            <div
-              key={ticketIndex}
-              className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
-            >
-              <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
-                {Array.isArray(finalTickets[ticketIndex]) &&
-                  finalTickets[ticketIndex].map((row, rowIndex) => (
-                    <React.Fragment key={rowIndex}>
-                      {Array.isArray(row) &&
-                        row.map((num, colIndex) => (
-                          <div
-                            key={`${rowIndex}-${colIndex}`}
-                            onClick={(e) =>
-                              num !== null && handleNumberClick(e)
-                            }
-                            className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
-                              num !== null
-                                ? selectedNumbers.includes(num)
-                                  ? "bg-gradient-to-b from-green-400 to-green-500 text-white"
-                                  : "bg-gradient-to-r from-white to-gray-100 text-black"
-                                : "bg-gray-300"
-                            } ${
-                              window.innerWidth < 370
-                                ? "w-full h-8 text-[12px]"
-                                : ""
-                            }`}
-                          >
-                            {num !== null ? num : ""}
-                          </div>
-                        ))}
-                    </React.Fragment>
-                  ))}
-              </div>
-              <button
-                className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
-                onClick={() => claimMenuToggle(ticketIndex)}
-              >
-                Claim
-              </button>
+        {Object.keys(finalTickets).length > 0 ? (
+          <>
+            {Object.keys(finalTickets).map((ticketIndex) => (
+              <React.Fragment key={ticketIndex}>
+                <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
+                  ticket no {ticketIndex} :
+                </h2>
+                <div
+                  key={ticketIndex}
+                  className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
+                >
+                  <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
+                    {Array.isArray(finalTickets[ticketIndex]) &&
+                      finalTickets[ticketIndex].map((row, rowIndex) => (
+                        <React.Fragment key={rowIndex}>
+                          {Array.isArray(row) &&
+                            row.map((num, colIndex) => (
+                              <div
+                                key={`${rowIndex}-${colIndex}`}
+                                onClick={(e) => {
+                                  num !== null &&
+                                    toggleNumberInSelected(ticketIndex, num);
+                                }}
+                                className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
+                                  num !== null
+                                    ? selectedNumbers[ticketIndex]?.includes(
+                                        num
+                                      )
+                                      ? "bg-gradient-to-b from-green-400 to-green-500 text-white"
+                                      : "bg-gradient-to-r from-white to-gray-100 text-black"
+                                    : "bg-gray-300"
+                                } ${
+                                  window.innerWidth < 370
+                                    ? "w-full h-8 text-[12px]"
+                                    : ""
+                                }`}
+                              >
+                                {num !== null ? num : ""}
+                              </div>
+                            ))}
+                        </React.Fragment>
+                      ))}
+                  </div>
+                  <button
+                    className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
+                    onClick={() => claimMenuToggle(ticketIndex)}
+                  >
+                    Claim
+                  </button>
 
-              {disqualify.includes(ticketIndex) && (
-                <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">
-                  Ticket is disqualified
+                  {disqualify.includes(ticketIndex) && (
+                    <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">
+                      Ticket is disqualified
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </React.Fragment>
-        ))}
+              </React.Fragment>
+            ))}
+          </>
+        ) : (
+          <div>
+            <button
+              onClick={claimMenuToggle}
+              className="bg-gradient-to-r from-red-300 via-yellow-200 to-orange-300 text-black font-semibold tracking-wide px-5 py-2 rounded-lg hover:from-red-400 hover:to-orange-400 transition-all duration-200 shadow-md active:scale-95"
+            >
+              Claim History
+            </button>
+          </div>
+        )}
 
         {claimMenu && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 bg-black/30 backdrop-blur-sm">
@@ -593,7 +660,11 @@ const AssignNumbers = () => {
                       <button
                         key={claim.id}
                         onClick={() => {
-                          if (winners !== 0 && foundClaim) {
+                          if (
+                            winners !== 0 &&
+                            foundClaim &&
+                            Object.keys(finalTickets).length > 0
+                          ) {
                             claimClick(parseInt(claim.id));
                           }
                         }}

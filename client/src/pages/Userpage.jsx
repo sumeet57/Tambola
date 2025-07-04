@@ -76,7 +76,11 @@ const Userpage = () => {
   //for listening to socket events
   useEffect(() => {
     const handleRoomJoined = (room) => {
-      navigate(`/user/room/${room}`);
+      if (Player?.role == "user") {
+        navigate(`/user/room/${room}`);
+      } else if (Player?.role == "host") {
+        navigate(`/host/room/${room}`);
+      }
       setLoading(false);
       // deductPoints();
     };
@@ -109,8 +113,7 @@ const Userpage = () => {
           {location.pathname === "/user" ||
           location.pathname === `/user/${publicId}` ? (
             <>
-              {Player?.id? (
-          
+              {Player?.id ? (
                 <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
                   <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">
                     <h2 className="text-2xl font-bold mb-4">Join a Room</h2>

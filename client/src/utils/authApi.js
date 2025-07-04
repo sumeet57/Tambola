@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 // const navigate = useNavigate();
 
@@ -19,10 +19,10 @@ export function markAsLoggedOut() {
 }
 
 const authApi = axios.create({
-  baseURL: `${backendURL}/api/user`
+  baseURL: `${backendURL}/api/user`,
 });
 
-authApi.interceptors.request.use(config => {
+authApi.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
@@ -32,16 +32,16 @@ authApi.interceptors.request.use(config => {
 
 authApi.interceptors.response.use(
   // ✅ Handle all successful responses
-  res => {
+  (res) => {
     return {
       status: res.status,
-      message: res.data?.message || 'Success',
+      message: res.data?.message || "Success",
       data: res.data?.data || res.data,
     };
   },
 
   // ✅ Handle errors
-  async err => {
+  async (err) => {
     const originalRequest = err.config;
     const status = err.response?.status;
 
@@ -49,12 +49,13 @@ authApi.interceptors.response.use(
     if (status === 401) {
       try {
         const { data } = await axios.post(`${backendURL}/api/user/tokens`, {
-          refreshToken: localStorage.getItem('refreshToken'),
-          sessionId: localStorage.getItem('sessionId'),
+          refreshToken: localStorage.getItem("refreshToken"),
+          sessionId: localStorage.getItem("sessionId"),
         });
 
         accessToken = data.accessToken;
-        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("userid", data.id);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         // Retry original request
@@ -63,7 +64,7 @@ authApi.interceptors.response.use(
         // Return in uniform structure after retry
         return {
           status: retriedResponse.status,
-          message: retriedResponse.data?.message || 'Success',
+          message: retriedResponse.data?.message || "Success",
           data: retriedResponse.data?.data || retriedResponse.data,
         };
       } catch {
@@ -71,13 +72,13 @@ authApi.interceptors.response.use(
         localStorage.clear();
         sessionStorage.clear();
 
-        if (window.location.pathname !== '/auth') {
-          window.location.href = '/auth';
+        if (window.location.pathname !== "/auth") {
+          window.location.href = "/auth";
         }
 
         return Promise.reject({
           status: 401,
-          message: 'Session expired. Please log in again.',
+          message: "Session expired. Please log in again.",
           data: null,
         });
       }
@@ -86,14 +87,10 @@ authApi.interceptors.response.use(
     // ✅ Other errors (400, 403, 500, etc.)
     return Promise.reject({
       status: status || 500,
-      message: err.response?.data?.message || 'Something went wrong',
+      message: err.response?.data?.message || "Something went wrong",
       data: err.response?.data?.data || null,
     });
   }
 );
-
-
-
-
 
 export default authApi;
