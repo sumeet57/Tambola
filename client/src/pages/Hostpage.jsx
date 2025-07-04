@@ -72,11 +72,9 @@ const Hostpage = () => {
     try {
       socket.emit("create_room", { ...Player }, { ...gameSettings });
     } catch (err) {
-      setLoading(false);
-
       toast.error("Failed to create room. Please try again.");
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleRoomJoined = (room) => {
