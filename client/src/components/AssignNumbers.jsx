@@ -128,11 +128,13 @@ const AssignNumbers = () => {
         if (
           parsedGameData.finalTickets &&
           parsedGameData.selectedNumbers &&
+          parsedGameData.disqualify &&
           Object.keys(parsedGameData.finalTickets).length ===
             gameState?.ticketCount
         ) {
           setFinalTickets(parsedGameData.finalTickets);
           setSelectedNumbers(parsedGameData.selectedNumbers);
+          setDisqualify(parsedGameData.disqualify || []);
           setLoading(false);
           return;
         }
@@ -143,6 +145,7 @@ const AssignNumbers = () => {
     const dataToSave = {
       finalTickets: ticketsData,
       selectedNumbers: {},
+      disqualify: [],
     };
 
     localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
@@ -153,6 +156,7 @@ const AssignNumbers = () => {
 
   // for claims and click on number
   const [selectedNumbers, setSelectedNumbers] = useState({});
+  const [disqualify, setDisqualify] = useState([]);
 
   const toggleNumberInSelected = (index, number) => {
     const numericIndex = Number(index);
@@ -184,9 +188,25 @@ const AssignNumbers = () => {
       const dataToSave = {
         finalTickets: finalTickets, // Use the *current* finalTickets state
         selectedNumbers: newSelectedNumbers,
+        disqualify: disqualify,
       };
       localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
 
+      return newSelectedNumbers;
+    });
+  };
+  const handleDisqualify = (ticketIndex) => {
+    setDisqualify((prev) => [...prev, ticketIndex]);
+    setSelectedNumbers((prev) => {
+      const newSelectedNumbers = { ...prev };
+      delete newSelectedNumbers[ticketIndex];
+      // Save to localStorage immediately after state update
+      const dataToSave = {
+        finalTickets: finalTickets, // Use the *current* finalTickets state
+        selectedNumbers: newSelectedNumbers,
+        disqualify: [...disqualify, ticketIndex],
+      };
+      localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
       return newSelectedNumbers;
     });
   };
@@ -233,7 +253,6 @@ const AssignNumbers = () => {
 
   const [ClaimHistory, setClaimHistory] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [disqualify, setDisqualify] = useState([]);
   const [claimMenu, setClaimMenu] = useState(false);
   const claimMenuToggle = (ticketindex) => {
     if (ticketindex) {
@@ -287,7 +306,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -323,7 +343,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -358,7 +379,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -394,7 +416,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -427,7 +450,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -463,7 +487,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -511,7 +536,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
@@ -547,7 +573,8 @@ const AssignNumbers = () => {
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
-            setDisqualify((prev) => [...prev, selectedTicket]);
+            // setDisqualify((prev) => [...prev, selectedTicket]);
+            handleDisqualify(selectedTicket);
             claimMenuToggle();
           }
         }
