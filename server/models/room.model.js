@@ -23,7 +23,7 @@ const roomSchema = new mongoose.Schema(
         name: String,
         phone: String,
         socketid: String,
-        assign_numbers: [Number],
+        assign_numbers: [Object],
         requestedTicketCount: Number,
         ticketCount: Number,
         claims: [String],

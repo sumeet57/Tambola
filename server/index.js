@@ -115,7 +115,7 @@ io.on("connection", (socket) => {
           socket.emit("error", "Room not found");
           return;
         }
-        const room = activeRooms.get(roomid);
+        const room = await activeRooms.get(roomid);
         if (!room) {
           socket.emit("error", "Room not found in memory");
           return;
@@ -126,9 +126,9 @@ io.on("connection", (socket) => {
           return;
         }
 
-        const players = assignNumbers(roomid);
-        if (typeof players === "string") {
-          socket.emit("error", players);
+        const result = assignNumbers(roomid);
+        if (typeof result === "string") {
+          socket.emit("error", result);
           return;
         }
         const roomInDb = await Room.findOne({ roomid: roomid });
@@ -138,17 +138,23 @@ io.on("connection", (socket) => {
         }
         room.isOngoing = true;
 
-        room.players?.forEach((player) => {
-          io.to(player.socketid).emit("started_game", {
-            player,
-            setting: {
-              roomid: roomid,
-              patterns: room?.patterns || [],
-              schedule: room?.schedule || null,
-              claimTrack: room?.claimTrack || [],
-            },
+        let players = await room.players;
+        if (Array.isArray(players)) {
+          players.forEach((player) => {
+            io.to(player.socketid).emit("started_game", {
+              player,
+              setting: {
+                roomid: roomid,
+                patterns: room?.patterns || [],
+                schedule: room?.schedule || null,
+                claimTrack: room?.claimTrack || [],
+              },
+            });
           });
-        });
+        } else {
+          console.warn("room.players is not an array:", players);
+        }
+        room.players = players;
       } catch (err) {
         console.error("Error in start_game:", err);
         socket.emit("error", "Server error");

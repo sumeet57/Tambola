@@ -20,14 +20,14 @@ const AssignNumbers = () => {
   const navigate = useNavigate();
 
   //for tickets
-  const [tickets, setTickets] = useState([]);
+  // const [tickets, setTickets] = useState([]);
   const [finalTickets, setFinalTickets] = useState([]); // Store final structured tickets
 
   // for context
   const { Player } = useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
 
-  //loding
+  //loading
   const [loading, setLoading] = useState(false);
 
   // warning message
@@ -55,69 +55,6 @@ const AssignNumbers = () => {
   };
 
   useEffect(() => {
-    if (gameState.assign_numbers.length > 14) {
-      const generatedTickets = distributeNumbersEqually(
-        gameState.assign_numbers
-      );
-      setTickets(generatedTickets);
-      setLoading(false);
-    } else {
-    }
-  }, []);
-
-  useEffect(() => {
-    if (tickets.length === 0) return;
-
-    let ticketsData = {};
-    setLoading(true);
-
-    // Initial generation
-    tickets.forEach((ticket, index) => {
-      ticketsData[index + 1] = generateTambolaTickets(ticket)[0];
-    });
-
-    const isValidTicket = (ticket) => {
-      if (!Array.isArray(ticket) || ticket.length !== 3) return false;
-      const flat = ticket.flat();
-      const nonNullValues = flat.filter((val) => typeof val === "number");
-      return nonNullValues.length === 15;
-    };
-
-    // Validate initially
-    let validTicketsCount =
-      Object.values(ticketsData).filter(isValidTicket).length;
-
-    let success = validTicketsCount == gameState?.ticketCount;
-
-    // Retry generation if invalid
-    if (!success) {
-      for (let i = 0; i < 10; i++) {
-        console.log(`Attempt ${i + 1} to generate valid tickets`);
-        Object.keys(ticketsData).forEach((key) => {
-          const newTicket = generateTambolaTickets(tickets[key - 1])[0];
-          if (!isValidTicket(ticketsData[key])) {
-            ticketsData[key] = newTicket;
-          }
-        });
-
-        validTicketsCount =
-          Object.values(ticketsData).filter(isValidTicket).length;
-
-        if (validTicketsCount == gameState?.ticketCount) {
-          success = true;
-          break;
-        }
-      }
-    }
-
-    if (!success) {
-      handleWarningMessage(
-        "Unable to generate valid tickets. Please Reconnect."
-      );
-      setLoading(false);
-      return;
-    }
-
     // Check for localStorage
     const existingGameData = localStorage.getItem(`${gameState?.roomid}`);
 
@@ -143,16 +80,16 @@ const AssignNumbers = () => {
       }
     }
     const dataToSave = {
-      finalTickets: ticketsData,
+      finalTickets: gameState?.assign_numbers || [],
       selectedNumbers: {},
       disqualify: [],
     };
 
     localStorage.setItem(`${gameState?.roomid}`, JSON.stringify(dataToSave));
-    setFinalTickets(ticketsData);
+    setFinalTickets(gameState?.assign_numbers);
     setSelectedNumbers({});
     setLoading(false);
-  }, [tickets, gameState?.roomid, gameState?.ticketCount]);
+  }, [gameState?.roomid, gameState?.ticketCount]);
 
   // for claims and click on number
   const [selectedNumbers, setSelectedNumbers] = useState({});

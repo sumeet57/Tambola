@@ -1,7 +1,7 @@
 import { activeRooms, pendingRoomDeletions } from "./room.js";
 import Room from "../models/room.model.js";
 import User from "../models/user.model.js";
-import { assignNumbersToPlayers } from "./assignNumberLogic.js";
+import { assignNumbersToPlayers, assignTickets } from "./assignNumberLogic.js";
 import { SaveExistingGameInDb, SaveGameInDb } from "../utils/game.utils.js";
 import { withRoomLock } from "../utils/mutexManager.js";
 
@@ -373,7 +373,12 @@ export const assignNumbers = async (roomid) => {
         return "Numbers already assigned";
       }
 
-      roomData.players = assignNumbersToPlayers(roomData.players);
+      // roomData.players = assignNumbersToPlayers(roomData.players);
+      roomData.players = assignTickets(roomData.players);
+      let isarr = Array.isArray(roomData.players);
+      if (!isarr) {
+        return "Error assigning numbers";
+      }
       roomData.isOngoing = true;
 
       return true;

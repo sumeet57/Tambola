@@ -31,13 +31,13 @@ const Hostroom = () => {
   const [loading, setLoading] = useState(false);
 
   // setting timer value for game
-  const [timerValue, setTimerValue] = useState(3); 
-  const timerValueRef = useRef(3); 
+  const [timerValue, setTimerValue] = useState(3);
+  const timerValueRef = useRef(3);
 
   const handleTimerChange = (e) => {
     const newValue = parseInt(e.target.value);
-    setTimerValue(newValue); 
-    timerValueRef.current = newValue; 
+    setTimerValue(newValue);
+    timerValueRef.current = newValue;
   };
 
   //socket event handlers, functions and states
@@ -54,7 +54,7 @@ const Hostroom = () => {
         name: player?.name || "Guest",
         roomid: roomid,
         ticketCount: player?.ticketCount || 0,
-        assign_numbers: player?.assign_numbers || [],
+        assign_numbers: player?.assign_numbers || {},
         patterns: setting?.patterns || [],
         schedule: setting?.schedule || null,
         claimTrack: setting?.claimTrack || [],

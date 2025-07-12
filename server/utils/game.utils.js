@@ -32,6 +32,7 @@ export const SaveGameInDb = async (roomid, roomData) => {
 
     return true;
   } catch (err) {
+    console.error("Error saving game:", err);
     return "Error saving game";
   }
 };
