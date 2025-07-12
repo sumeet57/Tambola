@@ -162,9 +162,9 @@ io.on("connection", (socket) => {
     });
 
     // Claiming points
-    socket.on("claim", async (player, roomid, pattern) => {
+    socket.on("claim", async (player, roomid, pattern, ticketIndex) => {
       try {
-        if (!player || !roomid || !pattern) {
+        if (!player || !roomid || !pattern || !ticketIndex) {
           socket.emit("error", "Invalid input");
           return;
         }
@@ -174,7 +174,7 @@ io.on("connection", (socket) => {
           return;
         }
 
-        const res = claimPoint(player, roomid, pattern, io);
+        const res = claimPoint(player, roomid, pattern, ticketIndex, io);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;

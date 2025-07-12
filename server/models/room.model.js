@@ -26,7 +26,7 @@ const roomSchema = new mongoose.Schema(
         assign_numbers: [Object],
         requestedTicketCount: Number,
         ticketCount: Number,
-        claims: [String],
+        claims: [Array],
       },
     ],
     settings: {

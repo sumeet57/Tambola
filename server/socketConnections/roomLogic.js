@@ -228,7 +228,7 @@ export const joinRoom = async (socketid, player, roomid, publicId) => {
 
 // updated the code, tested also (latest approch) need review
 
-export const claimPoint = async (player, roomid, pattern, io, socket) => {
+export const claimPoint = async (player, roomid, pattern, ticketIndex, io) => {
   return await withRoomLock(
     roomid,
     async () => {
@@ -269,16 +269,36 @@ export const claimPoint = async (player, roomid, pattern, io, socket) => {
         return "Pattern not available";
       }
 
-      const alreadyClaimed =
-        roomData.players[playerIndex].claims?.includes(patternName);
-      if (alreadyClaimed) {
-        return "Pattern already claimed";
+      // players - player - claims : [{name: "Early Five", ticketNo: [2,5....]}, ...]
+      // check if player ticket(ticketNo is there) has already claimed this pattern
+
+      const alreadyClaimedByAllTickets = roomData.players[
+        playerIndex
+      ].claims.some((claim) => {
+        if (claim?.name === patternName) {
+          if (claim?.ticketNo?.includes(ticketIndex)) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      });
+      if (alreadyClaimedByAllTickets) {
+        return "You have already claimed this pattern for this ticket";
+      } else if (alreadyClaimedByAllTickets === false) {
+        const claim = roomData.players[playerIndex].claims.find(
+          (claim) => claim.name === patternName
+        );
+        if (claim) {
+          claim.ticketNo.push(ticketIndex);
+        } else {
+          roomData.players[playerIndex].claims.push({
+            name: patternName,
+            ticketNo: [ticketIndex],
+          });
+        }
       }
 
-      // ✅ Apply claim
-      roomData.players[playerIndex].claims =
-        roomData.players[playerIndex].claims || [];
-      roomData.players[playerIndex].claims.push(patternName);
       roomData.claimData.push({
         player: {
           id: player?.id,

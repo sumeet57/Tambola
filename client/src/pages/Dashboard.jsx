@@ -12,7 +12,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { id } = useParams(); // room ID from route
 
-  const { Player,getAccessToken } = useContext(PlayerContext);
+  const { Player, getAccessToken } = useContext(PlayerContext);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -130,19 +130,15 @@ const Dashboard = () => {
               <table className="min-w-full bg-white border border-gray-300 rounded shadow">
                 <thead className="bg-gray-100 text-gray-700">
                   <tr>
-                    <th className="px-4 py-2 border">ID</th>
                     <th className="px-4 py-2 border">Name</th>
                     <th className="px-4 py-2 border">Phone</th>
                     <th className="px-4 py-2 border">Tickets</th>
                     <th className="px-4 py-2 border">Claims</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="overflow-auto max-h-[300px] whitespace-nowrap">
                   {selectedRoom?.players.map((player) => (
                     <tr key={player?._id}>
-                      <td className="px-4 py-2 border text-center">
-                        {player?._id}
-                      </td>
                       <td className="px-4 py-2 border text-center">
                         {player?.name}
                       </td>
@@ -152,17 +148,22 @@ const Dashboard = () => {
                       <td className="px-4 py-2 border text-center">
                         {player?.ticketCount}
                       </td>
+
                       <td className="px-4 py-2 border text-center">
-                        {player?.claims.length > 0
-                          ? player?.claims.map((c, i) => (
+                        {player?.claims && player.claims.length > 0 ? (
+                          player.claims.map((claim, index) =>
+                            claim.map((c) => (
                               <span
-                                key={i}
-                                className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded mr-1 text-sm inline-block"
+                                key={c.name + index}
+                                className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded mr-1 mb-1"
                               >
-                                {c}
+                                {c?.name} ({c?.ticketNo?.length})
                               </span>
                             ))
-                          : "-"}
+                          )
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}

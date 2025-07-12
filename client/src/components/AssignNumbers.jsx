@@ -197,18 +197,6 @@ const AssignNumbers = () => {
     }
     setClaimMenu(!claimMenu);
   };
-  const [messageBox, setMessageBox] = useState("");
-  const handleMessageBox = (pattern, name) => {
-    if (pattern && name) {
-      setMessageBox(pattern + " claimed by " + name);
-      setClaimHistory(...ClaimHistory, parseInt(pattern));
-    } else {
-      setMessageBox(pattern);
-    }
-    setTimeout(() => {
-      setMessageBox("");
-    }, 5000);
-  };
 
   const claimClick = (id) => {
     if (id === 4) {
@@ -239,7 +227,13 @@ const AssignNumbers = () => {
             const pattern = parseInt(id);
 
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -276,7 +270,13 @@ const AssignNumbers = () => {
           if (isClaimed) {
             const pattern = parseInt(id);
             // console.log(roomid, userid, pattern);
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -312,7 +312,13 @@ const AssignNumbers = () => {
           );
           if (isClaimed) {
             const pattern = parseInt(id);
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -349,7 +355,13 @@ const AssignNumbers = () => {
             ).length >= 5;
           if (isClaimed) {
             const pattern = id;
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -383,7 +395,13 @@ const AssignNumbers = () => {
             drawNumber.includes(middleNumber);
           if (isClaimed) {
             const pattern = id;
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -420,7 +438,13 @@ const AssignNumbers = () => {
             ).length >= 7;
           if (isClaimed) {
             const pattern = id;
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -469,7 +493,13 @@ const AssignNumbers = () => {
           if (isClaimed) {
             const pattern = parseInt(id);
 
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
@@ -506,7 +536,13 @@ const AssignNumbers = () => {
           if (isClaimed) {
             const pattern = parseInt(id);
 
-            socket.emit("claim", Player, gameState.roomid, pattern);
+            socket.emit(
+              "claim",
+              Player,
+              gameState.roomid,
+              pattern,
+              selectedTicket
+            );
             claimMenuToggle();
           } else {
             toast.error(`Ticket no ${selectedTicket} is disqualified`);
