@@ -562,62 +562,66 @@ const AssignNumbers = () => {
       <div className="flex flex-col gap-1 items-center relative">
         {Object.keys(finalTickets).length > 0 ? (
           <>
-            {Object.keys(finalTickets).map((ticketIndex) => (
-              <React.Fragment key={ticketIndex}>
-                <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
-                  ticket no {ticketIndex} :
-                </h2>
-                <div
-                  key={ticketIndex}
-                  className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
-                >
-                  <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
-                    {Array.isArray(finalTickets[ticketIndex]) &&
-                      finalTickets[ticketIndex].map((row, rowIndex) => (
-                        <React.Fragment key={rowIndex}>
-                          {Array.isArray(row) &&
-                            row.map((num, colIndex) => (
-                              <div
-                                key={`${rowIndex}-${colIndex}`}
-                                onClick={(e) => {
-                                  num !== null &&
-                                    toggleNumberInSelected(ticketIndex, num);
-                                }}
-                                className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
-                                  num !== null
-                                    ? selectedNumbers[ticketIndex]?.includes(
-                                        num
-                                      )
-                                      ? "bg-gradient-to-b from-green-400 to-green-500 text-white"
-                                      : "bg-gradient-to-r from-white to-gray-100 text-black"
-                                    : "bg-gray-300"
-                                } ${
-                                  window.innerWidth < 370
-                                    ? "w-full h-8 text-[12px]"
-                                    : ""
-                                }`}
-                              >
-                                {num !== null ? num : ""}
-                              </div>
-                            ))}
-                        </React.Fragment>
-                      ))}
-                  </div>
-                  <button
-                    className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
-                    onClick={() => claimMenuToggle(ticketIndex)}
-                  >
-                    Claim
-                  </button>
+            {Object.keys(finalTickets).map((ticketIndexRaw) => {
+              const ticketIndex = parseInt(ticketIndexRaw);
 
-                  {disqualify.includes(ticketIndex) && (
-                    <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">
-                      Ticket is disqualified
+              return (
+                <React.Fragment key={ticketIndex}>
+                  <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
+                    ticket no {ticketIndex} :
+                  </h2>
+                  <div
+                    key={ticketIndex}
+                    className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
+                  >
+                    <div className="grid grid-cols-9 bg-gradient-to-r from-blue-100 via-teal-100 to-green-100 rounded-md">
+                      {Array.isArray(finalTickets[ticketIndex]) &&
+                        finalTickets[ticketIndex].map((row, rowIndex) => (
+                          <React.Fragment key={rowIndex}>
+                            {Array.isArray(row) &&
+                              row.map((num, colIndex) => (
+                                <div
+                                  key={`${rowIndex}-${colIndex}`}
+                                  onClick={(e) => {
+                                    num !== null &&
+                                      toggleNumberInSelected(ticketIndex, num);
+                                  }}
+                                  className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
+                                    num !== null
+                                      ? selectedNumbers[ticketIndex]?.includes(
+                                          num
+                                        )
+                                        ? "bg-gradient-to-b from-green-400 to-green-500 text-white"
+                                        : "bg-gradient-to-r from-white to-gray-100 text-black"
+                                      : "bg-gray-300"
+                                  } ${
+                                    window.innerWidth < 370
+                                      ? "w-full h-8 text-[12px]"
+                                      : ""
+                                  }`}
+                                >
+                                  {num !== null ? num : ""}
+                                </div>
+                              ))}
+                          </React.Fragment>
+                        ))}
                     </div>
-                  )}
-                </div>
-              </React.Fragment>
-            ))}
+                    <button
+                      className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
+                      onClick={() => claimMenuToggle(ticketIndex)}
+                    >
+                      Claim
+                    </button>
+
+                    {disqualify.includes(ticketIndex) && (
+                      <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">
+                        Ticket is disqualified
+                      </div>
+                    )}
+                  </div>
+                </React.Fragment>
+              );
+            })}
           </>
         ) : (
           <div>

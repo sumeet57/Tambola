@@ -109,35 +109,19 @@ export const assignTickets = async (players) => {
     // Load tickets from tickets.json
     const ticketsData = await readFile("tickets.json", "utf8");
     const tickets = JSON.parse(ticketsData);
-    if (tickets.length < 1000) {
-      throw new Error("tickets.json must contain 1,000 tickets");
-    }
 
-    // Track used ticket indices (1 to 1000) for the session
-    const usedIndices = new Set();
+    // Initialize array of available set indices (1 to 1000)
+    const availableSetIndices = Array.from({ length: 1000 }, (_, i) => i + 1);
 
-    // Calculate total tickets needed
-    const totalTicketsNeeded = players.reduce(
-      (sum, player) => sum + player.ticketCount,
-      0
-    );
-    if (totalTicketsNeeded > 1000) {
-      throw new Error(
-        `Requested ${totalTicketsNeeded} tickets, but only 1,000 available`
-      );
-    }
-    if (totalTicketsNeeded > 600) {
-      throw new Error(
-        `Requested ${totalTicketsNeeded} tickets, but session limit is 600`
-      );
+    // Calculate total sets needed
+    const totalSetsNeeded = players.length;
+    if (totalSetsNeeded > 999) {
+      throw new Error("Too many players, only 999 tickets available");
     }
 
     // Assign tickets to each player
     for (let player of players) {
-      // player.assignedNumber = {};
       player.assign_numbers = {};
-      const maxAttempts = 100;
-
       if (player.ticketCount > 6) {
         player.ticketCount = 6; // Limit to 6 tickets
       }
@@ -145,28 +129,19 @@ export const assignTickets = async (players) => {
         continue; // Skip players with no tickets
       }
 
-      for (let i = 1; i <= player.ticketCount; i++) {
-        let attempts = 0;
-        let ticketIndex;
+      // Select a random set index from available indices
+      if (availableSetIndices.length === 0) {
+        throw new Error("No available sets remaining for assignment");
+      }
+      const randomIndex = Math.floor(
+        Math.random() * availableSetIndices.length
+      );
+      const ticketIndex = availableSetIndices[randomIndex];
+      availableSetIndices.splice(randomIndex, 1); // Remove the used index
 
-        // Find an unused ticket index
-        while (attempts < maxAttempts) {
-          ticketIndex = Math.floor(Math.random() * 1000); // 0 to 999
-          if (!usedIndices.has(ticketIndex)) {
-            usedIndices.add(ticketIndex);
-            break;
-          }
-          attempts++;
-          if (attempts === maxAttempts) {
-            throw new Error(
-              `Failed to find unused ticket for player after ${maxAttempts} attempts`
-            );
-          }
-        }
-
-        // Assign the ticket's 3x9 grid to assignedNumber
-        // player.assign_numbers = []
-        player.assign_numbers[`${i}`] = tickets[ticketIndex].ticket;
+      const ticketSet = tickets[ticketIndex];
+      for (let i = 0; i < player.ticketCount; i++) {
+        player.assign_numbers[i + 1] = ticketSet[i];
       }
     }
 
