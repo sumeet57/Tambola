@@ -160,11 +160,15 @@ const AssignNumbers = () => {
   };
 
   useEffect(() => {
-    const handleGameOver = () => {
+    const handleGameOver = (data) => {
       toast.info("Game Over!");
       localStorage.removeItem(`${gameState?.roomid}`);
       setTimeout(() => {
-        navigate("gameover");
+        navigate("gameover", {
+          state: {
+            claimData: data,
+          }
+        });
       }, 1000);
     };
     const handleClaimList = (claimedList) => {

@@ -343,7 +343,7 @@ export const claimPoint = async (player, roomid, pattern, ticketIndex, io) => {
           await SaveGameInDb(roomId, roomData);
         }
 
-        io.to(roomId).emit("game_over", { roomid: roomId });
+        io.to(roomId).emit("game_over",  roomData?.claimData);
 
         for (const player of roomData.players) {
           try {

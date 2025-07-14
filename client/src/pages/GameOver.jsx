@@ -4,52 +4,108 @@ import { useLocation, useNavigate } from "react-router-dom";
 const GameOver = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const winner = location.state?.name;
-
-  const [gameEnded, setGameEnded] = useState(false);
+  const claimData = location.state?.claimData;
+  const [parsedData, setParsedData] = useState([]);
+  
   useEffect(() => {
-    if (winner) {
-      if (winner === "Game ended by host") {
-        setGameEnded(true);
-      }
+    if (!claimData || claimData.length === 0) {
+      setParsedData([]);
+      return;
     }
-  }, [navigate]);
+
+    const transformedData = claimData.reduce((acc, claim) => {
+      // Ensure the claim object has player and pattern, and player has name and phone
+      if (!claim || !claim.player || !claim.pattern || !claim.player.name || !claim.player.phone) {
+        // You might want to handle these cases (e.g., log a warning, skip the claim)
+        console.warn("Skipping malformed claim:", claim);
+        return acc;
+      }
+
+      // Create a unique key using both name and phone number
+      const playerKey = `${claim.player.name}-${claim.player.phone}`;
+
+      let existingPlayerEntry = acc.find(
+        (entry) => `${entry.player.name}-${entry.player.phone}` === playerKey
+      );
+
+      if (existingPlayerEntry) {
+        // Player (name + phone) exists, check for existing pattern
+        const existingPattern = existingPlayerEntry.pattern.find(
+          (p) => p.name === claim.pattern
+        );
+
+        if (existingPattern) {
+          // Pattern exists for this player, increment count
+          existingPattern.count += 1;
+        } else {
+          // New pattern for existing player
+          existingPlayerEntry.pattern.push({ name: claim.pattern, count: 1 });
+        }
+      } else {
+        // New player (name + phone), add to accumulator with their first pattern
+        acc.push({
+          player: {
+            name: claim.player.name,
+            phone: claim.player.phone, // Include the phone number
+            // ... any other player properties you want to keep
+          },
+          pattern: [{ name: claim.pattern, count: 1 }],
+        });
+      }
+      return acc;
+    }, []);
+
+    setParsedData(transformedData);
+  }, [claimData]); // Add claimData to the dependency array
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/");
+      // navigate("/");
     }, 10000);
 
+    console.log("Claim Data:", claimData);
     return () => clearTimeout(timer);
   }, [navigate]);
   return (
     <>
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
-        <div className="bg-white p-8 rounded-lg shadow-2xl text-center">
-          <div className="text-3xl font-bold text-red-600 mb-4">
-            🎉 Game Over 🎉
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-300 to-purple-300 p-1">
+        <div className="leaderboard w-full max-w-2xl bg-white rounded-lg shadow-xl p-3 md:p-5">
+          <h1 className="text-2xl font-bold mb-4 text-center text-gray-800 md:text-4xl">Game Over</h1>
+          <h2 className="text-xl font-semibold mb-4 text-center text-gray-700 md:text-2xl">🎊 Winners 🎊</h2>
+          <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
+
+            {parsedData.length > 0 ? (
+              parsedData.map((data, index) => (
+                // --- Start of Compact Player Card Styling ---
+                <div
+                  key={index}
+                  className="mb-1 p-1 border border-gray-400 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-md"
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center justify-between mb-1">
+                    <span>{data.player.name} <span className="text-sm font-normal text-gray-700"> - {data.player.phone}</span></span>
+                  </h3>
+                  <ul className="text-sm text-gray-700 space-y-0.5"> {/* Reduced spacing and font size */}
+                    {data.pattern.map((p, pIndex) => (
+                      <li key={pIndex} className="flex justify-between items-center border-b-2 border-gray-300">
+                        <span className="font-normal">{p.name}</span>
+                        <span className="font-medium text-blue-600 ml-2">{p.count} claims</span> {/* Use ml-2 for spacing */}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                // --- End of Compact Player Card Styling ---
+              ))
+            ) : (
+              <p className="text-center text-gray-600 py-8">No claim data to display.</p>
+            )}
+
           </div>
-          {winner && (
-            <div className="text-xl font-semibold text-yellow-500 mb-4">
-              {gameEnded ? "🚫 Game ended by host" : `🏆 Winner : ${winner}!`}
-            </div>
-          )}
-          <p className="text-gray-700 mb-6">
-            All your progress is stored in the database.
-          </p>
-          <div className="bg-gray-100 p-6 rounded-lg shadow-inner">
-            <p className="text-gray-600 mb-4">
-              You will be redirected to home in 10 seconds.
-            </p>
-            <p className="text-green-600 mb-4 text-xl font-bold">
-              Thanks for playing! 🎮
-            </p>
-            <button
-              onClick={() => navigate("/")}
-              className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition duration-300"
+          <div className="flex justify-center mt-6">
+            <button 
+            onClick={() => navigate("/")}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
             >
-              Redirect Now
+              Back to Home
             </button>
           </div>
         </div>

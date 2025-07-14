@@ -66,10 +66,10 @@ const Game = () => {
   };
 
   //for development
-  // const [timer, setTimer] = useState(0);
+  const [timer, setTimer] = useState(0);
 
   // for production
-  const [timer, setTimer] = useState(timervalue);
+  // const [timer, setTimer] = useState(timervalue);
 
   const handleTimer = () => {
     const interval = setInterval(() => {
@@ -78,14 +78,14 @@ const Game = () => {
           clearInterval(interval);
           setTimerToggled(false);
           // for production
-          return timervalue;
+          // return timervalue;
 
           // for development
-          // return 0;
+          return 0;
         }
         return prevTimer - 1;
       });
-    }, 1000);
+    }, 100);
   };
 
   useEffect(() => {
