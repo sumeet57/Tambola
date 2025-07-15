@@ -53,7 +53,7 @@ const PatternMenu = () => {
   };
 
   return (
-    <div className="bg-white p-1 rounded-lg shadow-md">
+    <div className="bg-white p-1 rounded-lg border border-gray-400 shadow-md">
       <h2 className="text-lg sm:text-xl font-bold mb-3 text-gray-800 text-center">
         Select Patterns
       </h2>

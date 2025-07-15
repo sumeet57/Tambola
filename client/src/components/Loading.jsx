@@ -19,6 +19,17 @@ const Loading = () => {
             />
           </svg>
           <div>Loading...</div>
+
+          <div
+          className="w-9/12 "
+          >
+
+            <p
+            className="text-center text-lg text-red-400 mt-4"
+            >
+              Currently in testing phase. It may take a few seconds to load the game. Please wait.
+            </p>
+          </div>
         </div>
       </div>
     </div>

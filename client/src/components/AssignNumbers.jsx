@@ -160,11 +160,15 @@ const AssignNumbers = () => {
   };
 
   useEffect(() => {
-    const handleGameOver = () => {
+    const handleGameOver = (data) => {
       toast.info("Game Over!");
       localStorage.removeItem(`${gameState?.roomid}`);
       setTimeout(() => {
-        navigate("gameover");
+        navigate("gameover", {
+          state: {
+            claimData: data,
+          }
+        });
       }, 1000);
     };
     const handleClaimList = (claimedList) => {
@@ -559,17 +563,25 @@ const AssignNumbers = () => {
     <Loading />
   ) : (
     <React.Fragment>
-      <div className="flex flex-col gap-1 items-center relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 items-center relative">
         {Object.keys(finalTickets).length > 0 ? (
           <>
             {Object.keys(finalTickets).map((ticketIndexRaw) => {
               const ticketIndex = parseInt(ticketIndexRaw);
 
               return (
-                <React.Fragment key={ticketIndex}>
-                  <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
+                <div key={ticketIndex} >
+                  <div className="flex justify-between items-center w-full max-w-2xl mb-2">
+                    <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
                     ticket no {ticketIndex} :
                   </h2>
+                  <button
+                      className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
+                      onClick={() => claimMenuToggle(ticketIndex)}
+                    >
+                      Claim
+                    </button>
+                  </div>
                   <div
                     key={ticketIndex}
                     className="bg-white w-full h-fit p-1 relative overflow-hidden border-2 border-zinc-900 mb-2 rounded-lg shadow-md"
@@ -606,12 +618,7 @@ const AssignNumbers = () => {
                           </React.Fragment>
                         ))}
                     </div>
-                    <button
-                      className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
-                      onClick={() => claimMenuToggle(ticketIndex)}
-                    >
-                      Claim
-                    </button>
+                    
 
                     {disqualify.includes(ticketIndex) && (
                       <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">
@@ -619,7 +626,7 @@ const AssignNumbers = () => {
                       </div>
                     )}
                   </div>
-                </React.Fragment>
+                </div>
               );
             })}
           </>

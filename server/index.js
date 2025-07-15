@@ -174,7 +174,7 @@ io.on("connection", (socket) => {
           return;
         }
 
-        const res = claimPoint(player, roomid, pattern, ticketIndex, io);
+        const res = await claimPoint(player, roomid, pattern, ticketIndex, io);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;
@@ -267,8 +267,9 @@ io.on("connection", (socket) => {
           socket.emit("error", endRes);
           return;
         }
+        const claimDataForLeaderboard = room?.claimData;
 
-        io.to(roomid).emit("room_data_stored", "Game ended by host");
+        io.to(roomid).emit("room_data_stored", claimDataForLeaderboard);
       } catch (err) {
         console.error("Error in end_game:", err);
         socket.emit("error", "Server error");
