@@ -14,14 +14,14 @@ const GameOver = () => {
     }
 
     const transformedData = claimData.reduce((acc, claim) => {
-      // Ensure the claim object has player and pattern, and player has name and phone
+
       if (!claim || !claim.player || !claim.pattern || !claim.player.name || !claim.player.phone) {
-        // You might want to handle these cases (e.g., log a warning, skip the claim)
+
         console.warn("Skipping malformed claim:", claim);
         return acc;
       }
 
-      // Create a unique key using both name and phone number
+
       const playerKey = `${claim.player.name}-${claim.player.phone}`;
 
       let existingPlayerEntry = acc.find(
@@ -29,25 +29,25 @@ const GameOver = () => {
       );
 
       if (existingPlayerEntry) {
-        // Player (name + phone) exists, check for existing pattern
+      
         const existingPattern = existingPlayerEntry.pattern.find(
           (p) => p.name === claim.pattern
         );
 
         if (existingPattern) {
-          // Pattern exists for this player, increment count
+          
           existingPattern.count += 1;
         } else {
-          // New pattern for existing player
+         
           existingPlayerEntry.pattern.push({ name: claim.pattern, count: 1 });
         }
       } else {
-        // New player (name + phone), add to accumulator with their first pattern
+        
         acc.push({
           player: {
             name: claim.player.name,
-            phone: claim.player.phone, // Include the phone number
-            // ... any other player properties you want to keep
+            phone: claim.player.phone, 
+  
           },
           pattern: [{ name: claim.pattern, count: 1 }],
         });
@@ -56,14 +56,13 @@ const GameOver = () => {
     }, []);
 
     setParsedData(transformedData);
-  }, [claimData]); // Add claimData to the dependency array
+  }, [claimData]); 
 
   useEffect(() => {
     const timer = setTimeout(() => {
       // navigate("/");
     }, 10000);
 
-    console.log("Claim Data:", claimData);
     return () => clearTimeout(timer);
   }, [navigate]);
   return (

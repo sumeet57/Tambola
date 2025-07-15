@@ -66,10 +66,10 @@ const Game = () => {
   };
 
   //for development
-  const [timer, setTimer] = useState(0);
+  // const [timer, setTimer] = useState(0);
 
   // for production
-  // const [timer, setTimer] = useState(timervalue);
+  const [timer, setTimer] = useState(timervalue);
 
   const handleTimer = () => {
     const interval = setInterval(() => {
@@ -78,14 +78,14 @@ const Game = () => {
           clearInterval(interval);
           setTimerToggled(false);
           // for production
-          // return timervalue;
+          return timervalue;
 
           // for development
-          return 0;
+          // return 0;
         }
         return prevTimer - 1;
       });
-    }, 100);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -170,7 +170,7 @@ const Game = () => {
         <Loading />
       ) : location.pathname === "/game" ? (
         <div className="container flex flex-col items-center justify-center p-4 min-w-full min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
-          <div className="relative w-full max-w-md flex flex-col items-center gap-2">
+          <div className="relative w-full max-w-lg md:max-w-2xl flex flex-col items-center gap-2">
             {Player?.role === "host" && (
               <div className="w-full flex gap-2 items-center bg-white p-2 rounded-lg shadow-lg">
                 <div className="message hidden opacity-0"></div>
@@ -212,7 +212,7 @@ const Game = () => {
             </div>
 
             {/* Tickets Section */}
-            <div className="w-full bg-white p-2 rounded-lg shadow-lg overflow-y-auto max-h-[400px]">
+            <div className="w-full bg-white p-2 rounded-lg shadow-lg overflow-y-auto max-h-[450px] md">
               {/* {console.log("nearest", gameState.assignedNumbers)} */}
               <AssignNumbers data={gameState.assign_numbers} />
             </div>

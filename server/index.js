@@ -174,7 +174,7 @@ io.on("connection", (socket) => {
           return;
         }
 
-        const res = claimPoint(player, roomid, pattern, ticketIndex, io);
+        const res = await claimPoint(player, roomid, pattern, ticketIndex, io);
         if (typeof res === "string") {
           socket.emit("error", res);
           return;

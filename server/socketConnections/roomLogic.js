@@ -251,8 +251,8 @@ export const claimPoint = async (player, roomid, pattern, ticketIndex, io) => {
         2: "Middle Number",
         3: "Early Seven",
         4: "First Line",
-        5: "Middle Line",
-        6: "Last Line",
+        5: "Second Line",
+        6: "Third Line",
         7: "Corner",
         8: "Full House",
       };
@@ -318,7 +318,7 @@ export const claimPoint = async (player, roomid, pattern, ticketIndex, io) => {
 
       // 📢 Broadcast claim updates
       io.to(roomId).emit("pattern_claimed", {
-        message: `${patternName} Claimed by ${player?.name}, Approved by the System 🎉`,
+        message: `${patternName} Claimed by ${player?.name}, Approve by the System 🎉`,
       });
       io.to(roomId).emit("claimedList", roomData.claimTrack);
 

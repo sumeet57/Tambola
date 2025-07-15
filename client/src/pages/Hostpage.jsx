@@ -287,7 +287,7 @@ const Hostpage = () => {
                       <button
                         type="button" // Important: Prevent form submission if nested in a form
                         onClick={() => setEditPatterns(false)}
-                        className="absolute top-3 right-3 p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+                        className="absolute top-3 right-3 p-2 rounded-full bg-red-500 hover:bg-red-600 transition-colors duration-200 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                         aria-label="Close pattern selection"
                       >
                         <svg
@@ -308,6 +308,13 @@ const Hostpage = () => {
 
                       {/* PatternMenu Component */}
                       <PatternMenu />
+
+                      <button
+                      onClick={()=> setEditPatterns(false)}
+                      className="mt-4 bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold py-1.5 px-4 rounded focus:outline-none"
+                      >
+                        Done
+                      </button>
                     </div>
                   </div>
                 )}
