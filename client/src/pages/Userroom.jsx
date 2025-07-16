@@ -90,22 +90,20 @@ const Userroom = () => {
   return (
     <>
       <div className="p-4 pt-20 bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300 min-h-screen">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          Players
-        </h2>
-        <div className="border p-6 rounded-lg shadow-lg bg-white flex flex-wrap justify-start">
-          {playersList.length > 0 ? (
-            playersList.map((player, index) => (
-              <div
+        <div class="border border-gray-200 p-4 rounded-xl bg-white/55 shadow-lg flex flex-col items-center md:p-6 lg:p-8">
+          <h2 class="text-2xl font-extrabold text-gray-800 mb-4 pb-1 border-b-4 border-blue-500 block self-start md:self-center">
+            Players:
+          </h2>
+          <div class="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-5 w-full overflow-y-auto max-h-[40vh] ">
+            {playersList?.map((player, index) => (
+              <span
                 key={index}
-                className="m-2 border-2 p-2 rounded-lg bg-gray-200"
+                className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-base md:text-lg font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center min-w-[100px] text-center"
               >
                 {player}
-              </div>
-            ))
-          ) : (
-            <div className="text-gray-500">No players joined yet.</div>
-          )}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
       {isConnected && (

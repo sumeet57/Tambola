@@ -38,21 +38,9 @@ const DrawNumbers = () => {
 
   return (
     <>
-      {gameState?.drawnNumbers.length > 0 && (
-        <button
-          className={`p-[6px] fixed top-[2%] left-[2%] rounded-full inline-block text-2xl font-medium border ${
-            isVoiceEnabled
-              ? "bg-green-500 border-green-800"
-              : "bg-red-500 border-red-800"
-          } text-gray-800 shadow-md`}
-          onClick={handleVoiceToggle}
-        >
-          {isVoiceEnabled ? "🔊" : "🔇"}
-        </button>
-      )}
       <div
         onClick={toggleFullscreen}
-        className="overflow-x-scroll relative flex flex-nowrap bg-red-500 gap-2 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 p-4 rounded-2xl w-full shadow-lg"
+        className="overflow-x-scroll relative flex flex-nowrap bg-red-500 gap-2 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 p-3 rounded-2xl w-full shadow-lg"
       >
         {[...gameState.drawnNumbers].reverse().map((num, index) => (
           <span

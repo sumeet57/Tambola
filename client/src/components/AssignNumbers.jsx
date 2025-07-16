@@ -167,7 +167,7 @@ const AssignNumbers = () => {
         navigate("gameover", {
           state: {
             claimData: data,
-          }
+          },
         });
       }, 1000);
     };
@@ -563,19 +563,19 @@ const AssignNumbers = () => {
     <Loading />
   ) : (
     <React.Fragment>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 items-center relative">
+      <div className="grid grid-cols-1 gap-1 items-center relative">
         {Object.keys(finalTickets).length > 0 ? (
           <>
             {Object.keys(finalTickets).map((ticketIndexRaw) => {
               const ticketIndex = parseInt(ticketIndexRaw);
 
               return (
-                <div key={ticketIndex} >
+                <div key={ticketIndex}>
                   <div className="flex justify-between items-center w-full max-w-2xl mb-2">
                     <h2 className="text-left uppercase w-full ml-2 text-base sm:text-lg font-extrabold  tracking-tight text-gray-800">
-                    ticket no {ticketIndex} :
-                  </h2>
-                  <button
+                      ticket no {ticketIndex} :
+                    </h2>
+                    <button
                       className="mt-1 bg-gradient-to-r from-yellow-200 via-orange-200 to-pink-200 text-black text-center font-medium tracking-wider px-4 py-1 transition-all active:scale-90 rounded-lg hover:from-yellow-300 hover:via-orange-300 hover:to-pink-300 shadow-lg"
                       onClick={() => claimMenuToggle(ticketIndex)}
                     >
@@ -598,7 +598,13 @@ const AssignNumbers = () => {
                                     num !== null &&
                                       toggleNumberInSelected(ticketIndex, num);
                                   }}
-                                  className={`w-full h-10 flex items-center justify-center text-base select-none font-semibold rounded-none border ${
+                                  className={`w-full ${
+                                    window.innerHeight > 1000
+                                      ? "h-14"
+                                      : window.innerHeight > 700
+                                      ? "h-11"
+                                      : "h-10"
+                                  } flex items-center justify-center text-base select-none font-semibold rounded-none border ${
                                     num !== null
                                       ? selectedNumbers[ticketIndex]?.includes(
                                           num
@@ -618,7 +624,6 @@ const AssignNumbers = () => {
                           </React.Fragment>
                         ))}
                     </div>
-                    
 
                     {disqualify.includes(ticketIndex) && (
                       <div className="text-red-500 absolute flex justify-center items-center text-2xl w-full h-full top-0 left-0 p-2 bg-gray-600 opacity-90">

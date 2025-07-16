@@ -274,17 +274,22 @@ const Hostroom = () => {
             </div>
           )}
 
-          <h2 className="text-3xl font-bold my-6 text-gray-800">Players</h2>
-          <div className="border p-4 rounded-lg bg-white shadow-md flex flex-wrap justify-center">
-            {playerlist?.map((player, index) => (
-              <span
-                key={index}
-                className="m-2 border-2 p-2 rounded-lg bg-gray-200"
-              >
-                {player}
-              </span>
-            ))}
+          <div class="border border-gray-200 p-4 rounded-xl bg-white/55 shadow-lg flex flex-col items-center md:p-6 lg:p-8">
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-4 pb-1 border-b-4 border-blue-500 block self-start md:self-center">
+              Players:
+            </h2>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-5 w-full overflow-y-auto max-h-[40vh] ">
+              {playerlist?.map((player, index) => (
+                <span
+                  key={index}
+                  class="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-base md:text-lg font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center min-w-[100px] text-center"
+                >
+                  {player}
+                </span>
+              ))}
+            </div>
           </div>
+
           <div className="mt-6 flex items-center space-x-3 bg-white border border-gray-300 rounded-lg px-4 py-3 shadow-sm w-fit">
             <label
               htmlFor="drawn-interval"
@@ -333,39 +338,82 @@ const Hostroom = () => {
                       key={index}
                       className="flex items-center justify-between gap-2 bg-gray-100 p-2 rounded-lg"
                     >
-                      <span className="text-base font-medium truncate w-1/3">
-                        {data.name}
+                      <span className="text-base font-medium w-[60%]">
+                        {data?.name} - {data?.phone}
                       </span>
 
-                      <input
-                        type="number"
-                        min="1"
-                        max="6"
-                        className="w-16 text-center border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={data.count}
-                        onChange={(e) => {
-                          const newCount = parseInt(e.target.value) || 0;
-                          if (newCount > 6) {
-                            alert("Please enter a number between 1 and 6");
-                            return;
-                          }
-                          setRequestTicketsList((prev) =>
-                            prev.map((item, i) =>
-                              i === index ? { ...item, count: newCount } : item
-                            )
-                          );
-                        }}
-                      />
+                      <div className="w-[40%] flex items-center justify-end">
+                        {/* Decrement Button */}
+                        <button
+                          onClick={() => {
+                            const newCount = Math.max(1, data.count - 1); // Ensure count doesn't go below 1
+                            setRequestTicketsList((prev) =>
+                              prev.map((item, i) =>
+                                i === index
+                                  ? { ...item, count: newCount }
+                                  : item
+                              )
+                            );
+                          }}
+                          className="
+            bg-blue-200 hover:bg-blue-300 text-blue-800
+            text-lg font-bold
+            w-8 h-8 rounded-l-md
+            flex items-center justify-center
+            transition-all duration-150 active:scale-95
+          "
+                        >
+                          -
+                        </button>
 
-                      <button
-                        onClick={() => {
-                          setSelectedRequest(data);
-                          setWarningPopup(true);
-                        }}
-                        className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded-md transition-all active:scale-95"
-                      >
-                        Approve
-                      </button>
+                        {/* Count Display */}
+                        <span
+                          className="
+            w-10 h-8
+            flex items-center justify-center
+            border-t border-b border-gray-300
+            text-center text-base font-semibold
+            bg-white
+          "
+                        >
+                          {data.count}
+                        </span>
+
+                        {/* Increment Button */}
+                        <button
+                          onClick={() => {
+                            const newCount = Math.min(6, data.count + 1); // Ensure count doesn't go above 6
+                            setRequestTicketsList((prev) =>
+                              prev.map((item, i) =>
+                                i === index
+                                  ? { ...item, count: newCount }
+                                  : item
+                              )
+                            );
+                          }}
+                          className="
+            bg-blue-200 hover:bg-blue-300 text-blue-800
+            text-lg font-bold
+            w-8 h-8 rounded-r-md
+            flex items-center justify-center
+            transition-all duration-150 active:scale-95
+          "
+                        >
+                          +
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(data);
+                            setWarningPopup(true);
+                          }}
+                          className="bg-green-600 hover:bg-green-700 ml-2 text-white text-sm px-3 py-1.5 rounded-md transition-all active:scale-95"
+                        >
+                          Approve
+                        </button>
+                      </div>
+
+                      {/* Warning Popup remains the same, but ensure it's outside the mapped div if it should be a single popup for the whole list */}
                       {warningPopup && selectedRequest && (
                         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm transition-all">
                           <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-6 animate-fadeIn">
@@ -373,11 +421,8 @@ const Hostroom = () => {
                               {selectedRequest.phone} - {selectedRequest.name}
                             </h3>
                             <p className="text-sm text-gray-500 mb-4">
-                              Requesting{" "}
-                              <span className="font-semibold text-black">
-                                {selectedRequest.count}
-                              </span>{" "}
-                              ticket{selectedRequest.count > 1 ? "s" : ""}.
+                              Requesting {selectedRequest.count} ticket
+                              {selectedRequest.count > 1 ? "s" : ""}.
                               <br />
                               Are you sure you want to approve this request?
                             </p>
@@ -413,7 +458,6 @@ const Hostroom = () => {
 
                                   setWarningPopup(false);
                                   setSelectedRequest(null);
-                                  // console.log(requestTicketsList.length);
                                   if (requestTicketsList.length === 1) {
                                     setRequestMenu(false);
                                   }

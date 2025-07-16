@@ -29,13 +29,13 @@ const Dashboard = () => {
           },
           credentials: "include",
         });
-        setLoading(false);
         const data = await response.json();
         if (response.status === 200) {
           setRooms(data.rooms || []);
         } else {
           console.error("Error fetching rooms:", data.message);
         }
+        setLoading(false);
       } catch (error) {
         setLoading(false);
         console.error("Error fetching rooms:", error);

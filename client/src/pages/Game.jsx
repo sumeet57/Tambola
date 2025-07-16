@@ -169,8 +169,8 @@ const Game = () => {
       {loading ? (
         <Loading />
       ) : location.pathname === "/game" ? (
-        <div className="container flex flex-col items-center justify-center p-4 min-w-full min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
-          <div className="relative w-full max-w-lg md:max-w-2xl flex flex-col items-center gap-2">
+        <div className="container flex flex-col items-center p-2 min-w-full min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
+          <div className="relative w-full max-w-lg md:max-w-2xl h-fit flex flex-col items-center gap-2">
             {Player?.role === "host" && (
               <div className="w-full flex gap-2 items-center bg-white p-2 rounded-lg shadow-lg">
                 <div className="message hidden opacity-0"></div>
@@ -203,16 +203,12 @@ const Game = () => {
             )}
 
             {/* Drawn Numbers Section */}
-            <div className="w-full flex flex-col items-center bg-white p-2 rounded-lg shadow-lg">
+            <div className="w-full flex flex-col bg-white p-1 rounded-lg items-center shadow-lg">
               <DrawNumbers />
-            </div>
-            {/* Message Section  | Message section remove */}
-            <div className="w-full hidden flex-col items-center bg-white p-2 rounded-lg shadow-lg">
-              {/* <Message /> */}
             </div>
 
             {/* Tickets Section */}
-            <div className="w-full bg-white p-2 rounded-lg shadow-lg overflow-y-auto max-h-[450px] md">
+            <div className="w-full bg-white p-2 rounded-lg shadow-lg h-full overflow-y-auto">
               {/* {console.log("nearest", gameState.assignedNumbers)} */}
               <AssignNumbers data={gameState.assign_numbers} />
             </div>
@@ -254,103 +250,6 @@ const Game = () => {
                   >
                     🔄 Reconnect to Game
                   </button>
-                </div>
-              </div>
-            )}
-
-            {/* Menu for leave game, report, and end game */}
-            <button
-              onClick={handleMenuBox}
-              className="bg-zinc-900/60 text-xl text-white p-3 font-bold rounded-full shadow hover:bg-blue-700 transition duration-300
-              fixed top-4 right-2 z-50
-              "
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-            {menu && (
-              <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex justify-end">
-                <div
-                  className={`bg-white relative w-64 h-full shadow-lg p-6 ${
-                    window.innerHeight < 350 ? "overflow-y-auto" : ""
-                  }`}
-                >
-                  <div
-                    onClick={handleMenuBox}
-                    className="text-lg mb-4 w-full text-right"
-                  >
-                    <button className="bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 transition duration-300">
-                      <svg
-                        className="w-6 h-6"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M3.293 4.293a1 1 0 011.414 0L10 10.586l5.293-5.293a1 1 0 111.414 1.414L11.414 12l5.293 5.293a1 1 0 01-1.414 1.414L10 13.414 4.707 18.707a1 1 0 01-1.414-1.414L8.586 12 3.293 6.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <ul className="space-y-6">
-                    <li>
-                      <div className="w-full p-6 bg-white rounded-lg shadow-lg text-gray-800">
-                        {Player?.role == "host" && (
-                          <p className="text-red-500">Host</p>
-                        )}
-                        <div className="flex flex-col">
-                          {Player?.name && (
-                            <h2 className="text-2xl font-semibold mb-2">
-                              {Player.name}
-                            </h2>
-                          )}
-                          {Player?.phone && (
-                            <div className="flex items-center">
-                              <p className="text-gray-800 text-lg">
-                                {Player.phone}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                    <li></li>
-                    <li>
-                      <button
-                        className="text-gray-800 bg-blue-200 hover:bg-gray-200 w-full text-left px-4 py-2 rounded-full shadow transition duration-300"
-                        onClick={() => {
-                          navigate("/");
-                          window.location.reload();
-                          handleMenuBox();
-                        }}
-                      >
-                        ⛔ Leave Game
-                      </button>
-                    </li>
-                  </ul>
-                  <p className="text-sm mt-10 text-center text-gray-900 py-4 opacity-55">
-                    Developed by{" "}
-                    <a
-                      href="https://github.com/sumeet57"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-gray-600 hover:underline hover:text-orange-500 transition-all duration-300"
-                    >
-                      Sumeet
-                    </a>
-                  </p>
                 </div>
               </div>
             )}

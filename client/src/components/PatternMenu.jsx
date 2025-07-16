@@ -19,15 +19,34 @@ const PatternMenu = () => {
   const handleChange = (e) => {
     const { id, checked } = e.target;
 
+    let updatedPatterns;
+
     if (checked) {
-      updateGameSettings({
-        pattern: [...gameSettings.pattern, { id, winners: 1 }], // Add with default winners: 1
-      });
+      // If checked, add the new pattern with default winners: 1
+      // and then re-sort based on the 'patterns' constant order
+      const newPatternToAdd = { id, winners: 1 };
+      const tempPatterns = [...gameSettings.pattern, newPatternToAdd];
+
+      updatedPatterns = patterns
+        .filter((p) => tempPatterns.some((tp) => tp.id === p.id))
+        .map((p) => {
+          // Find the existing pattern in tempPatterns to retain its 'winners' property
+          const existing = tempPatterns.find((tp) => tp.id === p.id);
+          return existing || { id: p.id, winners: 1 }; // Fallback to default if not found (shouldn't happen here)
+        });
     } else {
-      updateGameSettings({
-        pattern: gameSettings.pattern.filter((p) => p.id !== id),
-      });
+      // If unchecked, filter out the pattern
+      const filteredPatterns = gameSettings.pattern.filter((p) => p.id !== id);
+
+      // Re-sort the filtered patterns based on the 'patterns' constant order
+      updatedPatterns = patterns.filter((p) =>
+        filteredPatterns.some((fp) => fp.id === p.id)
+      );
     }
+
+    updateGameSettings({
+      pattern: updatedPatterns,
+    });
   };
 
   const handleWinnersChange = (id, winners) => {
@@ -58,7 +77,7 @@ const PatternMenu = () => {
         Select Patterns
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[300px] pr-1">
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-[300px] pr-1">
         {" "}
         {/* Adjusted grid and gap */}
         {patterns.length > 0 ? (
@@ -97,9 +116,22 @@ const PatternMenu = () => {
 
               {/* Winners Input */}
               {gameSettings.pattern.some((p) => p.id === pattern.id) && (
-                <div className="ml-2 flex-shrink-0">
-                  {" "}
-                  {/* Adjusted margin for input */}
+                <div className="ml-4 flex items-center justify-end flex-shrink-0">
+                  <button
+                    onClick={() =>
+                      handleWinnersChange(
+                        pattern.id,
+                        Math.max(
+                          1,
+                          (gameSettings.pattern.find((p) => p.id === pattern.id)
+                            ?.winners || 1) - 1
+                        )
+                      )
+                    }
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl p-1 px-2 outline-none active:scale-90 rounded-l-md transition-all duration-200 ease-in-out shadow-md hover:shadow-lg focus:ring-blue-500 focus:ring-opacity-75 active:bg-blue-800 h-8 w-10 flex items-center justify-center"
+                  >
+                    -
+                  </button>
                   <input
                     type="number"
                     id={`winners-${pattern.id}`}
@@ -111,9 +143,21 @@ const PatternMenu = () => {
                       handleWinnersChange(pattern.id, e.target.value)
                     }
                     min="1"
-                    className="w-16 border border-gray-300 rounded-md p-1 text-sm text-center focus:border-blue-500 focus:ring-blue-500 outline-none" // Smaller, centered input
-                    placeholder="W" // Placeholder for winner count
+                    className="w-10 h-8 border-t border-b border-gray-300 text-center text-base focus:border-blue-500  outline-none placeholder-gray-400"
+                    placeholder="W"
                   />
+                  <button
+                    onClick={() =>
+                      handleWinnersChange(
+                        pattern.id,
+                        (gameSettings.pattern.find((p) => p.id === pattern.id)
+                          ?.winners || 1) + 1
+                      )
+                    }
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl p-1 px-2 rounded-r-md transition-all duration-200 ease-in-out shadow-md hover:shadow-lg outline-none active:scale-90 active:bg-blue-800 h-8 w-10 flex items-center justify-center"
+                  >
+                    +
+                  </button>
                 </div>
               )}
             </label>
