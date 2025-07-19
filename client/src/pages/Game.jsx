@@ -169,8 +169,8 @@ const Game = () => {
       {loading ? (
         <Loading />
       ) : location.pathname === "/game" ? (
-        <div className="container flex flex-col items-center p-2 min-w-full min-h-screen bg-gradient-to-r from-rose-300 via-blue-200 to-purple-300">
-          <div className="relative w-full max-w-lg md:max-w-2xl h-fit flex flex-col items-center gap-2">
+        <div className="container flex flex-col items-center p-2 min-w-full min-h-screen bg-gradient-to-r from-rose-200 via-blue-200 to-purple-200">
+          <div className="relative w-full max-w-lg md:max-w-2xl max-h-screen flex flex-col items-center gap-2">
             {Player?.role === "host" && (
               <div className="w-full flex gap-2 items-center bg-white p-2 rounded-lg shadow-lg">
                 <div className="message hidden opacity-0"></div>
@@ -203,7 +203,7 @@ const Game = () => {
             )}
 
             {/* Drawn Numbers Section */}
-            <div className="w-full flex flex-col bg-white p-1 rounded-lg items-center shadow-lg">
+            <div className="w-full top-0 flex flex-col bg-white p-1 rounded-lg items-center shadow-lg">
               <DrawNumbers />
             </div>
 
