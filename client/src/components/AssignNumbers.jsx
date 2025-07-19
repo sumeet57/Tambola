@@ -1,11 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
-import {
-  distributeNumbersEqually,
-  generateTambolaTickets,
-} from "../utils/game.js";
-
 import socket from "../utils/websocket";
 import { useNavigate } from "react-router-dom";
+
 //for context import
 import { PlayerContext } from "../context/PlayerContext.jsx";
 import { GameContext } from "../context/GameContext.jsx";
@@ -54,6 +50,7 @@ const AssignNumbers = () => {
     8: "Full House",
   };
 
+  // ticket assignment logic
   useEffect(() => {
     // Check for localStorage
     const existingGameData = localStorage.getItem(`${gameState?.roomid}`);
@@ -91,10 +88,8 @@ const AssignNumbers = () => {
     setLoading(false);
   }, [gameState?.roomid, gameState?.ticketCount]);
 
-  // for claims and click on number
+  // for selecting numbers in tickets handling
   const [selectedNumbers, setSelectedNumbers] = useState({});
-  const [disqualify, setDisqualify] = useState([]);
-
   const toggleNumberInSelected = (index, number) => {
     const numericIndex = Number(index);
     const numericNumber = Number(number);
@@ -132,6 +127,9 @@ const AssignNumbers = () => {
       return newSelectedNumbers;
     });
   };
+
+  // for disqualify tickets handling
+  const [disqualify, setDisqualify] = useState([]);
   const handleDisqualify = (ticketIndex) => {
     setDisqualify((prev) => [...prev, ticketIndex]);
     setSelectedNumbers((prev) => {
@@ -664,7 +662,7 @@ const AssignNumbers = () => {
               </h2>
 
               {/* Claim Buttons */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-auto">
                 {gameState?.patterns.map((claim) => {
                   if (!ClaimHistory?.includes(claim.id)) {
                     const foundClaim = gameState?.claimTrack.find(
@@ -689,7 +687,7 @@ const AssignNumbers = () => {
                   ${
                     winners === 0
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-br from-green-300 via-blue-300 to-purple-300 hover:from-green-400 hover:to-purple-400 text-gray-800 hover:scale-105 active:scale-95"
+                      : "bg-gradient-to-br from-blue-300 to-purple-200 hover:from-blue-400 hover:to-purple-300 text-gray-800 active:scale-95"
                   }`}
                       >
                         {`${claimGuide[claim.id] || "Unknown"} (${
