@@ -146,17 +146,20 @@ const AssignNumbers = () => {
     });
   };
 
+  // for drawn numbers handling
   const [drawNumber, setDrawNumber] = useState(gameState.drawnNumbers);
   useEffect(() => {
     setDrawNumber(gameState.drawnNumbers);
   }, [gameState.drawnNumbers]);
 
+  // handle claim message
   const handleClaimMessage = (data) => {
     toast.success(data.message, {
       autoClose: 5000,
     });
   };
 
+  // socket listeners for claim and game over
   useEffect(() => {
     const handleGameOver = (data) => {
       toast.info("Game Over!");
@@ -190,6 +193,7 @@ const AssignNumbers = () => {
     };
   }, []);
 
+  // for claiming patterns
   const [ClaimHistory, setClaimHistory] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [claimMenu, setClaimMenu] = useState(false);

@@ -3,12 +3,13 @@ import { useSpeech } from "react-text-to-speech";
 import { GameContext } from "../context/GameContext";
 
 const DrawNumbers = () => {
+  // context for game state
   const { gameState } = useContext(GameContext);
+
+  // state and handler for text-to-speech package
   const [textToSpeak, setTextToSpeak] = useState("");
   const prevNumberRef = useRef(null);
-
-  const { start, speechStatus, stop } = useSpeech({ text: textToSpeak });
-
+  const { start } = useSpeech({ text: textToSpeak });
   useEffect(() => {
     const numbers = gameState?.drawnNumbers || [];
     const lastNum = numbers.at(-1);
@@ -18,23 +19,16 @@ const DrawNumbers = () => {
       setTextToSpeak(String(lastNum));
     }
   }, [gameState?.drawnNumbers]);
+  useEffect(() => {
+    if (textToSpeak) start(); // speak new number
+  }, [textToSpeak]);
 
-  // fullscreen mode
+  // fullscreen mode state and handler
   const [isFullscreen, setIsFullscreen] = useState(false);
   const toggleFullscreen = () => {
     setIsFullscreen((prev) => !prev);
   };
-  const AllNumbers = Array.from({ length: 90 }, (_, i) => i + 1); // [1, 2, ..., 90]
-
-  useEffect(() => {
-    if (textToSpeak && isVoiceEnabled) start(); // speak new number
-  }, [textToSpeak]);
-
-  //voice enable button
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
-  const handleVoiceToggle = () => {
-    setIsVoiceEnabled((prev) => !prev);
-  };
+  const AllNumbers = Array.from({ length: 90 }, (_, i) => i + 1);
 
   return (
     <>

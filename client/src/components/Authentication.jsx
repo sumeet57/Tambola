@@ -16,8 +16,10 @@ const Authentication = () => {
   // for context
   const { Player, updatePlayer } = useContext(PlayerContext);
 
+  // for navigation
   const navigate = useNavigate();
 
+  // for form state
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -30,6 +32,7 @@ const Authentication = () => {
   const location = useLocation();
   const path = location.pathname;
 
+  // form submission handlers
   const loginUser = async (e) => {
     e.preventDefault();
     // validate user input

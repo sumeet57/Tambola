@@ -4,30 +4,31 @@ import Loading from "./Loading";
 import { PlayerContext } from "../context/PlayerContext";
 import authApi from "../utils/authApi.js";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
 import { toast } from "react-toastify";
 
 const Header = () => {
   //for context
   const { Player, updatePlayer, logout } = useContext(PlayerContext);
+
+  // for navigation
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   //loading
   const [loading, setLoading] = useState(false);
 
-  // const host = localStorage.getItem("hostid");
-
+  // toggle menu state and handler
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // logout handler
   const logoutClick = async () => {
     try {
       setLoading(true);
-      const res = await authApi.post('/logout', { sessionId: localStorage.getItem('sessionId') });
-      setLoading(false);
+      const res = await authApi.post("/logout", {
+        sessionId: localStorage.getItem("sessionId"),
+      });
       if (res.status === 200) {
         toast.success("Logged out successfully", {
           autoClose: 2000,
@@ -38,12 +39,13 @@ const Header = () => {
         navigate("/auth");
       }
     } catch (err) {
-      setLoading(false);
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // switching between host and user
+  // switching between host and user roles state and handler
   const [changeClick, setChangeClick] = useState(false);
   const changeClickHandler = () => {
     setChangeClick(!changeClick);
@@ -55,17 +57,18 @@ const Header = () => {
     }
     setLoading(true);
     const res = await authApi.post("/change-role", { role: newRole });
-    if(res.status === 200) {
+    if (res.status === 200) {
       toast.success(`Role changed to ${newRole}`);
       updatePlayer(res.data.user);
       toggleMenu();
-    }else{
+    } else {
       console.error("Error changing role:", res.data.message);
       alert("Error changing role. Please try again.");
     }
     setLoading(false);
     changeClickHandler();
   };
+
   return (
     <>
       {loading ? (
@@ -246,7 +249,7 @@ const Header = () => {
                   {/* Confirm Button */}
                   <li>
                     <button
-                      onClick={handleRoleChange} // Make sure this function exists
+                      onClick={handleRoleChange}
                       className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
                     >
                       Confirm

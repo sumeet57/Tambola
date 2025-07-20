@@ -3,8 +3,10 @@ import { GameContext } from "../context/GameContext";
 import { toast } from "react-toastify";
 
 const PatternMenu = () => {
+  // for context (game settings)
   const { gameSettings, updateGameSettings } = useContext(GameContext);
 
+  // predefined patterns
   const patterns = [
     { id: "1", value: "Early Five", label: "Early Five" },
     { id: "2", value: "Middle no", label: "Middle no" },
@@ -16,39 +18,36 @@ const PatternMenu = () => {
     { id: "8", value: "Full House", label: "Full House" },
   ];
 
+  // checkbox click handler
   const handleChange = (e) => {
     const { id, checked } = e.target;
 
     let updatedPatterns;
 
     if (checked) {
-      // If checked, add the new pattern with default winners: 1
-      // and then re-sort based on the 'patterns' constant order
       const newPatternToAdd = { id, winners: 1 };
       const tempPatterns = [...gameSettings.pattern, newPatternToAdd];
 
       updatedPatterns = patterns
         .filter((p) => tempPatterns.some((tp) => tp.id === p.id))
         .map((p) => {
-          // Find the existing pattern in tempPatterns to retain its 'winners' property
           const existing = tempPatterns.find((tp) => tp.id === p.id);
-          return existing || { id: p.id, winners: 1 }; // Fallback to default if not found (shouldn't happen here)
+          return existing || { id: p.id, winners: 1 };
         });
     } else {
-      // If unchecked, filter out the pattern
       const filteredPatterns = gameSettings.pattern.filter((p) => p.id !== id);
-
-      // Re-sort the filtered patterns based on the 'patterns' constant order
       updatedPatterns = patterns.filter((p) =>
         filteredPatterns.some((fp) => fp.id === p.id)
       );
     }
 
+    // Update game settings with new patterns
     updateGameSettings({
       pattern: updatedPatterns,
     });
   };
 
+  // for winners input change handler
   const handleWinnersChange = (id, winners) => {
     const numWinners = Number(winners);
 
@@ -78,8 +77,6 @@ const PatternMenu = () => {
       </h2>
 
       <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-[300px] pr-1">
-        {" "}
-        {/* Adjusted grid and gap */}
         {patterns.length > 0 ? (
           patterns.map((pattern) => (
             <label
@@ -94,12 +91,11 @@ const PatternMenu = () => {
                 cursor-pointer transition-all duration-200 justify-between
               `}
             >
-              {/* Checkbox and Label */}
               <div className="flex items-center flex-grow">
                 <input
                   checked={gameSettings.pattern.some(
                     (p) => p.id === pattern.id
-                  )} // Default checked for Early Five and Middle no
+                  )}
                   onChange={handleChange}
                   type="checkbox"
                   id={pattern.id}
@@ -107,11 +103,7 @@ const PatternMenu = () => {
                   value={pattern.value}
                   className="form-checkbox h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2 flex-shrink-0" // Smaller checkbox
                 />
-                <span className="truncate">
-                  {" "}
-                  {/* Truncate long labels */}
-                  {pattern.label}
-                </span>
+                <span className="truncate">{pattern.label}</span>
               </div>
 
               {/* Winners Input */}
