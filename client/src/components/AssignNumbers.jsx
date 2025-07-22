@@ -41,7 +41,6 @@ const AssignNumbers = () => {
   // claim guide table
   const claimGuide = {
     1: "Early Five",
-    2: "Middle Number",
     3: "Early Seven",
     4: "First Line",
     5: "Second Line",
@@ -649,8 +648,8 @@ const AssignNumbers = () => {
         )}
 
         {claimMenu && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 bg-black/30 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-3xl border border-white/30 bg-white/30 backdrop-blur-md shadow-2xl p-6 sm:p-8">
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 bg-black/20 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-3xl border border-white/30 bg-white/30 backdrop-blur-md shadow-2xl p-4 sm:p-6">
               {/* Close Button */}
               <button
                 onClick={claimMenuToggle}
@@ -662,7 +661,7 @@ const AssignNumbers = () => {
 
               {/* Title */}
               <h2 className="text-center text-xl sm:text-2xl font-bold text-gray-800 mb-6">
-                Select a Claim Pattern
+                Claim Pattern
               </h2>
 
               {/* Claim Buttons */}
@@ -694,9 +693,12 @@ const AssignNumbers = () => {
                       : "bg-gradient-to-br from-blue-300 to-purple-200 hover:from-blue-400 hover:to-purple-300 text-gray-800 active:scale-95"
                   }`}
                       >
-                        {`${claimGuide[claim.id] || "Unknown"} (${
-                          winners !== undefined ? winners : "claimed"
-                        })`}
+                        <div className="flex justify-between items-center">
+                          <span>{claimGuide[claim.id] || "Unknown"}</span>
+                          <span className="font-bold">
+                            ({winners !== undefined ? winners : "claimed"})
+                          </span>
+                        </div>
                       </button>
                     );
                   }

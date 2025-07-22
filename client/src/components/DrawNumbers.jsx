@@ -51,7 +51,7 @@ const DrawNumbers = () => {
       </div>
       {isFullscreen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="relative bg-white w-[340px] h-[500px] max-h-screen overflow-y-auto rounded-2xl shadow-2xl border border-gray-300">
+          <div className="relative bg-white w-[340px] h-[500px] max-h-screen overflow-y-auto scroll rounded-2xl shadow-2xl border border-gray-300">
             {/* Sticky Close Button */}
             <div className="sticky top-0 z-10 bg-white px-1 py-2 border-b border-gray-700 rounded-t-2xl flex justify-end">
               <h2 className="flex-1 text-left mt-1">
@@ -69,11 +69,11 @@ const DrawNumbers = () => {
             </div>
 
             {/* Grid of Numbers */}
-            <div className="p-2 grid grid-cols-6 gap-4">
+            <div className="p-2 grid grid-cols-5 gap-2">
               {AllNumbers.map((num, index) => (
                 <span
                   key={index}
-                  className={`w-10 h-10 text-lg font-bold grid place-items-center rounded-full border border-gray-500 shadow transition-all duration-200 ${
+                  className={`w-12 h-12 text-xl font-bold grid place-items-center rounded-full border border-gray-500 shadow transition-all duration-200 ${
                     gameState.drawnNumbers.includes(num)
                       ? "bg-gradient-to-tr from-pink-400 to-purple-500 border-purple-600 text-white scale-110"
                       : "bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"

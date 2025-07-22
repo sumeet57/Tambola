@@ -9,7 +9,6 @@ const PatternMenu = () => {
   // predefined patterns
   const patterns = [
     { id: "1", value: "Early Five", label: "Early Five" },
-    { id: "2", value: "Middle no", label: "Middle no" },
     { id: "3", value: "Early Seven", label: "Early Seven" },
     { id: "4", value: "First Line", label: "First Line" },
     { id: "5", value: "Second Line", label: "Second Line" },

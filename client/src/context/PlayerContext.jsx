@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
 import socket from "../utils/websocket";
-import { useNavigate } from "react-router-dom";
 import { updateSessionStorage } from "../utils/storageUtils";
-import Authentication from "../components/Authentication";
 import authApi, {
   getAccessToken,
   setAccessToken,
   markAsLoggedOut,
 } from "../utils/authApi";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
 export const PlayerContext = React.createContext();
 
 export const PlayerProvider = ({ children }) => {
+  // Get current path to handle redirects
   const location = window.location.pathname;
+
+  // for loading state and socket ID
   const [loading, setLoading] = React.useState(true);
+
+  // for socket ID state
   const [socketId, setSocketId] = React.useState(null);
 
+  // for player state
   const [Player, setPlayer] = React.useState(() => {
     const userData = sessionStorage.getItem("player");
     return userData ? JSON.parse(userData) : {};
@@ -62,7 +64,6 @@ export const PlayerProvider = ({ children }) => {
     socket.on("disconnect", handleDisconnect);
 
     if (socket.connected) {
-      // ✅ In case socket is already connected, ensure it's called
       handleConnect();
     }
 
@@ -91,14 +92,13 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   // Load user from sessionStorage or server
-  React.useEffect(() => {
+  useEffect(() => {
     setLoading(true);
     const userData = JSON.parse(sessionStorage.getItem("player"));
 
     if (userData && userData.name && userData.phone && userData.id) {
       updatePlayer(userData);
       setLoading(false);
-      // return;
     }
 
     // Refresh token and get new access token first

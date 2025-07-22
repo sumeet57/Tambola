@@ -310,8 +310,8 @@ const Hostpage = () => {
                       <PatternMenu />
 
                       <button
-                      onClick={()=> setEditPatterns(false)}
-                      className="mt-4 bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold py-1.5 px-4 rounded focus:outline-none"
+                        onClick={() => setEditPatterns(false)}
+                        className="mt-4 bg-blue-500 hover:bg-blue-700 transition-all active:scale-90 text-white font-bold py-1.5 px-4 rounded focus:outline-none"
                       >
                         Done
                       </button>
