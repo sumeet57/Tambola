@@ -32,6 +32,7 @@ const Game = () => {
   const [timerToggled, setTimerToggled] = useState(false);
 
   const [recentClaim, setRecentClaim] = useState(false);
+  const timeoutRef = useRef(null);
 
   const handlePickNumberClick = () => {
     if (Player.role === "host") {
@@ -120,12 +121,15 @@ const Game = () => {
       }
       setDrawNumber(number);
     };
+
     const handleClaim = () => {
-      if (recentClaim) {
-        setRecentClaim(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
+
       setRecentClaim(true);
-      setTimeout(() => {
+
+      timeoutRef.current = setTimeout(() => {
         setRecentClaim(false);
       }, 5000);
     };
