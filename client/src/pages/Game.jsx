@@ -194,7 +194,7 @@ const Game = () => {
                       : handlePickNumberClick
                   }
                   className={`w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg transition-transform transform ${
-                    drawNumber.length >= 90 || timerToggled
+                    drawNumber.length >= 90 || timerToggled || recentClaim
                       ? "cursor-not-allowed bg-gray-500"
                       : "cursor-pointer hover:bg-blue-500 active:scale-95"
                   }`}
