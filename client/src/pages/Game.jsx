@@ -31,9 +31,12 @@ const Game = () => {
 
   const [timerToggled, setTimerToggled] = useState(false);
 
+  const [recentClaim, setRecentClaim] = useState(false);
+
   const handlePickNumberClick = () => {
     if (Player.role === "host") {
-      if (timerToggled) {
+      if (timerToggled || recentClaim) {
+        toast.warning("Please wait for the timer to finish or claim to reset!");
         return;
       }
       setTimerToggled(!timerToggled);
@@ -117,7 +120,17 @@ const Game = () => {
       }
       setDrawNumber(number);
     };
+    const handleClaim = () => {
+      if (recentClaim) {
+        setRecentClaim(false);
+      }
+      setRecentClaim(true);
+      setTimeout(() => {
+        setRecentClaim(false);
+      }, 5000);
+    };
     socket.on("number_drawn", pickedNumber);
+    socket.on("pattern_claimed", handleClaim);
 
     return () => {
       socket.off("number_drawn", pickedNumber);
