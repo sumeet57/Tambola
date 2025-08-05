@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { PlayerContext } from "../context/PlayerContext.jsx";
 
-
-// currentRole is a fallback if currentUserRole prop is not provided
-
 const UnAuthorizePage = () => {
+  // for user context
   const { Player } = useContext(PlayerContext);
   const [displayRole, setDisplayRole] = useState(Player?.role || "guest");
 
@@ -39,7 +36,8 @@ const UnAuthorizePage = () => {
             .
           </p>
           <p className="text-md sm:text-lg text-gray-800 font-extrabold mt-2">
-            This page requires{displayRole == "host" ? " USER " : " HOST "}role for access.
+            This page requires{displayRole == "host" ? " USER " : " HOST "}role
+            for access.
           </p>
           <p className="text-md sm:text-lg text-gray-600 mt-2">
             To change your role, please navigate to the home page.

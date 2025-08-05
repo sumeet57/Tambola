@@ -1,10 +1,8 @@
-// src/pages/ErrorPage.jsx
 import React from "react";
 import { useRouteError } from "react-router-dom";
 
 const ErrorPage = () => {
   const error = useRouteError();
-  //   console.error("Error caught by router:", error);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 px-4">

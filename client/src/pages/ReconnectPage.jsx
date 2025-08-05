@@ -1,19 +1,26 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useLocation, Outlet, useNavigate, useParams } from "react-router-dom";
+
+// import components
 import Header from "../components/Header";
 import socket from "../utils/websocket";
 import Loading from "../components/Loading";
+
+// import context
 import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
 
+// import toastify (for notifications)
 import { toast } from "react-toastify";
 
 const ReconnectPage = () => {
+  // for importing environment variables
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  const { gameSettings, updateGameSettings, gameState, updateGameState } =
+
+  // for context
+  const { gameSettings, updateGameSettings, updateGameState } =
     useContext(GameContext);
-  const { Player, updatePlayer, deletePlayerProperty } =
-    useContext(PlayerContext);
+  const { Player, updatePlayer } = useContext(PlayerContext);
 
   //for navigation
   const navigate = useNavigate();
@@ -24,14 +31,20 @@ const ReconnectPage = () => {
   // for storing the room id and ticket count
   const temproomid = useParams();
 
+  // for storing room id and ticket count
   const [roomId, setRoomId] = useState(temproomid.roomid || "");
   const [ticketCount, setTicketCount] = useState(1);
+
+  // for loading state
   const [loading, setLoading] = useState(false);
 
+  // handle room joined event
   const handleRoomJoined = (room) => {
     navigate(`/host/room/${room}`);
     setLoading(false);
   };
+
+  // handle reconnecting to room and game
   const handleReconnectToRoom = (room) => {
     navigate(`/host/room/${room.roomid}`);
     updateGameState({
@@ -55,6 +68,7 @@ const ReconnectPage = () => {
     navigate("/game");
   };
 
+  // handle socket events
   useEffect(() => {
     socket.on("room_joined", handleRoomJoined);
     socket.on("reconnectToRoom", handleReconnectToRoom);
@@ -82,6 +96,7 @@ const ReconnectPage = () => {
     });
   }, [ticketCount]);
 
+  // handle join room button click
   const handleJoinRoom = async () => {
     setLoading(true);
     // for checking if player is invited or not

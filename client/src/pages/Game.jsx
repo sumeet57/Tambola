@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
+import { useLocation, Outlet, useNavigate } from "react-router-dom";
+//import components and utils
 import AssignNumbers from "../components/AssignNumbers";
 import DrawNumbers from "../components/DrawNumbers";
-import { useLocation, Outlet, useNavigate } from "react-router-dom";
+import Loading from "../components/Loading";
 import socket from "../utils/websocket";
+//import context
 import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
-import Loading from "../components/Loading";
 
 // import toastify
 import { toast } from "react-toastify";
@@ -15,25 +17,26 @@ const Game = () => {
   const { gameState, updateGameState } = useContext(GameContext);
   const { Player } = useContext(PlayerContext);
 
-  const isFirstLoad = useRef(true);
-
-  const [drawNumber, setDrawNumber] = useState([]);
+  //for navigation and getting current path
   const navigate = useNavigate();
   const location = useLocation();
-  const timervalue = gameState.timer || 3; // Default timer value
 
-  let roomId = sessionStorage.getItem("roomid");
+  //for storing drawn numbers and timer
+  const [drawNumber, setDrawNumber] = useState([]);
+  const timervalue = gameState.timer || 3;
+  const [timerToggled, setTimerToggled] = useState(false);
+  const timeoutRef = useRef(null);
 
-  const roomid = gameState.roomid || roomId || ""; // Default room ID
+  // for getting roomid from gameState
+  const roomid = gameState.roomid || "";
 
   // for loading state
   const [loading, setLoading] = useState(false);
 
-  const [timerToggled, setTimerToggled] = useState(false);
-
+  // for game state
   const [recentClaim, setRecentClaim] = useState(false);
-  const timeoutRef = useRef(null);
 
+  // for handle the pick number button click
   const handlePickNumberClick = () => {
     if (Player.role === "host") {
       if (timerToggled || recentClaim) {
@@ -54,14 +57,13 @@ const Game = () => {
     }
   };
 
+  // for handle end game click(for warning before ending the game)
   const [endMenu, setEndMenu] = useState(false);
-
   const endGameClick = () => {
     if (Player.role === "host") {
       setEndMenu(true);
     }
   };
-
   const endGame = () => {
     if (Player.role === "host") {
       socket.emit("end_game", roomid, Player.id);
@@ -71,10 +73,8 @@ const Game = () => {
 
   //for development
   // const [timer, setTimer] = useState(0);
-
   // for production
   const [timer, setTimer] = useState(timervalue);
-
   const handleTimer = () => {
     const interval = setInterval(() => {
       setTimer((prevTimer) => {
@@ -95,12 +95,6 @@ const Game = () => {
   useEffect(() => {
     updateGameState({ drawnNumbers: drawNumber });
   }, [drawNumber]);
-
-  // menu for leave game, report, and end game
-  const [menu, setMenu] = useState(false);
-  const handleMenuBox = () => {
-    setMenu(!menu);
-  };
 
   // socket event handlers, functions and states (drawn numbers, error messages)
   useEffect(() => {

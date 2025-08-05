@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const GameOver = () => {
+  // for navigation
   const navigate = useNavigate();
+  // for getting current path
   const location = useLocation();
+  // game states
   const claimData = location.state?.claimData;
   const [parsedData, setParsedData] = useState([]);
 
+  // for handle the parsing of claim data
   useEffect(() => {
     if (!claimData || claimData.length === 0) {
       setParsedData([]);
@@ -21,7 +25,6 @@ const GameOver = () => {
         !claim.player.name ||
         !claim.player.phone
       ) {
-        console.warn("Skipping malformed claim:", claim);
         return acc;
       }
 
@@ -56,13 +59,6 @@ const GameOver = () => {
     setParsedData(transformedData);
   }, [claimData]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // navigate("/");
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, [navigate]);
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-300 to-purple-300 p-1">
@@ -76,7 +72,6 @@ const GameOver = () => {
           <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
             {parsedData.length > 0 ? (
               parsedData.map((data, index) => (
-                // --- Start of Compact Player Card Styling ---
                 <div
                   key={index}
                   className="mb-1 p-1 border border-gray-400 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-md"
@@ -92,7 +87,6 @@ const GameOver = () => {
                   </h3>
                   <ul className="text-sm text-gray-700 space-y-0.5">
                     {" "}
-                    {/* Reduced spacing and font size */}
                     {data.pattern.map((p, pIndex) => (
                       <li
                         key={pIndex}
@@ -102,12 +96,10 @@ const GameOver = () => {
                         <span className="font-medium text-blue-600 ml-2">
                           {p.count} claims
                         </span>{" "}
-                        {/* Use ml-2 for spacing */}
                       </li>
                     ))}
                   </ul>
                 </div>
-                // --- End of Compact Player Card Styling ---
               ))
             ) : (
               <p className="text-center text-gray-600 py-8">

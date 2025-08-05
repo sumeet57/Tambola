@@ -19,9 +19,6 @@ import { GameContext } from "../context/GameContext";
 import { toast } from "react-toastify";
 import Authentication from "../components/Authentication.jsx";
 
-//import environment variables
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
 const Userpage = () => {
   //for extracting roomid from params if present
   const { publicId } = useParams();
@@ -29,7 +26,6 @@ const Userpage = () => {
 
   //for context
   const { Player, updatePlayer } = useContext(PlayerContext);
-  const { gameState, updateGameState } = useContext(GameContext);
 
   //for loading
   const [loading, setLoading] = useState(false);
@@ -60,10 +56,8 @@ const Userpage = () => {
       toast.warning("Please select at least 1 ticket");
       return;
     }
-    //for checking if player has enough points
     if (Player) {
       setLoading(true);
-      // for checking if player is invited or not
       setTimeout(() => {
         socket.emit("join_room", socket.id, Player, roomId, publicId);
       }, 1000);
@@ -82,7 +76,6 @@ const Userpage = () => {
         navigate(`/host/room/${room}`);
       }
       setLoading(false);
-      // deductPoints();
     };
 
     // Set up event listener for room_joined
@@ -100,8 +93,6 @@ const Userpage = () => {
       socket.off("error");
     };
   }, [requestTickets, Player, navigate]);
-
-  //get current socketid and update player state on page refresh,navigation, or any other event that triggers a re-render
 
   return (
     <>

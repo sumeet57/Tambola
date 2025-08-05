@@ -16,6 +16,7 @@ const Hostroom = () => {
   const { Player, updatePlayer } = useContext(PlayerContext);
   const { gameState, updateGameState } = useContext(GameContext);
 
+  // for extracting roomid from params if present
   const param = useParams();
   const roomid = param.roomid;
   const publicId = gameState.publicId || "";
@@ -113,8 +114,6 @@ const Hostroom = () => {
   };
 
   // connection and disconnection handling
-  // const [isConnected, setIsConnected] = useState(false);
-
   const [isConnected, setIsConnected] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -146,7 +145,7 @@ const Hostroom = () => {
     };
   }, []);
 
-  // refreshing the page
+  // for warning before leaving the page
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       event.preventDefault();
@@ -300,7 +299,7 @@ const Hostroom = () => {
             <select
               id="drawn-interval"
               className="bg-transparent focus:outline-none text-gray-900 w-[50px] text-lg font-bold cursor-pointer"
-              value={timerValue} // This controls the selection
+              value={timerValue}
               onChange={handleTimerChange}
             >
               <option value="2">2s</option>
@@ -355,10 +354,7 @@ const Hostroom = () => {
                               )
                             );
                           }}
-                          className="
-            bg-blue-200 hover:bg-blue-300 text-blue-800
-            text-lg font-bold
-            w-8 h-8 rounded-l-md
+                          className="bg-blue-200 hover:bg-blue-300 text-blue-800 text-lg font-bold w-8 h-8 rounded-l-md
             flex items-center justify-center
             transition-all duration-150 active:scale-95
           "

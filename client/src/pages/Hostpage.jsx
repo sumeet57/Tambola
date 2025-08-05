@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import { useLocation, Outlet, useNavigate, useParams } from "react-router-dom";
+// import components
 import Header from "../components/Header";
 import socket from "../utils/websocket";
 import Loading from "../components/Loading";
 import PatternMenu from "../components/PatternMenu";
+// import context
 import { GameContext } from "../context/GameContext";
 import { PlayerContext } from "../context/PlayerContext";
-import DrawNumbers from "../components/DrawNumbers";
+
 //import env
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+// import toastify (for notifications)
 import { toast } from "react-toastify";
 
 const Hostpage = () => {
@@ -25,25 +28,15 @@ const Hostpage = () => {
   // for getting the current path
   const location = useLocation();
 
+  // for storing all the room states
   const [roomId, setRoomId] = useState("");
   const [ticketCount, setTicketCount] = useState(0);
   const [gameSchedule, setGameSchedule] = useState("");
   const [loading, setLoading] = useState(false);
   const [hostPlay, setHostPlay] = useState(false);
 
+  // for ensuring the new state
   useEffect(() => {
-    if (Player.role !== "host") {
-      toast.error(
-        "You are not authorized to access this page. Redirecting to home page.",
-        {
-          autoClose: 3000,
-          onClose: () => {
-            navigate("/");
-          },
-        }
-      );
-    }
-
     if (location.pathname === "/host") {
       setRoomId("");
       setTicketCount(0);
@@ -53,6 +46,7 @@ const Hostpage = () => {
     }
   }, []);
 
+  // for handling the create room button click
   const handleCreateRoom = () => {
     if (!gameSettings?.roomId || gameSettings?.roomId?.length < 3) {
       toast.warning("Please enter a valid Room ID (at least 3 characters).");
@@ -77,6 +71,7 @@ const Hostpage = () => {
     }
   };
 
+  // handle room joined event
   const handleRoomJoined = (room) => {
     setRoomId("");
     updateGameSettings({
@@ -94,24 +89,8 @@ const Hostpage = () => {
       publicId: room.publicId,
     });
   };
-  const handleReconnectToRoom = (room) => {
-    navigate(`/host/room/${room}`);
-    setLoading(false);
-  };
-  const handleReconnectToGame = (data) => {
-    setLoading(false);
-    updateGameState({
-      roomid: data.roomid,
-      patterns: data.patterns || [],
-      schedule: data.schedule || null,
-      assign_numbers: data.assign_numbers || [],
-      claimTracks: data.claimTracks || [],
-      DrawNumbers: data.DrawNumbers || [],
-      name: Player.name,
-    });
-    navigate("/game");
-  };
 
+  // handle the socket events
   useEffect(() => {
     socket.on("room_created", handleRoomJoined);
     socket.on("room_joined", handleRoomJoined);
@@ -133,14 +112,15 @@ const Hostpage = () => {
     };
   }, [ticketCount, navigate]);
 
+  // for ensuring the player state is updated
   useEffect(() => {
     updatePlayer({
       ticketCount: ticketCount,
     });
   }, [ticketCount]);
 
+  // for generating a random room ID (6 characters long)
   const generateRandomRoomId = () => {
-    // Generate a random room ID (6 characters long)
     const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     updateGameSettings({ roomId: randomId });
   };
@@ -159,6 +139,7 @@ const Hostpage = () => {
 
   // handle the Edit Patterns
   const [editPatterns, setEditPatterns] = useState(false);
+
   return (
     <>
       {loading ? (
@@ -281,11 +262,10 @@ const Hostpage = () => {
 
                 {editPatterns && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2">
-                    {/* Modal Content Container */}
                     <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4">
                       {/* Close Button */}
                       <button
-                        type="button" // Important: Prevent form submission if nested in a form
+                        type="button"
                         onClick={() => setEditPatterns(false)}
                         className="absolute top-3 right-3 p-2 rounded-full bg-red-500 hover:bg-red-600 transition-colors duration-200 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                         aria-label="Close pattern selection"
@@ -363,7 +343,6 @@ const Hostpage = () => {
                         : "bg-gray-500"
                     }
                     text-white font-bold py-2 px-4 rounded`}
-                    // disabled={!roomId || gameSettings?.pattern?.length === 0}
                   >
                     Create Room
                   </button>
