@@ -94,8 +94,6 @@ const Hostpage = () => {
   useEffect(() => {
     socket.on("room_created", handleRoomJoined);
     socket.on("room_joined", handleRoomJoined);
-    socket.on("reconnectToRoom", handleReconnectToRoom);
-    socket.on("reconnectToGame", handleReconnectToGame);
 
     socket.on("error", (message) => {
       setLoading(false);
@@ -106,8 +104,6 @@ const Hostpage = () => {
     return () => {
       socket.off("room_created", handleRoomJoined);
       socket.off("room_joined", handleRoomJoined);
-      socket.off("reconnectToRoom", handleReconnectToRoom);
-      socket.off("reconnectToGame", handleReconnectToGame);
       socket.off("error");
     };
   }, [ticketCount, navigate]);

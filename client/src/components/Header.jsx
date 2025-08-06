@@ -81,7 +81,7 @@ const Header = () => {
                 navigate("/");
                 window.location.reload(); // Refresh the page
               }}
-              className="text-2xl sm:text-3xl font-bold font-sans text-white"
+              className="text-2xl sm:text-3xl font-bold font-sans cursor-pointer text-white"
             >
               Tambola
             </div>
