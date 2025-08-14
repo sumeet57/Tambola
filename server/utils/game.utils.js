@@ -1,5 +1,5 @@
 import Room from "../models/room.model.js";
-import { activeRooms, roomLocks } from "../socketConnections/room.js";
+import { activeRooms } from "../logic/room.js";
 import CryptoJS from "crypto-js";
 
 export const SaveGameInDb = async (roomid, roomData) => {

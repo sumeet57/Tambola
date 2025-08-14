@@ -1,5 +1,18 @@
+import Room from "./models/room.model.js";
 import http from "http";
 import { Server } from "socket.io";
+
+//importing socket connection game logic
+import { activeRooms, pendingRoomDeletions } from "./logic/room.js";
+import {
+  createRoom,
+  joinRoom,
+  assignNumbers,
+  claimPoint,
+  storeRoom,
+  reconnectPlayer,
+} from "./logic/game.js";
+import { SaveExistingGameInDb } from "./utils/game.utils.js";
 
 //importing database connection and connecting to database
 import connectDB from "./database/main.js";
@@ -18,55 +31,35 @@ const io = new Server(server, {
   },
 });
 
-//importing socket connection logic
-import { activeRooms, pendingRoomDeletions } from "./socketConnections/room.js";
-import {
-  createRoom,
-  joinRoom,
-  assignNumbers,
-  claimPoint,
-  storeRoom,
-  reconnectPlayer,
-} from "./socketConnections/roomLogic.js";
-import Room from "./models/room.model.js";
-import { SaveExistingGameInDb } from "./utils/game.utils.js";
 io.on("connection", (socket) => {
   try {
-    // Creating room
     socket.on("create_room", async (player, setting) => {
       try {
         if (typeof player !== "object" || typeof setting !== "object") {
-          socket.emit(
-            "error",
-            "Invalid input: player and setting must be objects"
-          );
-          return;
+          return socket.emit("error", {
+            message: "Invalid input: player and setting must be objects",
+          });
         }
-
         const res = await createRoom(player, setting);
-        if (typeof res === "string") {
-          socket.emit("error", res);
-          return;
-        }
-        socket.join(setting.roomId);
-        let room = activeRooms.get(setting.roomId);
-        if (!room) {
-          socket.emit("error", "Room not found in memory");
-          return;
-        }
-        socket.emit(
-          "room_created",
-          (room = {
+
+        if (res && res.success) {
+          let room = activeRooms.get(setting.roomId);
+          if (!room) return socket.emit("error", "Room not found in memory");
+          socket.join(setting.roomId);
+          // send room created event
+          socket.emit("room_created", {
             id: setting.roomId,
             publicId: room.publicId,
-          })
-        );
-        setTimeout(() => {
-          io.to(setting.roomId).emit("player_update", room?.playersList || []);
-        }, 1000);
+          });
+          // Notify the host about the room creation
+          setTimeout(() => {
+            io.to(setting.roomId).emit("player_update", room.playersList || []);
+          }, 1000);
+        } else {
+          throw new Error(res || "Failed to create room.");
+        }
       } catch (err) {
-        console.error("Error in create_room:", err);
-        socket.emit("error", "Server error");
+        socket.emit("error", err.message);
       }
     });
 
@@ -77,18 +70,14 @@ io.on("connection", (socket) => {
           socket.emit("error", "Invalid input");
           return;
         }
-
         const res = await joinRoom(socketid, player, roomid, publicId);
-        if (typeof res === "string") {
-          socket.emit("error", res);
-          return;
-        }
-        let room = activeRooms.get(roomid);
-
-        socket.join(roomid);
-        if (res === false) {
+        let room;
+        if (res && res.success) {
+          room = activeRooms.get(roomid);
+          if (!room) return socket.emit("error", "Room not found in memory");
+          socket.join(roomid);
           socket.emit("room_joined", roomid);
-          socket.emit("reconnectToRoom", roomid);
+          // Notify the host about player requested tickets
           let hostSocketId = room.players.find(
             (p) => p?.id == room?.host
           ).socketid;
@@ -97,14 +86,13 @@ io.on("connection", (socket) => {
               "requestedTicket",
               room?.requestedTicketCount || []
             );
+            io.to(roomid).emit("player_update", room?.playersList || []);
           }, 1000);
+        } else {
+          throw new Error(res || "Failed to join room for an unknown reason.");
         }
-        setTimeout(() => {
-          io.to(roomid).emit("player_update", room?.playersList || []);
-        }, 1000);
       } catch (err) {
-        console.error("Error in join_room:", err);
-        socket.emit("error", "Server error");
+        socket.emit("error", err.message);
       }
     });
 
@@ -139,6 +127,7 @@ io.on("connection", (socket) => {
         room.isOngoing = true;
 
         let players = await room.players;
+        // sending thier assigned tickets to players
         if (Array.isArray(players)) {
           players.forEach((player) => {
             io.to(player.socketid).emit("started_game", {
@@ -156,7 +145,6 @@ io.on("connection", (socket) => {
         }
         room.players = players;
       } catch (err) {
-        console.error("Error in start_game:", err);
         socket.emit("error", "Server error");
       }
     });
@@ -173,18 +161,13 @@ io.on("connection", (socket) => {
           socket.emit("error", "Room not found in memory");
           return;
         }
-
         const res = await claimPoint(player, roomid, pattern, ticketIndex, io);
-        if (typeof res === "string") {
-          socket.emit("error", res);
-          return;
+        if (res && res.success) {
+          io.to(roomid).emit("claimListUpdate", room?.claimList || []);
+          io.to(roomid).emit("claimed", pattern, player?.name);
         }
-
-        io.to(roomid).emit("claimListUpdate", room?.claimList || []);
-        io.to(roomid).emit("claimed", pattern, player?.name);
       } catch (err) {
-        console.error("Error in claim:", err);
-        socket.emit("error", "Server error");
+        socket.emit("error", err?.message);
       }
     });
     // Pick number (working fine)
@@ -339,7 +322,6 @@ io.on("connection", (socket) => {
 
           if (playerIndex !== -1) {
             const disconnectedPlayer = players[playerIndex];
-
             // Remove player from the room if the room is not ongoing
             if (!room.isOngoing) {
               if (room.host !== disconnectedPlayer.id) {
@@ -391,20 +373,6 @@ io.on("connection", (socket) => {
         console.error("Error in disconnect:", err);
       }
     });
-
-    // Handle messages
-    socket.on("message", (message, roomid, playerName) => {
-      try {
-        if (!roomid || !message || !playerName) {
-          socket.emit("error", "Invalid credentials");
-          return;
-        }
-        io.to(roomid).emit("messageReceived", message, playerName);
-      } catch (err) {
-        console.error("Error in message:", err);
-        socket.emit("error", "Server error");
-      }
-    });
   } catch (err) {
     console.error("Critical error in connection:", err);
   }
@@ -413,14 +381,13 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on ${PORT}`);
 });
 
 // Global error handling
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
 });
-
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });

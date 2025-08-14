@@ -13,6 +13,7 @@ app.use(express.json());
 // for cors policy
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
+// for cookies
 app.use(cookieParser());
 
 // Define routes

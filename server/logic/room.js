@@ -1,5 +1,3 @@
-// import Room from "../models/room.model.js";
-
 // In-memory room storage using Map
 const activeRooms = new Map();
 

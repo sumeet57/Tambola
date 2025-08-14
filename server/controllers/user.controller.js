@@ -144,6 +144,42 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// /api/user/change-role
+export const changeRole = async (req, res) => {
+  let { role } = req.body;
+  role = role.toString().trim();
+  try {
+    const user = await User.findById(req.userId).select("-password -sessions ");
+
+    if (!user) {
+      // send user for login
+      return res.status(401).json({ message: "User not found" });
+    }
+    if (role === "host" && user.role !== "host") {
+      user.role = "host";
+    } else if (role === "user" && user.role !== "user") {
+      user.role = "user";
+    } else if (role !== "user" && role !== "host") {
+      // send user for login
+      return res.status(401).json({ message: "Invalid role" });
+    }
+    await user.save();
+
+    res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+      },
+      message: "User role changed successfully",
+    });
+  } catch (error) {
+    console.error("Error changing user role:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // /api/user/tokens
 export async function refreshToken(req, res) {
   // destructure body and validate inputs
@@ -182,7 +218,7 @@ export async function getUser(req, res) {
 }
 
 // /api/user/get-invites
-export const getInvites = async (req, res) => {
+export async function getInvites(req, res) {
   try {
     const user = await User.findById(req.userId).select("invites -_id");
     if (!user) {
@@ -198,7 +234,7 @@ export const getInvites = async (req, res) => {
     console.error("Error fetching invites:", error.message);
     res.status(500).json({ message: error.message });
   }
-};
+}
 
 export async function logoutSession(req, res) {
   const { sessionId } = req.body;
@@ -207,38 +243,3 @@ export async function logoutSession(req, res) {
   await user.save();
   res.json({ message: "Logged out successfully" });
 }
-
-export const changeRole = async (req, res) => {
-  let { role } = req.body;
-  role = role.toString().trim();
-  try {
-    const user = await User.findById(req.userId).select("-password -sessions ");
-
-    if (!user) {
-      // send user for login
-      return res.status(401).json({ message: "User not found" });
-    }
-    if (role === "host" && user.role !== "host") {
-      user.role = "host";
-    } else if (role === "user" && user.role !== "user") {
-      user.role = "user";
-    } else if (role !== "user" && role !== "host") {
-      // send user for login
-      return res.status(401).json({ message: "Invalid role" });
-    }
-    await user.save();
-
-    res.status(200).json({
-      user: {
-        id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-      },
-      message: "User role changed successfully",
-    });
-  } catch (error) {
-    console.error("Error changing user role:", error.message);
-    res.status(500).json({ message: error.message });
-  }
-};
