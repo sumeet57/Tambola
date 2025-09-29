@@ -78,7 +78,7 @@ export const getRooms = async (req, res) => {
   try {
     const id = req.userId;
     if (!id) {
-      console.log("ID is not found in request:", id );
+      console.log("ID is not found in request:", id);
       return res.status(400).json({ message: "ID is required" });
     }
     const user = await User.findById(id).select("role");

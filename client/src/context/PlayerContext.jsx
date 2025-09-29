@@ -103,10 +103,9 @@ export const PlayerProvider = ({ children }) => {
 
     // Refresh token and get new access token first
     const tryRestoreSession = async () => {
-      const refreshToken = localStorage.getItem("refreshToken");
       const sessionId = localStorage.getItem("sessionId");
 
-      if (!refreshToken || !sessionId) {
+      if (!sessionId) {
         setLoading(false);
 
         setPlayer(null);
@@ -117,15 +116,6 @@ export const PlayerProvider = ({ children }) => {
       }
 
       try {
-        // Refresh token
-        const res = await authApi.post("/tokens", { refreshToken, sessionId });
-        const accessToken = res.data.accessToken;
-
-        // Store new access token in memory
-        setAccessToken(accessToken);
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-        localStorage.setItem("userid", res.data.id);
-
         // Then fetch the user
         const { data } = await authApi.get("/me");
 

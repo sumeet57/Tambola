@@ -58,7 +58,6 @@ const Authentication = () => {
       const res = await authApi.post("/login", { phone, password });
 
       toast.success("Successfully logged in");
-      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("sessionId", res.data.sessionId);
       localStorage.setItem("userid", res.data.user.id);
       updatePlayer({
@@ -67,7 +66,7 @@ const Authentication = () => {
         phone: res.data.user.phone,
         role: res.data.user.role,
       });
-      setAccessToken(res.data.accessToken);
+      // setAccessToken(res.data.accessToken);
       if (path === "/auth") {
         navigate("/");
       }
@@ -119,7 +118,6 @@ const Authentication = () => {
       const res = await authApi.post("/register", { name, phone, password });
 
       toast.success("Successfully registered");
-      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("sessionId", res.data.sessionId);
       localStorage.setItem("userid", res.data.user.id);
 
@@ -129,7 +127,6 @@ const Authentication = () => {
         phone: res.data.user.phone,
         role: res.data.user.role,
       });
-      setAccessToken(res.data.accessToken);
       if (path === "/auth") {
         navigate("/");
       }

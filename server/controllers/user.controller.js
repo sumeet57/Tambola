@@ -2,7 +2,11 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { createTokens } from "../utils/auth.utils.js";
+import {
+  cookieOptionsAccess,
+  cookieOptionsRefresh,
+  createTokens,
+} from "../utils/auth.utils.js";
 import { v4 as uuidv4 } from "uuid";
 
 // /api/user/register
@@ -64,9 +68,11 @@ export const createUser = async (req, res) => {
     // generate JWT token
     const tokens = createTokens(user._id.toString(), sessionId);
 
+    res.cookie("accessToken", tokens.accessToken, cookieOptionsAccess);
+    res.cookie("refreshToken", tokens.refreshToken, cookieOptionsRefresh);
+
     // sending response with tokens and sessionId
     res.status(200).json({
-      ...tokens,
       sessionId,
       user: {
         id: user._id,
@@ -128,8 +134,9 @@ export const loginUser = async (req, res) => {
     const tokens = createTokens(user._id.toString(), sessionId);
 
     // sending response with tokens and sessionId
+    res.cookie("accessToken", tokens.accessToken, cookieOptionsAccess);
+    res.cookie("refreshToken", tokens.refreshToken, cookieOptionsRefresh);
     res.status(200).json({
-      ...tokens,
       sessionId,
       user: {
         id: user._id,
@@ -241,5 +248,7 @@ export async function logoutSession(req, res) {
   const user = await User.findById(req.userId);
   user.sessions = user.sessions.filter((s) => s.sessionId !== sessionId);
   await user.save();
+  res.clearCookie("accessToken", cookieOptionsAccess);
+  res.clearCookie("refreshToken", cookieOptionsRefresh);
   res.json({ message: "Logged out successfully" });
 }
