@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useLocation, Outlet, useNavigate } from "react-router-dom";
 //import components and utils
-import AssignNumbers from "../components/AssignNumbers";
+import AssignTicket from "../components/AssignTicket";
 import DrawNumbers from "../components/DrawNumbers";
 import Loading from "../components/Loading";
 import socket from "../utils/websocket";
@@ -220,8 +220,7 @@ const Game = () => {
 
             {/* Tickets Section */}
             <div className="w-full bg-white p-2 rounded-lg shadow-lg h-full overflow-y-auto">
-              {/* {console.log("nearest", gameState.assignedNumbers)} */}
-              <AssignNumbers data={gameState.assign_numbers} />
+              <AssignTicket data={gameState.assign_numbers} />
             </div>
 
             {endMenu && (
@@ -245,7 +244,6 @@ const Game = () => {
               </div>
             )}
 
-            {/* connection lose warning */}
             {isConnected && (
               <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
                 <div className="bg-white text-red-600 border border-red-200 shadow-xl rounded-2xl p-6 w-full max-w-md text-center animate-fade-in-down">

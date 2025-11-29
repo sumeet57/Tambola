@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import socket from "../utils/websocket";
+import socket from "../utils/websocket.js";
 import { useNavigate } from "react-router-dom";
 
 //for context import
@@ -12,7 +12,7 @@ import Loading from "./Loading.jsx";
 // toastify
 import { toast } from "react-toastify";
 
-const AssignNumbers = () => {
+const AssignTicket = () => {
   const navigate = useNavigate();
 
   //for tickets
@@ -740,4 +740,4 @@ const AssignNumbers = () => {
   );
 };
 
-export default AssignNumbers;
+export default AssignTicket;
